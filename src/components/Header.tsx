@@ -1,8 +1,19 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Home, User, Bell, Menu, X, MessageCircle, Heart, Settings, LogOut, Search } from 'lucide-react';
-import { PageType } from '../App';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Home,
+  User,
+  Bell,
+  Menu,
+  X,
+  MessageCircle,
+  Heart,
+  Settings,
+  LogOut,
+  Search,
+} from "lucide-react";
+import { PageType } from "../App";
+import { useAuth } from "../contexts/AuthContext";
 
 interface HeaderProps {
   onNavigate: (page: PageType) => void;
@@ -14,35 +25,42 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   const menuItems = [
-    { label: 'Bosh Sahifa', page: 'home' as PageType, icon: Home },
-    { label: 'Yotoqxonalar', page: 'dormitories' as PageType, icon: Home },
-    { label: 'Ijara Xonadonlar', page: 'rentals' as PageType, icon: Home },
-    { label: 'Yordam', page: 'help' as PageType, icon: MessageCircle },
-    { label: 'Biz Haqimizda', page: 'about' as PageType, icon: User },
-    { label: 'Aloqa', page: 'contact' as PageType, icon: MessageCircle }
+    { label: "Bosh Sahifa", page: "home" as PageType, icon: Home },
+    { label: "Yotoqxonalar", page: "dormitories" as PageType, icon: Home },
+    { label: "Ijara Xonadonlar", page: "rentals" as PageType, icon: Home },
+    { label: "Yordam", page: "help" as PageType, icon: MessageCircle },
+    { label: "Biz Haqimizda", page: "about" as PageType, icon: User },
+    { label: "Aloqa", page: "contact" as PageType, icon: MessageCircle },
   ];
 
   const profileMenuItems = [
-    { label: 'Profil', page: 'profile' as PageType, icon: User },
-    { label: 'Dashboard', page: 'dashboard' as PageType, icon: Home },
-    { label: 'Xabarlar', page: 'messages' as PageType, icon: MessageCircle },
-    { label: 'Saqlangan', page: 'saved' as PageType, icon: Heart },
-    { label: 'Bildirishnomalar', page: 'notifications' as PageType, icon: Bell },
-    { label: 'Sozlamalar', page: 'settings' as PageType, icon: Settings }
+    { label: "Profil", page: "profile" as PageType, icon: User },
+    { label: "Dashboard", page: "dashboard" as PageType, icon: Home },
+    { label: "Xabarlar", page: "messages" as PageType, icon: MessageCircle },
+    { label: "Saqlangan", page: "saved" as PageType, icon: Heart },
+    {
+      label: "Bildirishnomalar",
+      page: "notifications" as PageType,
+      icon: Bell,
+    },
+    { label: "Sozlamalar", page: "settings" as PageType, icon: Settings },
   ];
 
   const handleLogout = () => {
     logout();
-    onNavigate('home');
+    onNavigate("home");
     setIsProfileMenuOpen(false);
   };
 
   // Helper: get display name and avatar
-  const displayName = user?.first_name && user?.last_name 
-    ? `${user.first_name} ${user.last_name}`.trim()
-    : user?.first_name || user?.username || 'Foydalanuvchi';
+  const displayName =
+    user?.first_name && user?.last_name
+      ? `${user.first_name} ${user.last_name}`.trim()
+      : user?.first_name || user?.username || "Foydalanuvchi";
   const avatarUrl = user?.image;
-  const avatarLetter = (user?.first_name || user?.username || 'F')[0].toUpperCase();
+  const avatarLetter = (user?.first_name ||
+    user?.username ||
+    "F")[0].toUpperCase();
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow-lg sticky top-0 z-50">
@@ -52,12 +70,10 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => onNavigate('home')}
+            onClick={() => onNavigate("home")}
             className="flex items-center gap-2"
           >
-            <div className="w-10 h-10 bg-gradient-to-r from-teal-600 to-green-600 rounded-lg flex items-center justify-center">
-              <Home className="w-6 h-6 text-white" />
-            </div>
+            <img src="src/assets/logo.svg" alt="JoyBor" className="w-10 h-10" />
             <span className="text-xl font-bold text-gray-900 dark:text-white">
               JoyBor
             </span>
@@ -66,19 +82,19 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <button
-              onClick={() => onNavigate('dormitories')}
+              onClick={() => onNavigate("dormitories")}
               className="text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
             >
               Yotoqxonalar
             </button>
             <button
-              onClick={() => onNavigate('rentals')}
+              onClick={() => onNavigate("rentals")}
               className="text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
             >
               Ijara Xonadonlar
             </button>
             <button
-              onClick={() => onNavigate('help')}
+              onClick={() => onNavigate("help")}
               className="text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
             >
               Yordam
@@ -93,7 +109,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => onNavigate('notifications')}
+                  onClick={() => onNavigate("notifications")}
                   className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
                 >
                   <Bell className="w-6 h-6" />
@@ -104,7 +120,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => onNavigate('messages')}
+                  onClick={() => onNavigate("messages")}
                   className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
                 >
                   <MessageCircle className="w-6 h-6" />
@@ -175,7 +191,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => onNavigate('login')}
+                  onClick={() => onNavigate("login")}
                   className="text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 font-medium transition-colors duration-200"
                 >
                   Kirish
@@ -183,7 +199,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => onNavigate('register')}
+                  onClick={() => onNavigate("register")}
                   className="bg-gradient-to-r from-teal-600 to-green-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-all duration-300"
                 >
                   Ro'yhatdan O'tish
@@ -198,7 +214,11 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
             >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </motion.button>
           </div>
         </div>
@@ -209,7 +229,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
         {isMenuOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
             className="md:hidden bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700"
@@ -228,13 +248,13 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                   {item.label}
                 </button>
               ))}
-              
+
               {!isAuthenticated && (
                 <>
                   <hr className="my-3 border-gray-200 dark:border-gray-700" />
                   <button
                     onClick={() => {
-                      onNavigate('login');
+                      onNavigate("login");
                       setIsMenuOpen(false);
                     }}
                     className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
@@ -244,7 +264,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                   </button>
                   <button
                     onClick={() => {
-                      onNavigate('register');
+                      onNavigate("register");
                       setIsMenuOpen(false);
                     }}
                     className="w-full bg-gradient-to-r from-teal-600 to-green-600 text-white px-3 py-2 rounded-lg font-medium hover:shadow-lg transition-all duration-300"
