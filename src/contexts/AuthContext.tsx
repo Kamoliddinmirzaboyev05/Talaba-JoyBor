@@ -84,12 +84,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
   }, []);
 
-  const login = (access: string, refresh: string) => {
+  const login = async (access: string, refresh: string) => {
     localStorage.setItem('access', access);
     localStorage.setItem('refresh', refresh);
     try {
+      // JWT dan asosiy ma'lumotlarni olish
       const decoded: any = jwtDecode(access);
-      setUser(decoded);
+      // API dan to'liq profile ma'lumotlarini olish
+      const response = await fetch('https://joyboryangi.pythonanywhere.com/profile/', {
+        headers: {
+          'Authorization': `Bearer ${access}`,
+        },
+      });
+      if (response.ok) {
+        const profileData = await response.json();
+        setUser(profileData);
+      } else {
+        setUser({
+          username: decoded.username || '',
+          first_name: decoded.first_name || '',
+          last_name: decoded.last_name || '',
+          email: decoded.email || '',
+        });
+      }
     } catch {
       setUser(null);
     }

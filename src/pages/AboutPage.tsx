@@ -70,7 +70,7 @@ const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
     {
       year: '2023',
       title: 'Loyiha Boshlandi',
-      description: 'JoyBor.uz g\'oyasi tug\'ildi va dastlabki ishlanma yaratildi'
+      description: 'JoyBor g\'oyasi tug\'ildi va dastlabki ishlanma yaratildi'
     },
     {
       year: '2024',
@@ -108,7 +108,7 @@ const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
             Biz Haqimizda
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            JoyBor.uz - O'zbekiston talabalarining yashash joy muammosini hal qilish uchun yaratilgan 
+            JoyBor - O'zbekiston talabalarining yashash joy muammosini hal qilish uchun yaratilgan 
             zamonaviy platforma. Bizning maqsadimiz har bir talabaga qulay, xavfsiz va arzon yashash 
             joyini topishda yordam berishdir.
           </p>
@@ -167,7 +167,7 @@ const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
         >
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-              Nima Uchun JoyBor.uz?
+              Nima Uchun JoyBor?
             </h2>
             <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
               Bizning platformamizning asosiy afzalliklari va xususiyatlari
@@ -209,7 +209,7 @@ const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
               Bizning Yo'limiz
             </h2>
             <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              JoyBor.uz platformasining rivojlanish tarixi
+              JoyBor platformasining rivojlanish tarixi
             </p>
           </div>
 
@@ -262,7 +262,7 @@ const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
               Bizning Jamoa
             </h2>
             <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              JoyBor.uz ortidagi professional jamoa a'zolari
+              JoyBor ortidagi professional jamoa a'zolari
             </p>
           </div>
 
@@ -307,7 +307,7 @@ const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
             Bizga Qo'shiling!
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-            JoyBor.uz jamoasiga qo'shiling va O'zbekiston talabalarining hayotini 
+            JoyBor jamoasiga qo'shiling va O'zbekiston talabalarining hayotini 
             yaxshilashda bizga yordam bering.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

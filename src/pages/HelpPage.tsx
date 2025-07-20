@@ -26,8 +26,8 @@ const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
     general: [
       {
         id: 'what-is-joybor',
-        question: 'JoyBor.uz nima?',
-        answer: 'JoyBor.uz - bu O\'zbekistondagi talabalar uchun yotoqxona va ijara xonadonlarini topishga yordam beruvchi platforma. Bu yerda siz universitetingizga yaqin, qulay va arzon yashash joylarini topishingiz mumkin.'
+        question: 'JoyBor nima?',
+        answer: 'JoyBor - bu O\'zbekistondagi talabalar uchun yotoqxona va ijara xonadonlarini topishga yordam beruvchi platforma. Bu yerda siz universitetingizga yaqin, qulay va arzon yashash joylarini topishingiz'
       },
       {
         id: 'how-it-works',
@@ -37,7 +37,7 @@ const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
       {
         id: 'is-free',
         question: 'Xizmat bepulmi?',
-        answer: 'Ha, JoyBor.uz platformasidan foydalanish talabalar uchun mutlaqo bepul. Siz faqat tanlagan yashash joyingiz uchun to\'lov qilasiz.'
+        answer: 'Ha, JoyBor platformasidan foydalanish talabalar uchun mutlaqo bepul. Siz faqat tanlagan yashash joyingiz uchun to\'lov qilasiz.'
       }
     ],
     registration: [
@@ -144,9 +144,9 @@ const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
     },
     {
       title: 'Email yuborish',
-      description: 'help@joybor.uz',
+      description: 'help@joybor',
       icon: Mail,
-      action: () => window.open('mailto:help@joybor.uz'),
+      action: () => window.open('mailto:help@joybor'),
       color: 'from-purple-500 to-purple-600'
     }
   ];
@@ -175,7 +175,7 @@ const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
             Yordam Markazi
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            JoyBor.uz platformasidan foydalanish bo'yicha barcha savollaringizga javob toping
+            JoyBor platformasidan foydalanish bo'yicha barcha savollaringizga javob toping
           </p>
         </motion.div>
 

@@ -71,8 +71,8 @@ function AppContent() {
   }, [darkMode]);
 
   // Called after successful login/register
-  const handleAuthSuccess = (access: string, refresh: string) => {
-    login(access, refresh);
+  const handleAuthSuccess = async (access: string, refresh: string) => {
+    await login(access, refresh);
     setCurrentPage('dashboard');
   };
 

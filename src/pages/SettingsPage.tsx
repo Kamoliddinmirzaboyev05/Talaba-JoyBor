@@ -165,26 +165,22 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onNavigate, darkMode,
                     {/* Dark Mode */}
                     <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-xl">
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                          darkMode ? 'bg-gray-800 text-yellow-400' : 'bg-yellow-100 text-yellow-600'
-                        }`}>
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${darkMode ? 'bg-gray-800 text-yellow-400' : 'bg-yellow-100 text-yellow-600'}`}>
                           {darkMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
                         </div>
                         <div>
                           <h3 className="font-medium text-gray-900 dark:text-white">
-                            Qorong'u rejim
+                            {darkMode ? "Qorong'u rejim" : "Kunduzgi rejim"}
                           </h3>
                           <p className="text-sm text-gray-600 dark:text-gray-300">
-                            Ko'zlaringizni himoya qilish uchun qorong'u mavzuni yoqing
+                            {darkMode ? "Ko'zlaringizni himoya qilish uchun qorong'u mavzuni yoqing" : "Yorqin va qulay kunduzgi mavzuni yoqing"}
                           </p>
                         </div>
                       </div>
                       <motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={() => onDarkModeToggle(!darkMode)}
-                        className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
-                          darkMode ? 'bg-teal-600' : 'bg-gray-300'
-                        }`}
+                        className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${darkMode ? 'bg-teal-600' : 'bg-gray-300'}`}
                       >
                         <motion.div
                           animate={{ x: darkMode ? 24 : 0 }}
@@ -231,7 +227,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onNavigate, darkMode,
                             Mobil ilova
                           </h3>
                           <p className="text-sm text-gray-600 dark:text-gray-300">
-                            JoyBor.uz mobil ilovasini yuklab oling
+                            JoyBor mobil ilovasini yuklab oling
                           </p>
                         </div>
                       </div>

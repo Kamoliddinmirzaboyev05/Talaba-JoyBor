@@ -59,7 +59,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
               <Home className="w-6 h-6 text-white" />
             </div>
             <span className="text-xl font-bold text-gray-900 dark:text-white">
-              JoyBor.uz
+              JoyBor
             </span>
           </motion.button>
 

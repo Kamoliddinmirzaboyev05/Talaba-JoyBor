@@ -29,7 +29,7 @@ const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
     {
       icon: Mail,
       title: 'Email',
-      details: ['info@joybor.uz', 'support@joybor.uz'],
+      details: ['info@joybor', 'support@joybor'],
       color: 'from-blue-500 to-blue-600'
     },
     {
@@ -48,8 +48,8 @@ const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
 
   const socialLinks = [
     { icon: Telegram, label: 'Telegram', url: 'https://t.me/joybor_uz', color: 'text-blue-500' },
-    { icon: Instagram, label: 'Instagram', url: 'https://instagram.com/joybor.uz', color: 'text-pink-500' },
-    { icon: Facebook, label: 'Facebook', url: 'https://facebook.com/joybor.uz', color: 'text-blue-600' }
+    { icon: Instagram, label: 'Instagram', url: 'https://instagram.com/joybor', color: 'text-pink-500' },
+    { icon: Facebook, label: 'Facebook', url: 'https://facebook.com/joybor', color: 'text-blue-600' }
   ];
 
   const subjects = [
