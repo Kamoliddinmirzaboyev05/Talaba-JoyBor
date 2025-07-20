@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -16,7 +17,7 @@ import SettingsPage from './pages/SettingsPage';
 import HelpPage from './pages/HelpPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
-import { User, Listing } from './types';
+import { Listing } from './types';
 
 export type PageType = 
   | 'home' 
@@ -36,11 +37,23 @@ export type PageType =
   | 'about' 
   | 'contact';
 
-function App() {
+function AppContent() {
   const [currentPage, setCurrentPage] = useState<PageType>('home');
-  const [user, setUser] = useState<User | null>(null);
+  const { user, isLoading, isAuthenticated, login, logout } = useAuth();
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [darkMode, setDarkMode] = useState(false);
+
+  // Redirect logic on load
+  useEffect(() => {
+    if (!isLoading) {
+      if (isAuthenticated) {
+        setCurrentPage('dashboard');
+      } else {
+        setCurrentPage('login');
+      }
+    }
+    // eslint-disable-next-line
+  }, [isLoading, isAuthenticated]);
 
   useEffect(() => {
     // Check for system dark mode preference
@@ -57,13 +70,14 @@ function App() {
     }
   }, [darkMode]);
 
-  const handleLogin = (userData: User) => {
-    setUser(userData);
+  // Called after successful login/register
+  const handleAuthSuccess = (access: string, refresh: string) => {
+    login(access, refresh);
     setCurrentPage('dashboard');
   };
 
   const handleLogout = () => {
-    setUser(null);
+    logout();
     setCurrentPage('home');
   };
 
@@ -77,9 +91,9 @@ function App() {
       case 'home':
         return <HomePage onNavigate={setCurrentPage} user={user} onListingSelect={handleListingSelect} />;
       case 'login':
-        return <LoginPage onNavigate={setCurrentPage} onLogin={handleLogin} />;
+        return <LoginPage onNavigate={setCurrentPage} onAuthSuccess={handleAuthSuccess} />;
       case 'register':
-        return <RegisterPage onNavigate={setCurrentPage} onLogin={handleLogin} />;
+        return <RegisterPage onNavigate={setCurrentPage} onAuthSuccess={handleAuthSuccess} />;
       case 'dormitories':
         return <DormitoriesPage onNavigate={setCurrentPage} user={user} onListingSelect={handleListingSelect} />;
       case 'rentals':
@@ -89,7 +103,7 @@ function App() {
       case 'application':
         return <ApplicationPage listing={selectedListing} onNavigate={setCurrentPage} user={user} />;
       case 'profile':
-        return <ProfilePage user={user} onNavigate={setCurrentPage} onUserUpdate={setUser} />;
+        return <ProfilePage user={user} onNavigate={setCurrentPage} />;
       case 'dashboard':
         return <DashboardPage user={user} onNavigate={setCurrentPage} onLogout={handleLogout} />;
       case 'messages':
@@ -111,6 +125,17 @@ function App() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Yuklanmoqda...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark' : ''}`}>
       <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
@@ -119,6 +144,14 @@ function App() {
         </AnimatePresence>
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

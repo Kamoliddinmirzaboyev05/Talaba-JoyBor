@@ -1,54 +1,46 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, UserPlus, Phone, GraduationCap, Car as IdCard } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, UserPlus, Phone } from 'lucide-react';
 import { PageType } from '../App';
-import { User as UserType } from '../types';
 
 interface RegisterPageProps {
   onNavigate: (page: PageType) => void;
-  onLogin: (user: UserType) => void;
+  onAuthSuccess: (access: string, refresh: string) => void;
 }
 
-const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onLogin }) => {
+const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onAuthSuccess }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
-    name: '',
+    first_name: '',
+    last_name: '',
+    username: '',
     email: '',
     phone: '',
-    university: '',
-    studentId: '',
     password: '',
-    confirmPassword: ''
+    password2: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const universities = [
-    'TATU - Toshkent Axborot Texnologiyalari Universiteti',
-    'MirU - Mirzo Ulug\'bek nomidagi O\'zMU',
-    'TDTU - Toshkent Davlat Texnika Universiteti',
-    'TIQXMMI - Toshkent Irrigatsiya va Qishloq Xo\'jaligi Mexanizatsiyasi Instituti',
-    'TATU Qarshi - TATU Qarshi filiali',
-    'Boshqa'
-  ];
+  const [generalError, setGeneralError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setErrors({});
+    setGeneralError('');
 
-    // Validation
+    // Frontend validation
     const newErrors: Record<string, string> = {};
-    if (!formData.name) newErrors.name = 'Ism familiya kiritilishi shart';
+    if (!formData.first_name) newErrors.first_name = 'Ism kiritilishi shart';
+    if (!formData.last_name) newErrors.last_name = 'Familiya kiritilishi shart';
+    if (!formData.username) newErrors.username = 'Foydalanuvchi nomi kiritilishi shart';
     if (!formData.email) newErrors.email = 'Email manzil kiritilishi shart';
     if (!formData.phone) newErrors.phone = 'Telefon raqam kiritilishi shart';
-    if (!formData.university) newErrors.university = 'Universitet tanlanishi shart';
-    if (!formData.studentId) newErrors.studentId = 'Talaba ID raqami kiritilishi shart';
     if (!formData.password) newErrors.password = 'Parol kiritilishi shart';
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Parollar mos kelmaydi';
+    if (formData.password !== formData.password2) {
+      newErrors.password2 = 'Parollar mos kelmaydi';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -57,29 +49,54 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onLogin }) => {
       return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      const mockUser: UserType = {
-        id: '1',
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        university: formData.university,
-        studentId: formData.studentId,
-        isVerified: false,
-        preferences: {
-          maxPrice: 2000000,
-          roomType: 'single',
-          location: 'Toshkent',
-          amenities: []
+    try {
+      const response = await fetch('https://joyboryangi.pythonanywhere.com/register/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        savedListings: [],
-        applications: []
-      };
-      
-      onLogin(mockUser);
+        body: JSON.stringify({
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          username: formData.username,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password,
+          password2: formData.password2,
+        }),
+      });
+
+      // Wait for the response body only after response.ok
+      if (!response.ok) {
+        const errorData = await response.json();
+        // Show field errors if available
+        if (typeof errorData === 'object') {
+          const fieldErrors: Record<string, string> = {};
+          Object.keys(errorData).forEach((key) => {
+            if (Array.isArray(errorData[key])) {
+              fieldErrors[key] = errorData[key][0];
+            } else if (typeof errorData[key] === 'string') {
+              fieldErrors[key] = errorData[key];
+            }
+          });
+          setErrors(fieldErrors);
+          setGeneralError(errorData.detail || 'Ro\'yhatdan o\'tishda xatolik yuz berdi');
+        } else {
+          setGeneralError('Ro\'yhatdan o\'tishda xatolik yuz berdi');
+        }
+        return;
+      }
+
+      // Only parse JSON after ok
+      const data = await response.json();
+      localStorage.setItem('access', data.access);
+      localStorage.setItem('refresh', data.refresh);
+      onAuthSuccess(data.access, data.refresh); // update auth context and UI
+    } catch (err) {
+      setGeneralError('Network error or server is down.');
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -92,7 +109,9 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onLogin }) => {
   const nextStep = () => {
     const step1Errors: Record<string, string> = {};
     if (currentStep === 1) {
-      if (!formData.name) step1Errors.name = 'Ism familiya kiritilishi shart';
+      if (!formData.first_name) step1Errors.first_name = 'Ism kiritilishi shart';
+      if (!formData.last_name) step1Errors.last_name = 'Familiya kiritilishi shart';
+      if (!formData.username) step1Errors.username = 'Foydalanuvchi nomi kiritilishi shart';
       if (!formData.email) step1Errors.email = 'Email manzil kiritilishi shart';
       if (!formData.phone) step1Errors.phone = 'Telefon raqam kiritilishi shart';
       
@@ -175,6 +194,16 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onLogin }) => {
           className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8"
         >
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* General Error */}
+            {generalError && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm"
+              >
+                {generalError}
+              </motion.div>
+            )}
             {currentStep === 1 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
@@ -182,30 +211,86 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onLogin }) => {
                 transition={{ duration: 0.4 }}
                 className="space-y-6"
               >
-                {/* Name Field */}
+                {/* First Name Field */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Ism Familiya
+                    Ism
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                       type="text"
-                      value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      value={formData.first_name}
+                      onChange={(e) => handleInputChange('first_name', e.target.value)}
                       className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                        errors.name ? 'border-red-500' : 'border-gray-300'
+                        errors.first_name ? 'border-red-500' : 'border-gray-300'
                       }`}
-                      placeholder="Aziz Karimov"
+                      placeholder="Aziz"
                     />
                   </div>
-                  {errors.name && (
+                  {errors.first_name && (
                     <motion.p
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="text-red-500 text-sm mt-1"
                     >
-                      {errors.name}
+                      {errors.first_name}
+                    </motion.p>
+                  )}
+                </div>
+
+                {/* Last Name Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Familiya
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      value={formData.last_name}
+                      onChange={(e) => handleInputChange('last_name', e.target.value)}
+                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+                        errors.last_name ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      placeholder="Karimov"
+                    />
+                  </div>
+                  {errors.last_name && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-red-500 text-sm mt-1"
+                    >
+                      {errors.last_name}
+                    </motion.p>
+                  )}
+                </div>
+
+                {/* Username Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Foydalanuvchi Nomi
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      value={formData.username}
+                      onChange={(e) => handleInputChange('username', e.target.value)}
+                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+                        errors.username ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      placeholder="aziz_karimov"
+                    />
+                  </div>
+                  {errors.username && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-red-500 text-sm mt-1"
+                    >
+                      {errors.username}
                     </motion.p>
                   )}
                 </div>
@@ -285,65 +370,6 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onLogin }) => {
                 transition={{ duration: 0.4 }}
                 className="space-y-6"
               >
-                {/* University Field */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Universitet
-                  </label>
-                  <div className="relative">
-                    <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <select
-                      value={formData.university}
-                      onChange={(e) => handleInputChange('university', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                        errors.university ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                    >
-                      <option value="">Universitetni tanlang</option>
-                      {universities.map((uni) => (
-                        <option key={uni} value={uni}>{uni}</option>
-                      ))}
-                    </select>
-                  </div>
-                  {errors.university && (
-                    <motion.p
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-red-500 text-sm mt-1"
-                    >
-                      {errors.university}
-                    </motion.p>
-                  )}
-                </div>
-
-                {/* Student ID Field */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Talaba ID Raqami
-                  </label>
-                  <div className="relative">
-                    <IdCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      value={formData.studentId}
-                      onChange={(e) => handleInputChange('studentId', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                        errors.studentId ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="ST2024001"
-                    />
-                  </div>
-                  {errors.studentId && (
-                    <motion.p
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-red-500 text-sm mt-1"
-                    >
-                      {errors.studentId}
-                    </motion.p>
-                  )}
-                </div>
-
                 {/* Password Field */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -388,10 +414,10 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onLogin }) => {
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
-                      value={formData.confirmPassword}
-                      onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                      value={formData.password2}
+                      onChange={(e) => handleInputChange('password2', e.target.value)}
                       className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                        errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                        errors.password2 ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="Parolni qayta kiriting"
                     />
@@ -403,13 +429,13 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onLogin }) => {
                       {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
-                  {errors.confirmPassword && (
+                  {errors.password2 && (
                     <motion.p
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="text-red-500 text-sm mt-1"
                     >
-                      {errors.confirmPassword}
+                      {errors.password2}
                     </motion.p>
                   )}
                 </div>

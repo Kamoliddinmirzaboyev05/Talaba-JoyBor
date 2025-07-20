@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Home, MessageCircle, Bell, Heart, Calendar, TrendingUp, Users, MapPin, Star, Clock, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import { PageType } from '../App';
 import { User, Application } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
 
 interface DashboardPageProps {
@@ -12,6 +13,7 @@ interface DashboardPageProps {
 }
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ user, onNavigate, onLogout }) => {
+  const { logout } = useAuth();
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -29,6 +31,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ user, onNavigate, onLogou
       </div>
     );
   }
+
+  // Fix: get first name safely
+  const firstName = user?.name?.split(' ')[0] || user?.username || 'Foydalanuvchi';
 
   // Mock data for dashboard
   const stats = [
@@ -142,7 +147,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ user, onNavigate, onLogou
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header user={user} onNavigate={onNavigate} />
+      <Header onNavigate={onNavigate} />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
@@ -153,7 +158,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ user, onNavigate, onLogou
           className="mb-8"
         >
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Xush kelibsiz, {user.name.split(' ')[0]}! 👋
+            Xush kelibsiz, {firstName}! 👋
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
             Bu yerda sizning faoliyatingiz va arizalaringizni kuzatishingiz mumkin

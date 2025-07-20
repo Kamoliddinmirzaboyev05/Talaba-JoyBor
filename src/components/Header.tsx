@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, User, Bell, Menu, X, MessageCircle, Heart, Settings, LogOut, Search } from 'lucide-react';
 import { PageType } from '../App';
-import { User as UserType } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 
 interface HeaderProps {
-  user: UserType | null;
   onNavigate: (page: PageType) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ user, onNavigate }) => {
+const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
+  const { user, isAuthenticated, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
@@ -30,6 +30,19 @@ const Header: React.FC<HeaderProps> = ({ user, onNavigate }) => {
     { label: 'Bildirishnomalar', page: 'notifications' as PageType, icon: Bell },
     { label: 'Sozlamalar', page: 'settings' as PageType, icon: Settings }
   ];
+
+  const handleLogout = () => {
+    logout();
+    onNavigate('home');
+    setIsProfileMenuOpen(false);
+  };
+
+  // Helper: get display name and avatar
+  const displayName = user?.first_name && user?.last_name 
+    ? `${user.first_name} ${user.last_name}`.trim()
+    : user?.first_name || user?.username || 'Foydalanuvchi';
+  const avatarUrl = user?.image;
+  const avatarLetter = (user?.first_name || user?.username || 'F')[0].toUpperCase();
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow-lg sticky top-0 z-50">
@@ -74,7 +87,7 @@ const Header: React.FC<HeaderProps> = ({ user, onNavigate }) => {
 
           {/* User Actions */}
           <div className="flex items-center gap-4">
-            {user ? (
+            {isAuthenticated && user ? (
               <div className="flex items-center gap-3">
                 {/* Notifications */}
                 <motion.button
@@ -106,13 +119,19 @@ const Header: React.FC<HeaderProps> = ({ user, onNavigate }) => {
                     onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                     className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
                   >
-                    <div className="w-8 h-8 bg-gradient-to-r from-teal-600 to-green-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-semibold">
-                        {user.name.charAt(0)}
-                      </span>
-                    </div>
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt={displayName}
+                        className="w-8 h-8 rounded-full object-cover border-2 border-teal-500"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 bg-gradient-to-r from-teal-600 to-green-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                        {avatarLetter}
+                      </div>
+                    )}
                     <span className="hidden md:block text-gray-700 dark:text-gray-300 font-medium">
-                      {user.name.split(' ')[0]}
+                      {displayName}
                     </span>
                   </motion.button>
 
@@ -140,10 +159,7 @@ const Header: React.FC<HeaderProps> = ({ user, onNavigate }) => {
                         ))}
                         <hr className="my-2 border-gray-200 dark:border-gray-700" />
                         <button
-                          onClick={() => {
-                            onNavigate('home');
-                            setIsProfileMenuOpen(false);
-                          }}
+                          onClick={handleLogout}
                           className="w-full flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
                         >
                           <LogOut className="w-4 h-4" />
@@ -213,7 +229,7 @@ const Header: React.FC<HeaderProps> = ({ user, onNavigate }) => {
                 </button>
               ))}
               
-              {!user && (
+              {!isAuthenticated && (
                 <>
                   <hr className="my-3 border-gray-200 dark:border-gray-700" />
                   <button

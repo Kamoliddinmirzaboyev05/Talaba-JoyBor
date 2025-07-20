@@ -1,58 +1,165 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { motion } from 'framer-motion';
-import { User, Mail, Phone, GraduationCap, MapPin, Edit3, Save, X, Camera, Shield, Star } from 'lucide-react';
+import { User, Mail, Phone, GraduationCap, MapPin, Edit3, Save, X, Camera, Shield, Star, Lock } from 'lucide-react';
 import { PageType } from '../App';
-import { User as UserType } from '../types';
 import Header from '../components/Header';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ProfilePageProps {
-  user: UserType | null;
   onNavigate: (page: PageType) => void;
-  onUserUpdate: (user: UserType) => void;
 }
 
-const ProfilePage: React.FC<ProfilePageProps> = ({ user, onNavigate, onUserUpdate }) => {
+interface ProfileData {
+  username: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  image?: string;
+  bio?: string;
+  phone?: string;
+  birth_date?: string;
+  address?: string;
+  telegram?: string;
+}
+
+const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
+  const { updateUserProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [editedUser, setEditedUser] = useState(user);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [editedProfile, setEditedProfile] = useState<ProfileData | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('profile');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  if (!user || !editedUser) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Tizimga kirish talab etiladi
-          </h2>
-          <button
-            onClick={() => onNavigate('login')}
-            className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors duration-200"
-          >
-            Tizimga kirish
-          </button>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setLoading(true);
+      setError('');
+      const token = localStorage.getItem('access');
+      if (!token) {
+        onNavigate('login');
+        return;
+      }
+      try {
+        const res = await fetch('https://joyboryangi.pythonanywhere.com/profile/', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        if (res.status === 401) {
+          onNavigate('login');
+          return;
+        }
+        if (!res.ok) {
+          setError('Profilni yuklashda xatolik.');
+          setLoading(false);
+          return;
+        }
+        const data = await res.json();
+        setProfile(data);
+        setEditedProfile(data);
+        setImageFile(null);
+        setPassword('');
+      } catch (e) {
+        setError('Tarmoq xatosi yoki server ishlamayapti.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+    // eslint-disable-next-line
+  }, []);
 
-  const handleSave = () => {
-    onUserUpdate(editedUser);
-    setIsEditing(false);
+  const handleSave = async (e: FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setError('');
+    setSuccess('');
+    setFieldErrors({});
+    const token = localStorage.getItem('access');
+    if (!token || !editedProfile) {
+      onNavigate('login');
+      return;
+    }
+    try {
+      const formData = new FormData();
+      formData.append('username', editedProfile.username);
+      formData.append('first_name', editedProfile.first_name || '');
+      formData.append('last_name', editedProfile.last_name || '');
+      if (password) formData.append('password', password);
+      if (imageFile) formData.append('image', imageFile);
+      formData.append('bio', editedProfile.bio || '');
+      formData.append('phone', editedProfile.phone || '');
+      formData.append('birth_date', editedProfile.birth_date || '');
+      formData.append('address', editedProfile.address || '');
+      formData.append('telegram', editedProfile.telegram || '');
+
+      const res = await fetch('https://joyboryangi.pythonanywhere.com/profile/', {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      if (res.status === 401) {
+        onNavigate('login');
+        return;
+      }
+      const data = await res.json();
+      if (!res.ok) {
+        if (typeof data === 'object') {
+          const fieldErrs: Record<string, string> = {};
+          Object.keys(data).forEach((key) => {
+            if (Array.isArray(data[key])) {
+              fieldErrs[key] = data[key][0];
+            } else if (typeof data[key] === 'string') {
+              fieldErrs[key] = data[key];
+            }
+          });
+          setFieldErrors(fieldErrs);
+        }
+        setError(data.detail || 'Profilni yangilashda xatolik.');
+        setSaving(false);
+        return;
+      }
+      setProfile(data);
+      setEditedProfile(data);
+      setImageFile(null);
+      setPassword('');
+      setSuccess('Profil muvaffaqiyatli yangilandi!');
+      setIsEditing(false);
+      updateUserProfile(data); // Update AuthContext after successful profile update
+    } catch (e) {
+      setError('Tarmoq xatosi yoki server ishlamayapti.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancel = () => {
-    setEditedUser(user);
+    setEditedProfile(profile);
+    setImageFile(null);
+    setPassword('');
     setIsEditing(false);
+    setError('');
+    setSuccess('');
+    setFieldErrors({});
   };
 
-  const handleInputChange = (field: string, value: string | number) => {
-    setEditedUser(prev => prev ? { ...prev, [field]: value } : null);
+  const handleInputChange = (field: keyof ProfileData, value: string) => {
+    setEditedProfile(prev => prev ? { ...prev, [field]: value } : null);
+    setFieldErrors(prev => ({ ...prev, [field]: '' }));
   };
 
-  const handlePreferencesChange = (field: string, value: string | number | string[]) => {
-    setEditedUser(prev => prev ? {
-      ...prev,
-      preferences: { ...prev.preferences, [field]: value }
-    } : null);
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setImageFile(e.target.files[0]);
+    }
   };
 
   const tabs = [
@@ -62,10 +169,34 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onNavigate, onUserUpdat
     { id: 'security', label: 'Xavfsizlik', icon: Shield }
   ];
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Profil yuklanmoqda...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 text-lg">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile || !editedProfile) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header user={user} onNavigate={onNavigate} />
-      
+      <Header onNavigate={onNavigate} />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div
@@ -81,7 +212,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onNavigate, onUserUpdat
             Shaxsiy ma'lumotlaringizni boshqaring
           </p>
         </motion.div>
-
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <div className="lg:col-span-1">
@@ -94,31 +224,46 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onNavigate, onUserUpdat
               {/* Profile Picture */}
               <div className="text-center mb-6">
                 <div className="relative inline-block">
-                  <div className="w-24 h-24 bg-gradient-to-r from-teal-600 to-green-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                    {user.name.charAt(0)}
-                  </div>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="absolute bottom-0 right-0 w-8 h-8 bg-teal-600 text-white rounded-full flex items-center justify-center hover:bg-teal-700 transition-colors duration-200"
-                  >
-                    <Camera className="w-4 h-4" />
-                  </motion.button>
+                  {editedProfile.image && !imageFile ? (
+                    <img
+                      src={editedProfile.image}
+                      alt="Profile"
+                      className="w-24 h-24 rounded-full object-cover border-4 border-teal-500 mx-auto"
+                    />
+                  ) : imageFile ? (
+                    <img
+                      src={URL.createObjectURL(imageFile)}
+                      alt="Profile preview"
+                      className="w-24 h-24 rounded-full object-cover border-4 border-teal-500 mx-auto"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 bg-gradient-to-r from-teal-600 to-green-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                      {editedProfile.username?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                  )}
+                  {isEditing && (
+                    <motion.label
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="absolute bottom-0 right-0 w-8 h-8 bg-teal-600 text-white rounded-full flex items-center justify-center hover:bg-teal-700 transition-colors duration-200 cursor-pointer"
+                    >
+                      <Camera className="w-4 h-4" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageChange}
+                      />
+                    </motion.label>
+                  )}
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mt-3">
-                  {user.name}
+                  {editedProfile.username}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  {user.university}
+                  {editedProfile.bio || ''}
                 </p>
-                {user.isVerified && (
-                  <div className="inline-flex items-center gap-1 mt-2 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full text-xs">
-                    <Shield className="w-3 h-3" />
-                    Tasdiqlangan
-                  </div>
-                )}
               </div>
-
               {/* Navigation */}
               <nav className="space-y-2">
                 {tabs.map((tab) => (
@@ -140,7 +285,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onNavigate, onUserUpdat
               </nav>
             </motion.div>
           </div>
-
           {/* Main Content */}
           <div className="lg:col-span-3">
             <motion.div
@@ -151,7 +295,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onNavigate, onUserUpdat
             >
               {/* Profile Tab */}
               {activeTab === 'profile' && (
-                <div>
+                <form onSubmit={handleSave}>
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
                       Shaxsiy Ma'lumotlar
@@ -162,6 +306,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onNavigate, onUserUpdat
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setIsEditing(true)}
                         className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors duration-200"
+                        type="button"
                       >
                         <Edit3 className="w-4 h-4" />
                         Tahrirlash
@@ -171,17 +316,20 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onNavigate, onUserUpdat
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          onClick={handleSave}
                           className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
+                          type="submit"
+                          disabled={saving}
                         >
                           <Save className="w-4 h-4" />
-                          Saqlash
+                          {saving ? 'Saqlanmoqda...' : 'Saqlash'}
                         </motion.button>
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={handleCancel}
                           className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                          type="button"
+                          disabled={saving}
                         >
                           <X className="w-4 h-4" />
                           Bekor qilish
@@ -189,330 +337,178 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onNavigate, onUserUpdat
                       </div>
                     )}
                   </div>
-
+                  {success && <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-green-700 dark:text-green-400 text-sm">{success}</div>}
+                  {error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">{error}</div>}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Ism Familiya
+                        Foydalanuvchi nomi
                       </label>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                           type="text"
-                          value={editedUser.name}
-                          onChange={(e) => handleInputChange('name', e.target.value)}
+                          value={editedProfile.username}
+                          onChange={(e) => handleInputChange('username', e.target.value)}
+                          className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${fieldErrors.username ? 'border-red-500' : ''}`}
+                          placeholder="Foydalanuvchi nomi"
                           disabled={!isEditing}
-                          className={`w-full pl-10 pr-4 py-3 border rounded-xl transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                            isEditing 
-                              ? 'border-gray-300 focus:ring-2 focus:ring-teal-500 focus:border-transparent' 
-                              : 'border-gray-200 bg-gray-50 dark:bg-gray-700'
-                          }`}
                         />
+                        {fieldErrors.username && <div className="text-red-500 text-xs mt-1">{fieldErrors.username}</div>}
                       </div>
                     </div>
-
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Email Manzil
+                        Ism
+                      </label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                          type="text"
+                          value={editedProfile.first_name || ''}
+                          onChange={(e) => handleInputChange('first_name', e.target.value)}
+                          className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${fieldErrors.first_name ? 'border-red-500' : ''}`}
+                          placeholder="Ism"
+                          disabled={!isEditing}
+                        />
+                        {fieldErrors.first_name && <div className="text-red-500 text-xs mt-1">{fieldErrors.first_name}</div>}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Familiya
+                      </label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                          type="text"
+                          value={editedProfile.last_name || ''}
+                          onChange={(e) => handleInputChange('last_name', e.target.value)}
+                          className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${fieldErrors.last_name ? 'border-red-500' : ''}`}
+                          placeholder="Familiya"
+                          disabled={!isEditing}
+                        />
+                        {fieldErrors.last_name && <div className="text-red-500 text-xs mt-1">{fieldErrors.last_name}</div>}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Email
                       </label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                           type="email"
-                          value={editedUser.email}
-                          onChange={(e) => handleInputChange('email', e.target.value)}
-                          disabled={!isEditing}
-                          className={`w-full pl-10 pr-4 py-3 border rounded-xl transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                            isEditing 
-                              ? 'border-gray-300 focus:ring-2 focus:ring-teal-500 focus:border-transparent' 
-                              : 'border-gray-200 bg-gray-50 dark:bg-gray-700'
-                          }`}
+                          value={editedProfile.email}
+                          disabled
+                          className="w-full pl-10 pr-4 py-3 border rounded-xl bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400"
+                          placeholder="Email"
                         />
                       </div>
                     </div>
-
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Telefon Raqam
+                        Telefon
                       </label>
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                           type="tel"
-                          value={editedUser.phone}
+                          value={editedProfile.phone || ''}
                           onChange={(e) => handleInputChange('phone', e.target.value)}
+                          className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${fieldErrors.phone ? 'border-red-500' : ''}`}
+                          placeholder="Telefon raqam"
                           disabled={!isEditing}
-                          className={`w-full pl-10 pr-4 py-3 border rounded-xl transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                            isEditing 
-                              ? 'border-gray-300 focus:ring-2 focus:ring-teal-500 focus:border-transparent' 
-                              : 'border-gray-200 bg-gray-50 dark:bg-gray-700'
-                          }`}
                         />
+                        {fieldErrors.phone && <div className="text-red-500 text-xs mt-1">{fieldErrors.phone}</div>}
                       </div>
                     </div>
-
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Universitet
+                        Tug'ilgan sana
                       </label>
                       <div className="relative">
-                        <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                          type="date"
+                          value={editedProfile.birth_date || ''}
+                          onChange={(e) => handleInputChange('birth_date', e.target.value)}
+                          className={`w-full pl-4 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${fieldErrors.birth_date ? 'border-red-500' : ''}`}
+                          placeholder="YYYY-MM-DD"
+                          disabled={!isEditing}
+                        />
+                        {fieldErrors.birth_date && <div className="text-red-500 text-xs mt-1">{fieldErrors.birth_date}</div>}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Manzil
+                      </label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                           type="text"
-                          value={editedUser.university}
-                          disabled
-                          className="w-full pl-10 pr-4 py-3 border border-gray-200 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400 rounded-xl"
+                          value={editedProfile.address || ''}
+                          onChange={(e) => handleInputChange('address', e.target.value)}
+                          className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${fieldErrors.address ? 'border-red-500' : ''}`}
+                          placeholder="Manzil"
+                          disabled={!isEditing}
                         />
+                        {fieldErrors.address && <div className="text-red-500 text-xs mt-1">{fieldErrors.address}</div>}
                       </div>
                     </div>
-
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Talaba ID
+                        Telegram
                       </label>
-                      <input
-                        type="text"
-                        value={editedUser.studentId}
-                        disabled
-                        className="w-full px-4 py-3 border border-gray-200 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400 rounded-xl"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Preferences Tab */}
-              {activeTab === 'preferences' && (
-                <div>
-                  <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
-                    Qidiruv Afzalliklari
-                  </h2>
-
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Maksimal Narx (so'm)
-                      </label>
-                      <input
-                        type="number"
-                        value={editedUser.preferences.maxPrice}
-                        onChange={(e) => handlePreferencesChange('maxPrice', parseInt(e.target.value))}
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Xona Turi
-                      </label>
-                      <select
-                        value={editedUser.preferences.roomType}
-                        onChange={(e) => handlePreferencesChange('roomType', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
-                      >
-                        <option value="single">Yakka xona</option>
-                        <option value="double">Ikki kishilik</option>
-                        <option value="triple">Uch kishilik</option>
-                        <option value="apartment">Kvartira</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Afzal Ko'rilgan Joylashuv
-                      </label>
-                      <input
-                        type="text"
-                        value={editedUser.preferences.location}
-                        onChange={(e) => handlePreferencesChange('location', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
-                        placeholder="Masalan: Chilonzor, Yunusobod"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                        Kerakli Qulayliklar
-                      </label>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {['WiFi', 'Konditsioner', 'Oshxona', 'Parking', 'Xavfsizlik', 'Sport zali'].map((amenity) => (
-                          <label key={amenity} className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={editedUser.preferences.amenities.includes(amenity)}
-                              onChange={(e) => {
-                                const newAmenities = e.target.checked
-                                  ? [...editedUser.preferences.amenities, amenity]
-                                  : editedUser.preferences.amenities.filter(a => a !== amenity);
-                                handlePreferencesChange('amenities', newAmenities);
-                              }}
-                              className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
-                            />
-                            <span className="text-sm text-gray-700 dark:text-gray-300">{amenity}</span>
-                          </label>
-                        ))}
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={editedProfile.telegram || ''}
+                          onChange={(e) => handleInputChange('telegram', e.target.value)}
+                          className={`w-full pl-4 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${fieldErrors.telegram ? 'border-red-500' : ''}`}
+                          placeholder="@username"
+                          disabled={!isEditing}
+                        />
+                        {fieldErrors.telegram && <div className="text-red-500 text-xs mt-1">{fieldErrors.telegram}</div>}
                       </div>
                     </div>
-
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={handleSave}
-                      className="w-full bg-gradient-to-r from-teal-600 to-green-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
-                    >
-                      Afzalliklarni Saqlash
-                    </motion.button>
-                  </div>
-                </div>
-              )}
-
-              {/* Applications Tab */}
-              {activeTab === 'applications' && (
-                <div>
-                  <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
-                    Mening Arizalarim
-                  </h2>
-
-                  {user.applications.length === 0 ? (
-                    <div className="text-center py-12">
-                      <GraduationCap className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                        Hali arizalar yo'q
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-300 mb-6">
-                        Yotoqxona yoki ijara xonadoni topib, birinchi arizangizni yuboring
-                      </p>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => onNavigate('home')}
-                        className="bg-gradient-to-r from-teal-600 to-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
-                      >
-                        Qidirishni Boshlash
-                      </motion.button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {user.applications.map((application) => (
-                        <div key={application.id} className="border border-gray-200 dark:border-gray-700 rounded-xl p-6">
-                          <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                              {application.listingTitle}
-                            </h3>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              application.status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
-                              application.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
-                              application.status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
-                              'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                            }`}>
-                              {application.status === 'approved' ? 'Tasdiqlangan' :
-                               application.status === 'pending' ? 'Kutilmoqda' :
-                               application.status === 'rejected' ? 'Rad etilgan' :
-                               'Suhbat'}
-                            </span>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-600 dark:text-gray-300">Yuborilgan:</span>
-                              <span className="ml-2 text-gray-900 dark:text-white">
-                                {new Date(application.submittedAt).toLocaleDateString('uz-UZ')}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-gray-600 dark:text-gray-300">Yangilangan:</span>
-                              <span className="ml-2 text-gray-900 dark:text-white">
-                                {new Date(application.updatedAt).toLocaleDateString('uz-UZ')}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          {application.notes && (
-                            <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                              <p className="text-sm text-gray-700 dark:text-gray-300">
-                                <strong>Izoh:</strong> {application.notes}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Security Tab */}
-              {activeTab === 'security' && (
-                <div>
-                  <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
-                    Xavfsizlik Sozlamalari
-                  </h2>
-
-                  <div className="space-y-6">
-                    <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                        Parolni O'zgartirish
-                      </h3>
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Joriy Parol
-                          </label>
-                          <input
-                            type="password"
-                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Yangi Parol
-                          </label>
-                          <input
-                            type="password"
-                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Parolni Tasdiqlang
-                          </label>
-                          <input
-                            type="password"
-                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
-                          />
-                        </div>
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="bg-teal-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-teal-700 transition-colors duration-200"
-                        >
-                          Parolni Yangilash
-                        </motion.button>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Bio
+                      </label>
+                      <div className="relative">
+                        <textarea
+                          value={editedProfile.bio || ''}
+                          onChange={(e) => handleInputChange('bio', e.target.value)}
+                          className={`w-full pl-4 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${fieldErrors.bio ? 'border-red-500' : ''}`}
+                          placeholder="O'zingiz haqida qisqacha ma'lumot"
+                          disabled={!isEditing}
+                          rows={3}
+                        />
+                        {fieldErrors.bio && <div className="text-red-500 text-xs mt-1">{fieldErrors.bio}</div>}
                       </div>
                     </div>
-
-                    <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                        Hisobni Tasdiqlash
-                      </h3>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-gray-600 dark:text-gray-300 mb-1">
-                            Email tasdiqlash
-                          </p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Email manzilingiz tasdiqlangan
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                          <Shield className="w-5 h-5" />
-                          <span className="text-sm font-medium">Tasdiqlangan</span>
-                        </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Parol (ixtiyoriy)
+                      </label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${fieldErrors.password ? 'border-red-500' : ''}`}
+                          placeholder="Yangi parol (ixtiyoriy)"
+                          disabled={!isEditing}
+                        />
+                        {fieldErrors.password && <div className="text-red-500 text-xs mt-1">{fieldErrors.password}</div>}
                       </div>
                     </div>
                   </div>
-                </div>
+                </form>
               )}
+              {/* Other tabs can be implemented as needed */}
             </motion.div>
           </div>
         </div>
