@@ -1,0 +1,31 @@
+User-agent: *
+Allow: /
+
+# Sitemap joylashuvi
+Sitemap: https://joyboronline.uz/sitemap.xml
+
+# Qidirish sahifalarini indekslashga ruxsat berish
+Allow: /kurslar
+Allow: /topshiriqlar
+Allow: /resurslar
+Allow: /resume
+Allow: /kodlar
+Allow: /dashboard
+
+# Maxfiy sahifalarni bloklash
+Disallow: /admin/
+Disallow: /api/
+Disallow: /private/
+Disallow: /*.json$
+Disallow: /*?*
+
+# Crawl delay (ixtiyoriy)
+Crawl-delay: 1
+
+# Bing uchun maxsus qoidalar
+User-agent: bingbot
+Crawl-delay: 2
+
+# Yandex uchun maxsus qoidalar
+User-agent: YandexBot
+Crawl-delay: 1
