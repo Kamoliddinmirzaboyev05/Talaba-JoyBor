@@ -12,57 +12,25 @@
     <priority>1.0</priority>
   </url>
 
-  <!-- Kurslar sahifasi -->
+  <!-- Login sahifasi -->
   <url>
-    <loc>https://joyboronline.uz/kurslar</loc>
-    <lastmod>2025-01-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <!-- Topshiriqlar sahifasi -->
-  <url>
-    <loc>https://joyboronline.uz/topshiriqlar</loc>
-    <lastmod>2025-01-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Resurslar sahifasi -->
-  <url>
-    <loc>https://joyboronline.uz/resurslar</loc>
-    <lastmod>2025-01-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Resume sahifasi -->
-  <url>
-    <loc>https://joyboronline.uz/resume</loc>
+    <loc>https://joyboronline.uz/login</loc>
     <lastmod>2025-01-21</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.6</priority>
   </url>
 
-  <!-- Kodlar sahifasi -->
+  <!-- Ro'yxatdan o'tish sahifasi -->
   <url>
-    <loc>https://joyboronline.uz/kodlar</loc>
+    <loc>https://joyboronline.uz/register</loc>
     <lastmod>2025-01-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Dashboard sahifasi -->
-  <url>
-    <loc>https://joyboronline.uz/dashboard</loc>
-    <lastmod>2025-01-21</lastmod>
-    <changefreq>daily</changefreq>
+    <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <!-- Yotoqxonalar sahifasi -->
   <url>
-    <loc>https://joyboronline.uz/yotoqxonalar</loc>
+    <loc>https://joyboronline.uz/dormitories</loc>
     <lastmod>2025-01-21</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
@@ -70,23 +38,55 @@
 
   <!-- Ijara sahifasi -->
   <url>
-    <loc>https://joyboronline.uz/ijara</loc>
+    <loc>https://joyboronline.uz/rentals</loc>
     <lastmod>2025-01-21</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- Haqida sahifasi -->
+  <!-- Dashboard sahifasi -->
   <url>
-    <loc>https://joyboronline.uz/haqida</loc>
+    <loc>https://joyboronline.uz/dashboard</loc>
     <lastmod>2025-01-21</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>
 
-  <!-- Aloqa sahifasi -->
+  <!-- Profil sahifasi -->
   <url>
-    <loc>https://joyboronline.uz/aloqa</loc>
+    <loc>https://joyboronline.uz/profile</loc>
+    <lastmod>2025-01-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Xabarlar sahifasi -->
+  <url>
+    <loc>https://joyboronline.uz/messages</loc>
+    <lastmod>2025-01-21</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Saqlangan e'lonlar sahifasi -->
+  <url>
+    <loc>https://joyboronline.uz/saved</loc>
+    <lastmod>2025-01-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Bildirishnomalar sahifasi -->
+  <url>
+    <loc>https://joyboronline.uz/notifications</loc>
+    <lastmod>2025-01-21</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Sozlamalar sahifasi -->
+  <url>
+    <loc>https://joyboronline.uz/settings</loc>
     <lastmod>2025-01-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
@@ -94,10 +94,26 @@
 
   <!-- Yordam sahifasi -->
   <url>
-    <loc>https://joyboronline.uz/yordam</loc>
+    <loc>https://joyboronline.uz/help</loc>
     <lastmod>2025-01-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
+  </url>
+
+  <!-- Haqida sahifasi -->
+  <url>
+    <loc>https://joyboronline.uz/about</loc>
+    <lastmod>2025-01-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- Aloqa sahifasi -->
+  <url>
+    <loc>https://joyboronline.uz/contact</loc>
+    <lastmod>2025-01-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
 
 </urlset>
