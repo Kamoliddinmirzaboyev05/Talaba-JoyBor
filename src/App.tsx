@@ -45,12 +45,8 @@ function AppContent() {
 
   // Redirect logic on load
   useEffect(() => {
-    if (!isLoading) {
-      if (isAuthenticated) {
-        setCurrentPage('dashboard');
-      } else {
-        setCurrentPage('login');
-      }
+    if (!isLoading && isAuthenticated) {
+      setCurrentPage('dashboard');
     }
     // eslint-disable-next-line
   }, [isLoading, isAuthenticated]);
