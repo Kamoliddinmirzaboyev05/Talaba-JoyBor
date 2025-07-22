@@ -82,10 +82,19 @@ function AppContent() {
     setCurrentPage('listing-detail');
   };
 
+  const handleApplicationStart = (listing: Listing) => {
+    if (!isAuthenticated) {
+      setCurrentPage('login');
+      return;
+    }
+    setSelectedListing(listing);
+    setCurrentPage('application');
+  };
+
   const renderPage = () => {
     switch (currentPage) {
       case 'home':
-        return <HomePage onNavigate={setCurrentPage} user={user} onListingSelect={handleListingSelect} />;
+        return <HomePage onNavigate={setCurrentPage} user={user} onListingSelect={handleListingSelect} onApplicationStart={handleApplicationStart} />;
       case 'login':
         return <LoginPage onNavigate={setCurrentPage} onAuthSuccess={handleAuthSuccess} />;
       case 'register':
@@ -95,7 +104,7 @@ function AppContent() {
       case 'rentals':
         return <RentalsPage onNavigate={setCurrentPage} user={user} onListingSelect={handleListingSelect} />;
       case 'listing-detail':
-        return <ListingDetailPage listing={selectedListing} onNavigate={setCurrentPage} user={user} />;
+        return <ListingDetailPage listing={selectedListing} onNavigate={setCurrentPage} user={user} onApplicationStart={handleApplicationStart} />;
       case 'application':
         return <ApplicationPage listing={selectedListing} onNavigate={setCurrentPage} user={user} />;
       case 'profile':

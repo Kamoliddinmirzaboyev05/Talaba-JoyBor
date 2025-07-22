@@ -9,9 +9,10 @@ interface ListingDetailPageProps {
   listing: Listing | null;
   onNavigate: (page: PageType) => void;
   user: User | null;
+  onApplicationStart: (listing: Listing) => void;
 }
 
-const ListingDetailPage: React.FC<ListingDetailPageProps> = ({ listing, onNavigate, user }) => {
+const ListingDetailPage: React.FC<ListingDetailPageProps> = ({ listing, onNavigate, user, onApplicationStart }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
 
@@ -346,7 +347,7 @@ const ListingDetailPage: React.FC<ListingDetailPageProps> = ({ listing, onNaviga
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => onNavigate('application')}
+                      onClick={() => onApplicationStart(listing)}
                       className="w-full bg-gradient-to-r from-teal-600 to-green-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
                     >
                       <Calendar className="w-5 h-5" />
