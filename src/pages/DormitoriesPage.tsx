@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, MapPin, Star, Users, Wifi, Car, Shield, SlidersHorizontal } from 'lucide-react';
+import { Search, SlidersHorizontal } from 'lucide-react';
 import { PageType } from '../App';
 import { User, Listing } from '../types';
 import Header from '../components/Header';

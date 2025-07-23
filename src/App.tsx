@@ -48,7 +48,6 @@ function AppContent() {
     if (!isLoading && isAuthenticated) {
       setCurrentPage('dashboard');
     }
-    // eslint-disable-next-line
   }, [isLoading, isAuthenticated]);
 
   useEffect(() => {
@@ -72,10 +71,7 @@ function AppContent() {
     setCurrentPage('dashboard');
   };
 
-  const handleLogout = () => {
-    logout();
-    setCurrentPage('home');
-  };
+
 
   const handleListingSelect = (listing: Listing) => {
     setSelectedListing(listing);
@@ -100,9 +96,9 @@ function AppContent() {
       case 'register':
         return <RegisterPage onNavigate={setCurrentPage} onAuthSuccess={handleAuthSuccess} />;
       case 'dormitories':
-        return <DormitoriesPage onNavigate={setCurrentPage} user={user} onListingSelect={handleListingSelect} />;
+        return <DormitoriesPage onNavigate={setCurrentPage} user={user} onListingSelect={handleListingSelect} onApplicationStart={handleApplicationStart} />;
       case 'rentals':
-        return <RentalsPage onNavigate={setCurrentPage} user={user} onListingSelect={handleListingSelect} />;
+        return <RentalsPage onNavigate={setCurrentPage} user={user} onListingSelect={handleListingSelect} onApplicationStart={handleApplicationStart} />;
       case 'listing-detail':
         return <ListingDetailPage listing={selectedListing} onNavigate={setCurrentPage} user={user} onApplicationStart={handleApplicationStart} />;
       case 'application':
@@ -110,7 +106,7 @@ function AppContent() {
       case 'profile':
         return <ProfilePage user={user} onNavigate={setCurrentPage} />;
       case 'dashboard':
-        return <DashboardPage user={user} onNavigate={setCurrentPage} onLogout={handleLogout} />;
+        return <DashboardPage user={user} onNavigate={setCurrentPage} />;
       case 'messages':
         return <MessagesPage user={user} onNavigate={setCurrentPage} />;
       case 'saved':

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Search, MapPin, Star, Users, Shield, Clock, Home, Building2, ChevronRight, Filter, Heart, MessageCircle } from 'lucide-react';
+import { Search, Users, Shield, Home, Building2, ChevronRight, MessageCircle } from 'lucide-react';
 import { PageType } from '../App';
 import { User, Listing } from '../types';
 import Header from '../components/Header';
@@ -11,10 +11,10 @@ interface HomePageProps {
   onNavigate: (page: PageType) => void;
   user: User | null;
   onListingSelect: (listing: Listing) => void;
+  onApplicationStart: (listing: Listing) => void;
 }
 
 const HomePage: React.FC<HomePageProps> = ({ onNavigate, user, onListingSelect }) => {
-  const [searchQuery, setSearchQuery] = useState('');
 
   const featuredListings: Listing[] = [
     {
@@ -173,7 +173,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate, user, onListingSelect }
               </motion.button>
             </div>
 
-            <SearchBar onSearch={setSearchQuery} />
+            <SearchBar onSearch={() => {}} />
           </motion.div>
         </div>
       </section>

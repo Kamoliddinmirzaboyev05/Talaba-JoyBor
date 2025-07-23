@@ -50,7 +50,7 @@ api.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${access}`;
           return api(originalRequest);
         }
-      } catch (refreshError) {
+      } catch {
         // Refresh token failed, logout user
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
@@ -131,7 +131,7 @@ export const authAPI = {
   logout: async (): Promise<void> => {
     try {
       await api.post('/logout/');
-    } catch (error) {
+    } catch {
       // Even if logout fails, clear local storage
     }
     localStorage.removeItem('access_token');

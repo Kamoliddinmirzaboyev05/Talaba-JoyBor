@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { HelpCircle, Search, ChevronDown, ChevronRight, MessageCircle, Phone, Mail, Book, Video, FileText } from 'lucide-react';
+import { HelpCircle, Search, ChevronRight, MessageCircle, Phone, Mail, Book, Video, FileText } from 'lucide-react';
 import { PageType } from '../App';
 import Header from '../components/Header';
 
@@ -205,7 +205,7 @@ const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
         >
-          {supportOptions.map((option, index) => (
+          {supportOptions.map((option) => (
             <motion.button
               key={option.title}
               whileHover={{ scale: 1.02 }}

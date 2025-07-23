@@ -92,7 +92,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onAuthSuccess }
       localStorage.setItem('access', data.access);
       localStorage.setItem('refresh', data.refresh);
       onAuthSuccess(data.access, data.refresh); // update auth context and UI
-    } catch (err) {
+    } catch {
       setGeneralError('Network error or server is down.');
     } finally {
       setIsLoading(false);

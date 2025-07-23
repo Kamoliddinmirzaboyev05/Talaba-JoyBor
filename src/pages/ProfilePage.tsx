@@ -1,6 +1,6 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { motion } from 'framer-motion';
-import { User, Mail, Phone, GraduationCap, MapPin, Edit3, Save, X, Camera, Shield, Star, Lock } from 'lucide-react';
+import { User, Mail, Phone, GraduationCap, MapPin, Edit3, Save, X, Camera, Shield, Lock } from 'lucide-react';
 import { PageType } from '../App';
 import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
@@ -65,7 +65,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
         setEditedProfile(data);
         setImageFile(null);
         setPassword('');
-      } catch (e) {
+      } catch {
         setError('Tarmoq xatosi yoki server ishlamayapti.');
       } finally {
         setLoading(false);
@@ -134,7 +134,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
       setSuccess('Profil muvaffaqiyatli yangilandi!');
       setIsEditing(false);
       updateUserProfile(data); // Update AuthContext after successful profile update
-    } catch (e) {
+    } catch {
       setError('Tarmoq xatosi yoki server ishlamayapti.');
     } finally {
       setSaving(false);
