@@ -138,6 +138,48 @@ export const authAPI = {
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
   },
+
+  // Get provinces/cities list
+  getProvinces: async (): Promise<{ id: number; name: string }[]> => {
+    const response = await api.get('/provinces/');
+    return response.data;
+  },
+
+  // Get districts by province ID
+  getDistricts: async (provinceId: number): Promise<{ id: number; name: string; province: number }[]> => {
+    const response = await api.get(`/districts/?province=${provinceId}`);
+    return response.data;
+  },
+
+  // Submit application
+  submitApplication: async (applicationData: {
+    user: number;
+    dormitory: number;
+    room: number;
+    status: string;
+    comment: string;
+    name: string;
+    fio: string;
+    city: string;
+    village: string;
+    university: string;
+    phone: number;
+    passport: number;
+  }): Promise<any> => {
+    const token = localStorage.getItem('access');
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+    
+    const response = await api.post('/application/create/', applicationData, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  },
+
+
 };
 
 export default api; 

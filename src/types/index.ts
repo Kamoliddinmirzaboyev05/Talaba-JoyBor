@@ -1,20 +1,20 @@
 export interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
   phone: string;
   university: string;
-  studentId: string;
+  studentId?: string;
   avatar?: string;
-  isVerified: boolean;
-  preferences: {
+  isVerified?: boolean;
+  preferences?: {
     maxPrice: number;
     roomType: string;
     location: string;
     amenities: string[];
   };
-  savedListings: string[];
-  applications: Application[];
+  savedListings?: string[];
+  applications?: Application[];
 }
 
 export interface Listing {
@@ -53,19 +53,20 @@ export interface Listing {
 
 export interface Application {
   id: string;
-  listingId: string;
-  listingTitle: string;
-  status: 'pending' | 'approved' | 'rejected' | 'interview' | 'completed';
-  submittedAt: string;
-  updatedAt: string;
-  documents: {
-    studentId: boolean;
-    transcript: boolean;
-    recommendation: boolean;
-    passport: boolean;
-  };
-  notes?: string;
-  interviewDate?: string;
+  user: number;
+  dormitory: number;
+  room: number;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'INTERVIEW' | 'COMPLETED';
+  comment: string;
+  name: string;
+  fio: string;
+  city: string;
+  village: string;
+  university: string;
+  phone: number;
+  passport: number;
+  submittedAt?: string;
+  updatedAt?: string;
 }
 
 export interface Message {

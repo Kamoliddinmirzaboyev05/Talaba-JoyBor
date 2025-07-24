@@ -1,20 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import { PageType } from '../App';
 import { User, Listing } from '../types';
 import Header from '../components/Header';
 import ListingCard from '../components/ListingCard';
+import { authAPI } from '../services/api';
 
 interface DormitoriesPageProps {
   onNavigate: (page: PageType) => void;
   user: User | null;
   onListingSelect: (listing: Listing) => void;
+  onApplicationStart: (listing: Listing) => void;
 }
 
-const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onNavigate, user, onListingSelect }) => {
+const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onNavigate, user, onListingSelect, onApplicationStart }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({
+    location: '',
     university: '',
     priceRange: '',
     roomType: '',
@@ -22,6 +25,20 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onNavigate, user, onL
   });
   const [sortBy, setSortBy] = useState('rating');
   const [showFilters, setShowFilters] = useState(false);
+  const [provinces, setProvinces] = useState<{ id: number; name: string }[]>([]);
+
+  // API dan shaharlar ro'yxatini yuklash
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      try {
+        const data = await authAPI.getProvinces();
+        setProvinces(data);
+      } catch (error) {
+        console.error('Shaharlar yuklanmadi:', error);
+      }
+    };
+    fetchProvinces();
+  }, []);
 
   const dormitories: Listing[] = [
     {
@@ -173,7 +190,23 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onNavigate, user, onL
               transition={{ duration: 0.3 }}
               className="border-t border-gray-200 dark:border-gray-700 pt-4"
             >
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Shahar
+                  </label>
+                  <select
+                    value={selectedFilters.location}
+                    onChange={(e) => setSelectedFilters(prev => ({ ...prev, location: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="">Barcha shaharlar</option>
+                    {provinces.map(province => (
+                      <option key={province.id} value={province.name}>{province.name}</option>
+                    ))}
+                  </select>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Universitet

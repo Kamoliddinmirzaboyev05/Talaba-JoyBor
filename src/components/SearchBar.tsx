@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, MapPin, DollarSign, Filter, Calendar, X, Home, Building2, Users, Wifi } from 'lucide-react';
+import { authAPI } from '../services/api';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
+}
+
+interface Province {
+  id: number;
+  name: string;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
@@ -14,6 +20,33 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const [amenities, setAmenities] = useState('');
   const [distance, setDistance] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [loadingProvinces, setLoadingProvinces] = useState(true);
+
+  // API dan shaharlar ro'yxatini yuklash
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      try {
+        const data = await authAPI.getProvinces();
+        setProvinces(data);
+      } catch (error) {
+        console.error('Shaharlar yuklanmadi:', error);
+        // Fallback shaharlar ro'yxati
+        setProvinces([
+          { id: 1, name: 'Toshkent' },
+          { id: 2, name: 'Samarqand' },
+          { id: 3, name: 'Buxoro' },
+          { id: 4, name: 'Andijon' },
+          { id: 5, name: 'Namangan' },
+          { id: 6, name: 'Farg\'ona' }
+        ]);
+      } finally {
+        setLoadingProvinces(false);
+      }
+    };
+
+    fetchProvinces();
+  }, []);
 
   const handleSearch = () => {
     onSearch(searchQuery);
@@ -28,16 +61,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     setDistance('');
   };
 
-  const locations = [
-    'Toshkent',
-    'Samarqand', 
-    'Buxoro',
-    'Andijon',
-    'Namangan',
-    'Farg\'ona',
-    'Qarshi',
-    'Nukus'
-  ];
+
 
   const priceRanges = [
     { label: '100,000 - 500,000 so\'m', value: '100000-500000' },
@@ -105,11 +129,16 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
                 <select
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  className="w-full pl-12 pr-4 py-5 bg-gray-50 dark:bg-gray-700 border-0 rounded-2xl focus:ring-2 focus:ring-teal-500 focus:bg-white dark:focus:bg-gray-600 transition-all duration-300 text-gray-900 dark:text-white appearance-none cursor-pointer"
+                  disabled={loadingProvinces}
+                  className="w-full pl-12 pr-4 py-5 bg-gray-50 dark:bg-gray-700 border-0 rounded-2xl focus:ring-2 focus:ring-teal-500 focus:bg-white dark:focus:bg-gray-600 transition-all duration-300 text-gray-900 dark:text-white appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <option value="">Shahar</option>
-                  {locations.map((loc) => (
-                    <option key={loc} value={loc}>{loc}</option>
+                  <option value="">
+                    {loadingProvinces ? 'Yuklanmoqda...' : 'Shahar'}
+                  </option>
+                  {provinces.map((province) => (
+                    <option key={province.id} value={province.name}>
+                      {province.name}
+                    </option>
                   ))}
                 </select>
               </div>
