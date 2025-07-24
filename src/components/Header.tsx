@@ -10,7 +10,6 @@ import {
   Heart,
   Settings,
   LogOut,
-  Search,
 } from "lucide-react";
 import { PageType } from "../App";
 import { useAuth } from "../contexts/AuthContext";

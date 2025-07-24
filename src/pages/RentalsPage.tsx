@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, MapPin, Star, Users, Wifi, Car, Shield, SlidersHorizontal, Map } from 'lucide-react';
+import { Search, SlidersHorizontal, Map } from 'lucide-react';
 import { PageType } from '../App';
 import { User, Listing } from '../types';
 import Header from '../components/Header';
 import ListingCard from '../components/ListingCard';
+import { authAPI } from '../services/api';
 
 interface RentalsPageProps {
   onNavigate: (page: PageType) => void;
   user: User | null;
   onListingSelect: (listing: Listing) => void;
+  onApplicationStart: (listing: Listing) => void;
 }
 
-const RentalsPage: React.FC<RentalsPageProps> = ({ onNavigate, user, onListingSelect }) => {
+const RentalsPage: React.FC<RentalsPageProps> = ({ onNavigate, user, onListingSelect, onApplicationStart }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
   const [selectedFilters, setSelectedFilters] = useState({
@@ -22,6 +24,20 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onNavigate, user, onListingSe
     furnished: ''
   });
   const [sortBy, setSortBy] = useState('rating');
+  const [provinces, setProvinces] = useState<{ id: number; name: string }[]>([]);
+
+  // API dan shaharlar ro'yxatini yuklash
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      try {
+        const data = await authAPI.getProvinces();
+        setProvinces(data);
+      } catch (error) {
+        console.error('Shaharlar yuklanmadi:', error);
+      }
+    };
+    fetchProvinces();
+  }, []);
   const [showFilters, setShowFilters] = useState(false);
 
   const rentals: Listing[] = [

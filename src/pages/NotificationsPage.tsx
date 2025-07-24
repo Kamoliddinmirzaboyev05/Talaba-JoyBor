@@ -246,7 +246,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ user, onNavigate 
               <Filter className="w-5 h-5 text-gray-400" />
               <select
                 value={filter}
-                onChange={(e) => setFilter(e.target.value as any)}
+                onChange={(e) => setFilter(e.target.value as 'all' | 'unread' | 'application' | 'message' | 'system')}
                 className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
               >
                 <option value="all">Barchasi</option>

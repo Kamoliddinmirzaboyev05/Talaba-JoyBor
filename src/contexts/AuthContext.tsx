@@ -48,7 +48,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const token = localStorage.getItem('access');
       if (token) {
         try {
-          const decoded: any = jwtDecode(token);
+          const decoded: { user_id: number; exp: number } = jwtDecode(token);
           // API dan to'liq profile ma'lumotlarini yuklash
           const response = await fetch('https://joyboryangi.pythonanywhere.com/profile/', {
             headers: {
@@ -89,7 +89,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.setItem('refresh', refresh);
     try {
       // JWT dan asosiy ma'lumotlarni olish
-      const decoded: any = jwtDecode(access);
+      const decoded: { user_id: number; exp: number } = jwtDecode(access);
       // API dan to'liq profile ma'lumotlarini olish
       const response = await fetch('https://joyboryangi.pythonanywhere.com/profile/', {
         headers: {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Search, Filter, Grid, List, Trash2, Share2, Eye } from 'lucide-react';
+import { Heart, Search, Grid, List, Trash2, Share2, Eye } from 'lucide-react';
 import { PageType } from '../App';
 import { User, Listing } from '../types';
 import Header from '../components/Header';

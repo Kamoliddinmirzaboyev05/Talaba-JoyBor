@@ -7,9 +7,10 @@ interface ListingCardProps {
   listing: Listing;
   onSelect: () => void;
   user: User | null;
+  onApplicationStart?: (listing: Listing) => void;
 }
 
-const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user }) => {
+const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user, onApplicationStart }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
