@@ -1,0 +1,17 @@
+{
+  "name": "JoyBor - Talabalar uchun turar joy",
+  "short_name": "JoyBor",
+  "description": "O'zbekistondagi talabalar uchun yotoqxona va ijara uylarini topish platformasi",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0D9488",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
