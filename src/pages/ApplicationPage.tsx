@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, User, Phone, GraduationCap, CheckCircle, AlertCircle, MapPin, FileText, MessageSquare, Building, Upload, X } from 'lucide-react';
 import { PageType } from '../App';
-import { User as UserType, Listing } from '../types';
+import { User as UserType } from '../types';
 import Header from '../components/Header';
 import { authAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ApplicationPageProps {
-  listing: Listing | null;
   onNavigate: (page: PageType) => void;
   user: UserType | null;
 }
@@ -26,13 +26,19 @@ interface ApplicationFormData {
   passport_image_second?: File | null;
 }
 
-const ApplicationPage: React.FC<ApplicationPageProps> = ({ listing, onNavigate, user }) => {
+const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: propUser }) => {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  
+  // Debug logging
+  console.log('ApplicationPage - isAuthenticated:', isAuthenticated);
+  console.log('ApplicationPage - user:', user);
+  console.log('ApplicationPage - isLoading:', isLoading);
   const [formData, setFormData] = useState<ApplicationFormData>({
-    name: user?.name || '',
-    fio: user?.name || '',
+    name: user?.first_name || '',
+    fio: `${user?.first_name || ''} ${user?.last_name || ''}`.trim(),
     city: '',
     village: '',
-    university: user?.university || '',
+    university: '',
     phone: user?.phone || '',
     passport: '',
     comment: '',
@@ -43,22 +49,40 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ listing, onNavigate, 
   
   const [provinces, setProvinces] = useState<{ id: number; name: string }[]>([]);
   const [districts, setDistricts] = useState<{ id: number; name: string; province: number }[]>([]);
+  const [dormitories, setDormitories] = useState<any[]>([]);
   const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(null);
+  const [selectedDormitoryId, setSelectedDormitoryId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  // API dan viloyatlar ro'yxatini yuklash
+  // Update form data when user changes
   useEffect(() => {
-    const fetchProvinces = async () => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.first_name || '',
+        fio: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
+        phone: user.phone || '',
+      }));
+    }
+  }, [user]);
+
+  // API dan viloyatlar va yotoqxonalar ro'yxatini yuklash
+  useEffect(() => {
+    const fetchData = async () => {
       try {
-        const data = await authAPI.getProvinces();
-        setProvinces(data);
+        const [provincesData, dormitoriesData] = await Promise.all([
+          authAPI.getProvinces(),
+          authAPI.getDormitories()
+        ]);
+        setProvinces(provincesData);
+        setDormitories(dormitoriesData);
       } catch (error) {
-        console.error('Viloyatlar yuklanmadi:', error);
+        console.error('Ma\'lumotlar yuklanmadi:', error);
       }
     };
-    fetchProvinces();
+    fetchData();
   }, []);
   
   // Tanlangan viloyat o'zgarganda tumanlarni yuklash
@@ -79,18 +103,34 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ listing, onNavigate, 
     }
   }, [selectedProvinceId]);
 
-  if (!listing || !user) {
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Yuklanmoqda...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Authentication check
+  if (!isAuthenticated || !user || !user.id) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            {!user ? 'Tizimga kirish talab etiladi' : 'Elon topilmadi'}
+            Tizimga kirish talab etiladi
           </h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-6">
+            Ariza yuborish uchun avval tizimga kirishingiz kerak
+          </p>
           <button
-            onClick={() => onNavigate(!user ? 'login' : 'home')}
+            onClick={() => onNavigate('login')}
             className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors duration-200"
           >
-            {!user ? 'Tizimga kirish' : 'Bosh sahifaga qaytish'}
+            Tizimga kirish
           </button>
         </div>
       </div>
@@ -132,6 +172,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ listing, onNavigate, 
     const newErrors: Record<string, string> = {};
 
     // Required fields validation
+    if (!selectedDormitoryId) newErrors.dormitory = 'Yotoqxona tanlanishi shart';
     if (!formData.name.trim()) newErrors.name = 'Ism kiritilishi shart';
     if (!formData.fio.trim()) newErrors.fio = 'F.I.O kiritilishi shart';
     if (!formData.city.trim()) newErrors.city = 'Viloyat tanlanishi shart';
@@ -167,11 +208,19 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ listing, onNavigate, 
       
       if (!phoneNumber || phoneNumber.length < 9) {
         setErrors({ phone: 'Telefon raqam noto\'g\'ri formatda' });
+        setIsSubmitting(false);
         return;
       }
       
       if (!passportNumber || passportNumber.length < 8) {
         setErrors({ passport: 'Pasport raqami noto\'g\'ri formatda' });
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!selectedDormitoryId) {
+        setErrors({ general: 'Yotoqxona tanlanishi shart.' });
+        setIsSubmitting(false);
         return;
       }
 
@@ -180,7 +229,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ listing, onNavigate, 
       
       // Add required fields
       formDataToSend.append('user', user.id.toString());
-      formDataToSend.append('dormitory', listing.id);
+      formDataToSend.append('dormitory', selectedDormitoryId.toString());
       formDataToSend.append('room', '0');
       formDataToSend.append('status', 'PENDING');
       formDataToSend.append('comment', formData.comment.trim() || '');
@@ -214,6 +263,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ listing, onNavigate, 
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('API Error:', errorData);
         throw new Error(JSON.stringify(errorData));
       }
 
@@ -330,7 +380,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ listing, onNavigate, 
             >
               <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
                 <User className="w-6 h-6 text-teal-600" />
-                Shaxsiy Ma'lumotlar
+                Ariza Ma'lumotlari
               </h2>
               
               {errors.general && (
@@ -347,6 +397,36 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ listing, onNavigate, 
               )}
               
               <div className="space-y-6">
+                {/* Dormitory Selection */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Yotoqxona <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <select
+                      value={selectedDormitoryId}
+                      onChange={(e) => setSelectedDormitoryId(e.target.value)}
+                      className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+                        errors.dormitory ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                    >
+                      <option value="">Yotoqxonani tanlang</option>
+                      {dormitories.map((dormitory) => (
+                        <option key={dormitory.id} value={dormitory.id}>
+                          {dormitory.name} - {dormitory.university.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {errors.dormitory && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.dormitory}
+                    </p>
+                  )}
+                </div>
+
                 {/* Name and FIO */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -720,8 +800,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ listing, onNavigate, 
                     Avtomatik Belgilanadigan:
                   </h4>
                   <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                    <li>• Foydalanuvchi: {user?.name}</li>
-                    <li>• Yotoqxona: {listing?.title}</li>
+                    <li>• Foydalanuvchi: {user?.first_name} {user?.last_name}</li>
                     <li>• Xona: Avtomatik</li>
                     <li>• Holat: Kutilmoqda</li>
                   </ul>
@@ -732,6 +811,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ listing, onNavigate, 
                     Siz To'ldirasiz:
                   </h4>
                   <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                    <li>• Yotoqxona tanlash</li>
                     <li>• Shaxsiy ma'lumotlar</li>
                     <li>• Manzil (viloyat/tuman)</li>
                     <li>• Aloqa ma'lumotlari</li>

@@ -25,7 +25,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate, user, onListingSelect }
       try {
         setLoading(true);
         const dormitoriesData = await authAPI.getDormitories();
-        
+
         // Dormitory ma'lumotlarini Listing formatiga o'tkazish
         const convertedListings: Listing[] = dormitoriesData.slice(0, 3).map((dormitory: any) => ({
           id: dormitory.id.toString(),
@@ -53,7 +53,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate, user, onListingSelect }
             lng: dormitory.longitude
           }
         }));
-        
+
         setFeaturedListings(convertedListings);
       } catch (error) {
         console.error('Yotoqxonalar yuklanmadi:', error);
@@ -100,7 +100,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate, user, onListingSelect }
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
       <Header onNavigate={onNavigate} />
-      
+
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-teal-600/10 to-green-600/10 dark:from-teal-600/20 dark:to-green-600/20" />
@@ -113,16 +113,16 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate, user, onListingSelect }
           >
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
               <span className="bg-gradient-to-r from-teal-600 to-green-600 bg-clip-text text-transparent">
-                Mukammal Talaba
+                O'zingiz uchun qulay
               </span>
               <br />
-              Uyini Toping
+              Turar Joy Toping
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-              O'zbekistondagi eng yaxshi yotoqxonalar va ijara xonadonlarini bir joyda. 
+              O'zbekistondagi eng yaxshi yotoqxonalar va ijara xonadonlarini bir joyda.
               Tez, oson va ishonchli.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -144,7 +144,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate, user, onListingSelect }
               </motion.button>
             </div>
 
-            <SearchBar onSearch={() => {}} />
+            <SearchBar onSearch={() => { }} />
           </motion.div>
         </div>
       </section>
@@ -298,7 +298,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate, user, onListingSelect }
               Bugun O'z Uyingizni Toping!
             </h2>
             <p className="text-teal-100 mb-8 max-w-2xl mx-auto">
-              Minglab talabalar bizning platformamiz orqali o'zlariga mos yashash joyini topdilar. 
+              Minglab talabalar bizning platformamiz orqali o'zlariga mos yashash joyini topdilar.
               Endi sizning navbatingiz!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

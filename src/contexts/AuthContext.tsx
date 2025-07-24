@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { jwtDecode } from 'jwt-decode';
 
 interface User {
+  id?: number;
   username: string;
   first_name: string;
   last_name: string;
@@ -58,11 +59,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           
           if (response.ok) {
             const profileData = await response.json();
-            setUser(profileData);
+            setUser({ ...profileData, id: decoded.user_id });
             setIsAuthenticated(true);
           } else {
             // API dan ma'lumot olishda xatolik bo'lsa, JWT dan asosiy ma'lumotlarni ishlatamiz
             setUser({
+              id: decoded.user_id,
               username: decoded.username || '',
               first_name: decoded.first_name || '',
               last_name: decoded.last_name || '',
@@ -98,9 +100,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       if (response.ok) {
         const profileData = await response.json();
-        setUser(profileData);
+        setUser({ ...profileData, id: decoded.user_id });
       } else {
         setUser({
+          id: decoded.user_id,
           username: decoded.username || '',
           first_name: decoded.first_name || '',
           last_name: decoded.last_name || '',
