@@ -43,12 +43,12 @@ function AppContent() {
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [darkMode, setDarkMode] = useState(false);
 
-  // Redirect logic on load
+  // Redirect logic on load - only redirect to dashboard if on login/register page
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+    if (!isLoading && isAuthenticated && (currentPage === 'login' || currentPage === 'register')) {
       setCurrentPage('dashboard');
     }
-  }, [isLoading, isAuthenticated]);
+  }, [isLoading, isAuthenticated, currentPage]);
 
   useEffect(() => {
     // Check for system dark mode preference
@@ -102,7 +102,7 @@ function AppContent() {
       case 'listing-detail':
         return <ListingDetailPage listing={selectedListing} onNavigate={setCurrentPage} user={user} onApplicationStart={handleApplicationStart} />;
       case 'application':
-        return <ApplicationPage listing={selectedListing} onNavigate={setCurrentPage} user={user} />;
+        return <ApplicationPage onNavigate={setCurrentPage} user={user} />;
       case 'profile':
         return <ProfilePage user={user} onNavigate={setCurrentPage} />;
       case 'dashboard':
