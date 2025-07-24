@@ -32,63 +32,8 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ user, onNavigate 
     );
   }
 
-  // Mock notifications data
-  const notifications: Notification[] = [
-    {
-      id: '1',
-      title: 'Ariza tasdiqlandi',
-      message: 'TATU Yotoqxonasi uchun yuborgan arizangiz tasdiqlandi. Keyingi qadamlar haqida ma\'lumot olish uchun bog\'laning.',
-      type: 'application',
-      timestamp: '2024-01-15T14:30:00Z',
-      read: false,
-      actionUrl: '/applications'
-    },
-    {
-      id: '2',
-      title: 'Yangi xabar',
-      message: 'Aziz Karimov sizga xabar yubordi: "Kvartira haqida qo\'shimcha savollaringiz bormi?"',
-      type: 'message',
-      timestamp: '2024-01-15T13:45:00Z',
-      read: false,
-      actionUrl: '/messages'
-    },
-    {
-      id: '3',
-      title: 'Suhbat vaqti belgilandi',
-      message: 'Mirzo Ulug\'bek Yotoqxonasi bilan suhbat 18-yanvar, 10:00 da belgilandi.',
-      type: 'application',
-      timestamp: '2024-01-15T11:20:00Z',
-      read: true,
-      actionUrl: '/applications'
-    },
-    {
-      id: '4',
-      title: 'Yangi elonlar mavjud',
-      message: 'Sizning afzalliklaringizga mos 3 ta yangi elon qo\'shildi.',
-      type: 'system',
-      timestamp: '2024-01-15T09:15:00Z',
-      read: true,
-      actionUrl: '/dormitories'
-    },
-    {
-      id: '5',
-      title: 'Hujjat yuklash eslatmasi',
-      message: 'Arizangizni to\'ldirish uchun talaba guvohnomasi va o\'quv ma\'lumotnomasi yuklash kerak.',
-      type: 'reminder',
-      timestamp: '2024-01-14T16:30:00Z',
-      read: true,
-      actionUrl: '/applications'
-    },
-    {
-      id: '6',
-      title: 'Profil yangilandi',
-      message: 'Profilingiz muvaffaqiyatli yangilandi. Barcha ma\'lumotlar saqlandi.',
-      type: 'system',
-      timestamp: '2024-01-14T14:20:00Z',
-      read: true,
-      actionUrl: '/profile'
-    }
-  ];
+  // Hozircha bildirishnomalar uchun API yo'q, shuning uchun bo'sh array
+  const notifications: Notification[] = [];
 
   const filteredNotifications = notifications.filter(notification => {
     const matchesSearch = notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||

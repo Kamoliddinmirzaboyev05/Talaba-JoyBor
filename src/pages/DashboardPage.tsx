@@ -1,19 +1,40 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Home, MessageCircle, Bell, Heart, Calendar, TrendingUp, Users, MapPin, Star, Clock, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+import { Home, MessageCircle, Bell, Heart, Calendar, Users, MapPin, Clock, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import { PageType } from '../App';
 import { User, Application } from '../types';
-import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
+import { authAPI } from '../services/api';
 
 interface DashboardPageProps {
   user: User | null;
   onNavigate: (page: PageType) => void;
-  onLogout: () => void;
 }
 
-const DashboardPage: React.FC<DashboardPageProps> = ({ user, onNavigate, onLogout }) => {
-  const { logout } = useAuth();
+const DashboardPage: React.FC<DashboardPageProps> = ({ user, onNavigate }) => {
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // API dan arizalarni yuklash
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        setLoading(true);
+        const applicationsData = await authAPI.getApplications();
+        setApplications(applicationsData);
+      } catch (error) {
+        console.error('Arizalar yuklanmadi:', error);
+        setApplications([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchApplications();
+    }
+  }, [user]);
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -33,64 +54,14 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ user, onNavigate, onLogou
   }
 
   // Fix: get first name safely
-  const firstName = user?.name?.split(' ')[0] || user?.username || 'Foydalanuvchi';
+  const firstName = user?.name?.split(' ')[0] || 'Foydalanuvchi';
 
-  // Mock data for dashboard
+  // Dashboard statistikalari
   const stats = [
-    { label: 'Yuborilgan Arizalar', value: '3', icon: Calendar, color: 'text-blue-600', bg: 'bg-blue-100 dark:bg-blue-900/30' },
-    { label: 'Saqlangan Elonlar', value: '12', icon: Heart, color: 'text-red-600', bg: 'bg-red-100 dark:bg-red-900/30' },
-    { label: 'Yangi Xabarlar', value: '5', icon: MessageCircle, color: 'text-green-600', bg: 'bg-green-100 dark:bg-green-900/30' },
-    { label: 'Bildirishnomalar', value: '8', icon: Bell, color: 'text-purple-600', bg: 'bg-purple-100 dark:bg-purple-900/30' }
-  ];
-
-  const recentApplications: Application[] = [
-    {
-      id: '1',
-      listingId: '1',
-      listingTitle: 'TATU Yotoqxonasi - Zamonaviy Xonalar',
-      status: 'pending',
-      submittedAt: '2024-01-15T10:00:00Z',
-      updatedAt: '2024-01-15T10:00:00Z',
-      documents: {
-        studentId: true,
-        transcript: true,
-        recommendation: false,
-        passport: true
-      },
-      notes: 'Hujjatlar ko\'rib chiqilmoqda'
-    },
-    {
-      id: '2',
-      listingId: '2',
-      listingTitle: 'Zamonaviy 2-Xonali Kvartira',
-      status: 'approved',
-      submittedAt: '2024-01-10T14:30:00Z',
-      updatedAt: '2024-01-12T09:15:00Z',
-      documents: {
-        studentId: true,
-        transcript: true,
-        recommendation: true,
-        passport: true
-      },
-      notes: 'Ariza tasdiqlandi. Uy egasi bilan bog\'laning.',
-      interviewDate: '2024-01-20T15:00:00Z'
-    },
-    {
-      id: '3',
-      listingId: '3',
-      listingTitle: 'Mirzo Ulug\'bek Yotoqxonasi',
-      status: 'interview',
-      submittedAt: '2024-01-08T16:45:00Z',
-      updatedAt: '2024-01-14T11:20:00Z',
-      documents: {
-        studentId: true,
-        transcript: true,
-        recommendation: true,
-        passport: false
-      },
-      notes: 'Suhbat uchun tayyorlaning',
-      interviewDate: '2024-01-18T10:00:00Z'
-    }
+    { label: 'Yuborilgan Arizalar', value: applications.length.toString(), icon: Calendar, color: 'text-blue-600', bg: 'bg-blue-100 dark:bg-blue-900/30' },
+    { label: 'Kutilayotgan', value: applications.filter(app => app.status === 'PENDING').length.toString(), icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-100 dark:bg-yellow-900/30' },
+    { label: 'Tasdiqlangan', value: applications.filter(app => app.status === 'APPROVED').length.toString(), icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-100 dark:bg-green-900/30' },
+    { label: 'Rad etilgan', value: applications.filter(app => app.status === 'REJECTED').length.toString(), icon: XCircle, color: 'text-red-600', bg: 'bg-red-100 dark:bg-red-900/30' }
   ];
 
   const quickActions = [
@@ -102,14 +73,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ user, onNavigate, onLogou
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'approved':
+      case 'APPROVED':
         return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'pending':
+      case 'PENDING':
         return <Clock className="w-5 h-5 text-yellow-500" />;
-      case 'rejected':
+      case 'REJECTED':
         return <XCircle className="w-5 h-5 text-red-500" />;
-      case 'interview':
+      case 'INTERVIEW':
         return <AlertCircle className="w-5 h-5 text-blue-500" />;
+      case 'COMPLETED':
+        return <CheckCircle className="w-5 h-5 text-green-600" />;
       default:
         return <Clock className="w-5 h-5 text-gray-500" />;
     }
@@ -117,14 +90,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ user, onNavigate, onLogou
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'approved':
+      case 'APPROVED':
         return 'Tasdiqlangan';
-      case 'pending':
+      case 'PENDING':
         return 'Kutilmoqda';
-      case 'rejected':
+      case 'REJECTED':
         return 'Rad etilgan';
-      case 'interview':
+      case 'INTERVIEW':
         return 'Suhbat';
+      case 'COMPLETED':
+        return 'Yakunlangan';
       default:
         return 'Noma\'lum';
     }
@@ -132,14 +107,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ user, onNavigate, onLogou
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'approved':
+      case 'APPROVED':
         return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
-      case 'pending':
+      case 'PENDING':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
-      case 'rejected':
+      case 'REJECTED':
         return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
-      case 'interview':
+      case 'INTERVIEW':
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+      case 'COMPLETED':
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
     }
@@ -148,7 +125,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ user, onNavigate, onLogou
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header onNavigate={onNavigate} />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <motion.div
@@ -215,27 +192,32 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ user, onNavigate, onLogou
                 </motion.button>
               </div>
 
-              {recentApplications.length === 0 ? (
+              {loading ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600 dark:text-gray-300">Arizalar yuklanmoqda...</p>
+                </div>
+              ) : applications.length === 0 ? (
                 <div className="text-center py-12">
                   <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                     Hali arizalar yo'q
                   </h3>
                   <p className="text-gray-600 dark:text-gray-300 mb-6">
-                    Yotoqxona yoki ijara xonadoni topib, birinchi arizangizni yuboring
+                    Yotoqxona topib, birinchi arizangizni yuboring
                   </p>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => onNavigate('home')}
+                    onClick={() => onNavigate('dormitories')}
                     className="bg-gradient-to-r from-teal-600 to-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
                   >
-                    Qidirishni Boshlash
+                    Yotoqxona Qidirish
                   </motion.button>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {recentApplications.map((application, index) => (
+                  {applications.slice(0, 5).map((application, index) => (
                     <motion.div
                       key={application.id}
                       initial={{ opacity: 0, x: -20 }}
@@ -244,9 +226,14 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ user, onNavigate, onLogou
                       className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-md transition-shadow duration-200"
                     >
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-semibold text-gray-900 dark:text-white">
-                          {application.listingTitle}
-                        </h3>
+                        <div>
+                          <h3 className="font-semibold text-gray-900 dark:text-white">
+                            {application.dormitory.name}
+                          </h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {application.dormitory.university.name}
+                          </p>
+                        </div>
                         <div className="flex items-center gap-2">
                           {getStatusIcon(application.status)}
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(application.status)}`}>
@@ -254,21 +241,37 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ user, onNavigate, onLogou
                           </span>
                         </div>
                       </div>
-                      
-                      <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
-                        <span>
-                          Yuborilgan: {new Date(application.submittedAt).toLocaleDateString('uz-UZ')}
-                        </span>
-                        {application.interviewDate && (
-                          <span className="text-blue-600 dark:text-blue-400">
-                            Suhbat: {new Date(application.interviewDate).toLocaleDateString('uz-UZ')}
-                          </span>
-                        )}
+
+                      <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-300 mb-3">
+                        <div>
+                          <span className="font-medium">Ism:</span> {application.name}
+                        </div>
+                        <div>
+                          <span className="font-medium">Shahar:</span> {application.city}
+                        </div>
+                        <div>
+                          <span className="font-medium">Telefon:</span> {application.phone}
+                        </div>
+                        <div>
+                          <span className="font-medium">Universitet:</span> {application.university}
+                        </div>
                       </div>
-                      
-                      {application.notes && (
+
+                      {application.created_at && (
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          Yuborilgan: {new Date(application.created_at).toLocaleDateString('uz-UZ', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      )}
+
+                      {application.comment && (
                         <p className="mt-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 p-2 rounded-lg">
-                          {application.notes}
+                          <span className="font-medium">Izoh:</span> {application.comment}
                         </p>
                       )}
                     </motion.div>
@@ -291,7 +294,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ user, onNavigate, onLogou
                 Tezkor Harakatlar
               </h3>
               <div className="space-y-3">
-                {quickActions.map((action, index) => (
+                {quickActions.map((action) => (
                   <motion.button
                     key={action.label}
                     whileHover={{ scale: 1.02 }}
@@ -350,7 +353,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ user, onNavigate, onLogou
                   </div>
                 </div>
               </div>
-              
+
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
