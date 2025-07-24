@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, User, Phone, GraduationCap, CheckCircle, AlertCircle, MapPin, FileText, MessageSquare, Building, Upload, X } from 'lucide-react';
 import { PageType } from '../App';
-import { User as UserType } from '../types';
 import Header from '../components/Header';
 import { authAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
 interface ApplicationPageProps {
   onNavigate: (page: PageType) => void;
-  user: UserType | null;
+  selectedListing?: any | null;
 }
 
 interface ApplicationFormData {
@@ -26,13 +25,9 @@ interface ApplicationFormData {
   passport_image_second?: File | null;
 }
 
-const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: propUser }) => {
+const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedListing }) => {
   const { user, isAuthenticated, isLoading } = useAuth();
-  
-  // Debug logging
-  console.log('ApplicationPage - isAuthenticated:', isAuthenticated);
-  console.log('ApplicationPage - user:', user);
-  console.log('ApplicationPage - isLoading:', isLoading);
+
   const [formData, setFormData] = useState<ApplicationFormData>({
     name: user?.first_name || '',
     fio: `${user?.first_name || ''} ${user?.last_name || ''}`.trim(),
@@ -46,15 +41,22 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
     passport_image_first: null,
     passport_image_second: null
   });
-  
+
   const [provinces, setProvinces] = useState<{ id: number; name: string }[]>([]);
   const [districts, setDistricts] = useState<{ id: number; name: string; province: number }[]>([]);
   const [dormitories, setDormitories] = useState<any[]>([]);
   const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(null);
-  const [selectedDormitoryId, setSelectedDormitoryId] = useState<string>('');
+  const [selectedDormitoryId, setSelectedDormitoryId] = useState<string>(selectedListing?.id || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  // Debug logging
+  console.log('ApplicationPage - isAuthenticated:', isAuthenticated);
+  console.log('ApplicationPage - user:', user);
+  console.log('ApplicationPage - isLoading:', isLoading);
+  console.log('ApplicationPage - selectedListing:', selectedListing);
+  console.log('ApplicationPage - selectedDormitoryId:', selectedDormitoryId);
 
   // Update form data when user changes
   useEffect(() => {
@@ -84,7 +86,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
     };
     fetchData();
   }, []);
-  
+
   // Tanlangan viloyat o'zgarganda tumanlarni yuklash
   useEffect(() => {
     if (selectedProvinceId) {
@@ -142,7 +144,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
       ...prev,
       [field]: value
     }));
-    
+
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
@@ -156,7 +158,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
         setErrors(prev => ({ ...prev, [field]: 'Fayl hajmi 5MB dan oshmasligi kerak' }));
         return;
       }
-      
+
       // Check file type
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
       if (!allowedTypes.includes(file.type)) {
@@ -164,7 +166,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
         return;
       }
     }
-    
+
     handleInputChange(field, file);
   };
 
@@ -201,17 +203,17 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
     if (!validateForm()) return;
 
     setIsSubmitting(true);
-    
+
     try {
       const phoneNumber = formData.phone.replace(/\D/g, '');
       const passportNumber = formData.passport.replace(/\D/g, '');
-      
+
       if (!phoneNumber || phoneNumber.length < 9) {
         setErrors({ phone: 'Telefon raqam noto\'g\'ri formatda' });
         setIsSubmitting(false);
         return;
       }
-      
+
       if (!passportNumber || passportNumber.length < 8) {
         setErrors({ passport: 'Pasport raqami noto\'g\'ri formatda' });
         setIsSubmitting(false);
@@ -226,9 +228,9 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
 
       // Create FormData for file upload
       const formDataToSend = new FormData();
-      
+
       // Add required fields
-      formDataToSend.append('user', user.id.toString());
+      formDataToSend.append('user', user.id!.toString());
       formDataToSend.append('dormitory', selectedDormitoryId.toString());
       formDataToSend.append('room', '0');
       formDataToSend.append('status', 'PENDING');
@@ -240,7 +242,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
       formDataToSend.append('university', formData.university.trim());
       formDataToSend.append('phone', phoneNumber);
       formDataToSend.append('passport', passportNumber);
-      
+
       // Add files if they exist
       if (formData.document) {
         formDataToSend.append('document', formData.document);
@@ -271,11 +273,11 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
       setTimeout(() => {
         onNavigate('dashboard');
       }, 3000);
-      
+
     } catch (error: any) {
       console.error('Ariza yuborishda xatolik:', error);
       let errorMessage = 'Ariza yuborishda xatolik yuz berdi. Qaytadan urinib ko\'ring.';
-      
+
       try {
         const errorData = JSON.parse(error.message);
         if (errorData.detail) {
@@ -291,7 +293,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
       } catch {
         errorMessage = error.message || errorMessage;
       }
-      
+
       setErrors({ general: errorMessage });
     } finally {
       setIsSubmitting(false);
@@ -338,7 +340,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header onNavigate={onNavigate} />
-      
+
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <motion.button
@@ -382,7 +384,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
                 <User className="w-6 h-6 text-teal-600" />
                 Ariza Ma'lumotlari
               </h2>
-              
+
               {errors.general && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
@@ -395,37 +397,57 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
                   </div>
                 </motion.div>
               )}
-              
+
               <div className="space-y-6">
-                {/* Dormitory Selection */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Yotoqxona <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <select
-                      value={selectedDormitoryId}
-                      onChange={(e) => setSelectedDormitoryId(e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                        errors.dormitory ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                    >
-                      <option value="">Yotoqxonani tanlang</option>
-                      {dormitories.map((dormitory) => (
-                        <option key={dormitory.id} value={dormitory.id}>
-                          {dormitory.name} - {dormitory.university.name}
-                        </option>
-                      ))}
-                    </select>
+                {/* Dormitory Selection - only show if no selectedListing */}
+                {!selectedListing ? (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Yotoqxona <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <select
+                        value={selectedDormitoryId}
+                        onChange={(e) => setSelectedDormitoryId(e.target.value)}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.dormitory ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                      >
+                        <option value="">Yotoqxonani tanlang</option>
+                        {dormitories.map((dormitory) => (
+                          <option key={dormitory.id} value={dormitory.id}>
+                            {dormitory.name} - {dormitory.university.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {errors.dormitory && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.dormitory}
+                      </p>
+                    )}
                   </div>
-                  {errors.dormitory && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.dormitory}
-                    </p>
-                  )}
-                </div>
+                ) : (
+                  <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                      <Building className="w-6 h-6 text-teal-600" />
+                      <div>
+                        <h3 className="font-semibold text-teal-900 dark:text-teal-100">
+                          Tanlangan Yotoqxona
+                        </h3>
+                        <p className="text-teal-700 dark:text-teal-300">
+                          {selectedListing.name || selectedListing.title}
+                        </p>
+                        {selectedListing.university && (
+                          <p className="text-sm text-teal-600 dark:text-teal-400">
+                            {selectedListing.university.name || selectedListing.university}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Name and FIO */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -439,9 +461,8 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
                         type="text"
                         value={formData.name}
                         onChange={(e) => handleInputChange('name', e.target.value)}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                          errors.name ? 'border-red-500' : 'border-gray-300'
-                        }`}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.name ? 'border-red-500' : 'border-gray-300'
+                          }`}
                         placeholder="Aziz"
                       />
                     </div>
@@ -463,9 +484,8 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
                         type="text"
                         value={formData.fio}
                         onChange={(e) => handleInputChange('fio', e.target.value)}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                          errors.fio ? 'border-red-500' : 'border-gray-300'
-                        }`}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.fio ? 'border-red-500' : 'border-gray-300'
+                          }`}
                         placeholder="Karimov Aziz Akmalovich"
                       />
                     </div>
@@ -494,9 +514,8 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
                           setSelectedProvinceId(selectedProvince ? selectedProvince.id : null);
                           handleInputChange('village', '');
                         }}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                          errors.city ? 'border-red-500' : 'border-gray-300'
-                        }`}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.city ? 'border-red-500' : 'border-gray-300'
+                          }`}
                       >
                         <option value="">Viloyatni tanlang</option>
                         {provinces.map((province) => (
@@ -524,15 +543,14 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
                         value={formData.village}
                         onChange={(e) => handleInputChange('village', e.target.value)}
                         disabled={!selectedProvinceId || districts.length === 0}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                          errors.village ? 'border-red-500' : 'border-gray-300'
-                        } ${(!selectedProvinceId || districts.length === 0) ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.village ? 'border-red-500' : 'border-gray-300'
+                          } ${(!selectedProvinceId || districts.length === 0) ? 'opacity-60 cursor-not-allowed' : ''}`}
                       >
                         <option value="">
-                          {!selectedProvinceId 
-                            ? 'Avval viloyatni tanlang' 
-                            : districts.length === 0 
-                              ? 'Yuklanmoqda...' 
+                          {!selectedProvinceId
+                            ? 'Avval viloyatni tanlang'
+                            : districts.length === 0
+                              ? 'Yuklanmoqda...'
                               : 'Tumanni tanlang'}
                         </option>
                         {districts.map((district) => (
@@ -562,9 +580,8 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
                       type="text"
                       value={formData.university}
                       onChange={(e) => handleInputChange('university', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                        errors.university ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.university ? 'border-red-500' : 'border-gray-300'
+                        }`}
                       placeholder="TATU"
                     />
                   </div>
@@ -591,9 +608,8 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
                           const value = e.target.value.replace(/\D/g, '');
                           handleInputChange('phone', value);
                         }}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                          errors.phone ? 'border-red-500' : 'border-gray-300'
-                        }`}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.phone ? 'border-red-500' : 'border-gray-300'
+                          }`}
                         placeholder="998901234567"
                         maxLength={12}
                       />
@@ -616,9 +632,8 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
                         type="text"
                         value={formData.passport}
                         onChange={(e) => handleInputChange('passport', e.target.value.replace(/\D/g, ''))}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                          errors.passport ? 'border-red-500' : 'border-gray-300'
-                        }`}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.passport ? 'border-red-500' : 'border-gray-300'
+                          }`}
                         placeholder="123456789"
                         maxLength={10}
                       />
@@ -793,41 +808,82 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, user: pro
                 <Building className="w-5 h-5 text-teal-600" />
                 Ariza Ma'lumotlari
               </h3>
-              
+
               <div className="space-y-4">
-                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
-                    Avtomatik Belgilanadigan:
-                  </h4>
-                  <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                    <li>• Foydalanuvchi: {user?.first_name} {user?.last_name}</li>
-                    <li>• Xona: Avtomatik</li>
-                    <li>• Holat: Kutilmoqda</li>
-                  </ul>
+                {/* Tanlangan yotoqxona ma'lumotlari */}
+                {selectedListing && (
+                  <div className="bg-gradient-to-r from-teal-50 to-green-50 dark:from-teal-900/20 dark:to-green-900/20 border border-teal-200 dark:border-teal-800 rounded-xl p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-teal-600 to-green-600 rounded-full flex items-center justify-center">
+                        <Building className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-teal-900 dark:text-teal-100">
+                          {selectedListing.name || selectedListing.title}
+                        </h4>
+                        {selectedListing.university && (
+                          <p className="text-sm text-teal-700 dark:text-teal-300">
+                            {selectedListing.university.name || selectedListing.university}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg p-3">
+                      <p className="text-xs text-teal-800 dark:text-teal-200 font-medium">
+                        ✨ Siz ushbu yotoqxona uchun ariza yubormoqdasiz
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Motivatsion xabar */}
+                <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-pink-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                  <div className="text-center">
+                    <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <span className="text-xl">🎯</span>
+                    </div>
+                    <h4 className="font-bold text-gray-900 dark:text-white mb-2">
+                      Muvaffaqiyatga Bir Qadam!
+                    </h4>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                      Har bir maydonni diqqat bilan to'ldiring. To'liq va aniq ma'lumotlar sizning arizangizni tezroq ko'rib chiqishga yordam beradi.
+                    </p>
+                  </div>
                 </div>
 
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
-                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                    Siz To'ldirasiz:
-                  </h4>
-                  <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-                    <li>• Yotoqxona tanlash</li>
-                    <li>• Shaxsiy ma'lumotlar</li>
-                    <li>• Manzil (viloyat/tuman)</li>
-                    <li>• Aloqa ma'lumotlari</li>
-                    <li>• Hujjatlar (ixtiyoriy)</li>
-                    <li>• Qo'shimcha izohlar</li>
-                  </ul>
+                {/* Foydali maslahatlar */}
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-sm">💡</span>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-amber-900 dark:text-amber-100 mb-2">
+                        Foydali Maslahatlar
+                      </h4>
+                      <ul className="text-sm text-amber-800 dark:text-amber-200 space-y-1">
+                        <li>• Haqiqiy ma'lumotlarni kiriting</li>
+                        <li>• Telefon raqamingiz doim faol bo'lsin</li>
+                        <li>• Hujjat rasmlarini aniq tortib yuklang</li>
+                        <li>• Qo'shimcha izohda o'zingiz haqida yozing</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3">
-                  <h4 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-2">
-                    Eslatma:
-                  </h4>
-                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                    Barcha majburiy maydonlar (*) to'ldirilishi shart. 
-                    Hujjatlar ixtiyoriy, lekin arizangizni tezroq ko'rib chiqish uchun tavsiya etiladi.
-                  </p>
+                {/* Qo'llab-quvvatlash */}
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
+                  <div className="text-center">
+                    <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <span className="text-lg">🤝</span>
+                    </div>
+                    <h4 className="font-bold text-green-900 dark:text-green-100 mb-1">
+                      Biz Sizga Yordam Beramiz!
+                    </h4>
+                    <p className="text-xs text-green-700 dark:text-green-300">
+                      Savollaringiz bo'lsa, biz bilan bog'laning. Sizning muvaffaqiyatingiz - bizning maqsadimiz!
+                    </p>
+                  </div>
                 </div>
               </div>
             </motion.div>

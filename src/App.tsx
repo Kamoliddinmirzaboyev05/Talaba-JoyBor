@@ -102,7 +102,7 @@ function AppContent() {
       case 'listing-detail':
         return <ListingDetailPage listing={selectedListing} onNavigate={setCurrentPage} user={user} onApplicationStart={handleApplicationStart} />;
       case 'application':
-        return <ApplicationPage onNavigate={setCurrentPage} user={user} />;
+        return <ApplicationPage onNavigate={setCurrentPage} selectedListing={selectedListing} />;
       case 'profile':
         return <ProfilePage user={user} onNavigate={setCurrentPage} />;
       case 'dashboard':
