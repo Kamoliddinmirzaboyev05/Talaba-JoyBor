@@ -27,7 +27,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
     { label: "Bosh Sahifa", page: "home" as PageType, icon: Home },
     { label: "Yotoqxonalar", page: "dormitories" as PageType, icon: Home },
     { label: "Ijara Xonadonlar", page: "rentals" as PageType, icon: Home },
-    ...(isAuthenticated ? [{ label: "Ariza Yuborish", page: "application" as PageType, icon: User }] : []),
+
     { label: "Yordam", page: "help" as PageType, icon: MessageCircle },
     { label: "Biz Haqimizda", page: "about" as PageType, icon: User },
     { label: "Aloqa", page: "contact" as PageType, icon: MessageCircle },
@@ -93,14 +93,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
             >
               Ijara Xonadonlar
             </button>
-            {isAuthenticated && (
-              <button
-                onClick={() => onNavigate("application")}
-                className="bg-gradient-to-r from-teal-600 to-green-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-all duration-300"
-              >
-                Ariza Yuborish
-              </button>
-            )}
+
             <button
               onClick={() => onNavigate("help")}
               className="text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"

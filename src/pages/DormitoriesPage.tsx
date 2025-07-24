@@ -441,7 +441,7 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onNavigate, user, onL
                         onClick={() => onApplicationStart(convertDormitoryToListing(dormitory))}
                         className="px-4 py-2 border-2 border-teal-600 text-teal-600 rounded-lg font-medium hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all duration-300"
                       >
-                        Ariza
+                        Ariza Yuborish
                       </motion.button>
                     )}
                   </div>
