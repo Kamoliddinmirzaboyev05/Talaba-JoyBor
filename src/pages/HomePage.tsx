@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Users, Shield, Home, Building2, ChevronRight, MessageCircle } from 'lucide-react';
 import { PageType } from '../App';
@@ -6,6 +6,7 @@ import { User, Listing } from '../types';
 import Header from '../components/Header';
 import SearchBar from '../components/SearchBar';
 import ListingCard from '../components/ListingCard';
+import { authAPI } from '../services/api';
 
 interface HomePageProps {
   onNavigate: (page: PageType) => void;
@@ -15,85 +16,55 @@ interface HomePageProps {
 }
 
 const HomePage: React.FC<HomePageProps> = ({ onNavigate, user, onListingSelect }) => {
+  const [featuredListings, setFeaturedListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const featuredListings: Listing[] = [
-    {
-      id: '1',
-      title: 'TATU Yotoqxonasi - Zamonaviy Xonalar',
-      type: 'dormitory',
-      price: 300000,
-      location: 'Chilonzor, Toshkent',
-      university: 'TATU',
-      images: ['https://images.pexels.com/photos/1457842/pexels-photo-1457842.jpeg'],
-      amenities: ['WiFi', 'Konditsioner', 'Oshxona', 'Xavfsizlik'],
-      description: 'Zamonaviy jihozlangan yotoqxona xonalari',
-      capacity: 2,
-      available: true,
-      rating: 4.8,
-      reviews: 124,
-      features: {
-        furnished: true,
-        wifi: true,
-        parking: true,
-        security: true
-      },
-      rules: ['Sigaret chekish taqiqlanadi', 'Mehmonlar 22:00 gacha'],
-      coordinates: { lat: 41.2995, lng: 69.2401 }
-    },
-    {
-      id: '2',
-      title: 'Mirzo Ulug\'bek Yotoqxonasi',
-      type: 'dormitory',
-      price: 250000,
-      location: 'Mirzo Ulug\'bek, Toshkent',
-      university: 'MirU',
-      images: ['https://images.pexels.com/photos/271816/pexels-photo-271816.jpeg'],
-      amenities: ['WiFi', 'Oshxona', 'O\'quv xonasi', 'Sport zali'],
-      description: 'Qulay va arzon yotoqxona',
-      capacity: 3,
-      available: true,
-      rating: 4.5,
-      reviews: 89,
-      features: {
-        furnished: true,
-        wifi: true,
-        parking: false,
-        security: true
-      },
-      rules: ['Ovqat tayyorlash ruxsat etiladi', 'Shovqin qilish taqiqlanadi'],
-      coordinates: { lat: 41.3111, lng: 69.2797 }
-    },
-    {
-      id: '3',
-      title: 'Zamonaviy 2-Xonali Kvartira',
-      type: 'rental',
-      price: 2500000,
-      location: 'Yunusobod, Toshkent',
-      university: 'TDTU yaqinida',
-      images: ['https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg'],
-      amenities: ['WiFi', 'Konditsioner', 'Kir yuvish mashinasi', 'Balkon'],
-      description: 'To\'liq jihozlangan zamonaviy kvartira',
-      capacity: 4,
-      available: true,
-      rating: 4.9,
-      reviews: 67,
-      landlord: {
-        name: 'Aziz Karimov',
-        phone: '+998901234567',
-        email: 'aziz@example.com',
-        verified: true,
-        rating: 4.8
-      },
-      features: {
-        furnished: true,
-        wifi: true,
-        parking: true,
-        security: true
-      },
-      rules: ['Hayvonlar ruxsat etilmaydi', 'Sigaret chekish balkondan'],
-      coordinates: { lat: 41.3775, lng: 69.2718 }
-    }
-  ];
+  // API dan yotoqxonalarni yuklash
+  useEffect(() => {
+    const fetchDormitories = async () => {
+      try {
+        setLoading(true);
+        const dormitoriesData = await authAPI.getDormitories();
+        
+        // Dormitory ma'lumotlarini Listing formatiga o'tkazish
+        const convertedListings: Listing[] = dormitoriesData.slice(0, 3).map((dormitory: any) => ({
+          id: dormitory.id.toString(),
+          title: dormitory.name,
+          type: 'dormitory' as const,
+          price: dormitory.month_price,
+          location: dormitory.address,
+          university: dormitory.university.name,
+          images: dormitory.images.map((img: any) => img.image),
+          amenities: dormitory.amenities.map((amenity: any) => amenity.name),
+          description: dormitory.description,
+          capacity: dormitory.total_capacity,
+          available: dormitory.available_capacity > 0,
+          rating: 4.5, // Default rating
+          reviews: 0, // Default reviews
+          features: {
+            furnished: true,
+            wifi: dormitory.amenities.some((a: any) => a.name.toLowerCase().includes('wifi')),
+            parking: dormitory.amenities.some((a: any) => a.name.toLowerCase().includes('parking')),
+            security: dormitory.amenities.some((a: any) => a.name.toLowerCase().includes('security'))
+          },
+          rules: dormitory.rules || [],
+          coordinates: {
+            lat: dormitory.latitude,
+            lng: dormitory.longitude
+          }
+        }));
+        
+        setFeaturedListings(convertedListings);
+      } catch (error) {
+        console.error('Yotoqxonalar yuklanmadi:', error);
+        setFeaturedListings([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDormitories();
+  }, []);
 
   const stats = [
     { icon: Home, label: 'Yotoqxonalar', value: '150+', color: 'text-teal-600' },
@@ -218,22 +189,41 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate, user, onListingSelect }
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredListings.map((listing, index) => (
-              <motion.div
-                key={listing.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-              >
-                <ListingCard
-                  listing={listing}
-                  onSelect={() => onListingSelect(listing)}
-                  user={user}
-                />
-              </motion.div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-600 dark:text-gray-300">Yotoqxonalar yuklanmoqda...</p>
+              </div>
+            </div>
+          ) : featuredListings.length === 0 ? (
+            <div className="text-center py-12">
+              <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                Yotoqxonalar topilmadi
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Hozircha yotoqxonalar mavjud emas
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {featuredListings.map((listing, index) => (
+                <motion.div
+                  key={listing.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                >
+                  <ListingCard
+                    listing={listing}
+                    onSelect={() => onListingSelect(listing)}
+                    user={user}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          )}
 
           <motion.div
             initial={{ opacity: 0 }}

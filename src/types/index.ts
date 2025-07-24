@@ -51,10 +51,104 @@ export interface Listing {
   };
 }
 
+export interface Dormitory {
+  id: number;
+  university: {
+    id: number;
+    name: string;
+    address: string;
+    description: string;
+    contact: string;
+    logo: string | null;
+  };
+  admin: {
+    id: number;
+    username: string;
+    role: string;
+    email: string;
+  };
+  name: string;
+  address: string;
+  description: string;
+  images: {
+    id: number;
+    dormitory: {
+      id: number;
+      name: string;
+    };
+    image: string;
+  }[];
+  month_price: number;
+  year_price: number;
+  latitude: number;
+  longitude: number;
+  amenities: {
+    id: number;
+    name: string;
+    is_active: boolean;
+    type: string;
+  }[];
+  total_capacity: number;
+  available_capacity: number;
+  total_rooms: number;
+  distance_to_university: number;
+  rules: string[];
+}
+
+export interface Dormitory {
+  id: number;
+  university: {
+    id: number;
+    name: string;
+    address: string;
+    description: string;
+    contact: string;
+    logo: string | null;
+  };
+  admin: {
+    id: number;
+    username: string;
+    role: string;
+    email: string;
+  };
+  name: string;
+  address: string;
+  description: string;
+  images: {
+    id: number;
+    dormitory: {
+      id: number;
+      name: string;
+    };
+    image: string;
+  }[];
+  month_price: number;
+  year_price: number;
+  latitude: number;
+  longitude: number;
+  amenities: {
+    id: number;
+    name: string;
+    is_active: boolean;
+    type: string;
+  }[];
+  total_capacity: number;
+  available_capacity: number;
+  total_rooms: number;
+  distance_to_university: number;
+  rules: string[];
+}
+
 export interface Application {
-  id: string;
+  id: number;
   user: number;
-  dormitory: number;
+  dormitory: {
+    id: number;
+    name: string;
+    university: {
+      name: string;
+    };
+  };
   room: number;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'INTERVIEW' | 'COMPLETED';
   comment: string;
@@ -65,8 +159,8 @@ export interface Application {
   university: string;
   phone: number;
   passport: number;
-  submittedAt?: string;
-  updatedAt?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Message {

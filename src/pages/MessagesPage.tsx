@@ -33,63 +33,8 @@ const MessagesPage: React.FC<MessagesPageProps> = ({ user, onNavigate }) => {
     );
   }
 
-  // Mock conversations data
-  const conversations: Conversation[] = [
-    {
-      id: '1',
-      participantId: 'landlord1',
-      participantName: 'Aziz Karimov',
-      participantAvatar: undefined,
-      lastMessage: {
-        id: 'msg1',
-        senderId: 'landlord1',
-        senderName: 'Aziz Karimov',
-        content: 'Kvartira haqida qo\'shimcha savollaringiz bormi?',
-        timestamp: '2024-01-15T14:30:00Z',
-        read: false,
-        type: 'text'
-      },
-      unreadCount: 2,
-      listingId: '3',
-      listingTitle: 'Zamonaviy 2-Xonali Kvartira'
-    },
-    {
-      id: '2',
-      participantId: 'admin1',
-      participantName: 'TATU Yotoqxona Ma\'muriyati',
-      participantAvatar: undefined,
-      lastMessage: {
-        id: 'msg2',
-        senderId: 'admin1',
-        senderName: 'TATU Admin',
-        content: 'Arizangiz ko\'rib chiqilmoqda. Tez orada javob beramiz.',
-        timestamp: '2024-01-15T10:15:00Z',
-        read: true,
-        type: 'text'
-      },
-      unreadCount: 0,
-      listingId: '1',
-      listingTitle: 'TATU Yotoqxonasi'
-    },
-    {
-      id: '3',
-      participantId: 'landlord2',
-      participantName: 'Malika Tosheva',
-      participantAvatar: undefined,
-      lastMessage: {
-        id: 'msg3',
-        senderId: 'user1',
-        senderName: user.name,
-        content: 'Xona ko\'rish uchun qachon kelishim mumkin?',
-        timestamp: '2024-01-14T16:45:00Z',
-        read: true,
-        type: 'text'
-      },
-      unreadCount: 0,
-      listingId: '4',
-      listingTitle: 'Chilonzor 1-Xonali Kvartira'
-    }
-  ];
+  // Hozircha xabarlar uchun API yo'q, shuning uchun bo'sh array
+  const conversations: Conversation[] = [];
 
   // Mock messages for selected conversation
   const getMessagesForConversation = (conversationId: string): Message[] => {

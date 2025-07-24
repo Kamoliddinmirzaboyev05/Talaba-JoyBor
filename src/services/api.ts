@@ -14,10 +14,11 @@ const api: AxiosInstance = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const accessToken = localStorage.getItem('access_token');
+    const accessToken = localStorage.getItem('access') || localStorage.getItem('access_token');
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
+    config.headers['Content-Type'] = 'application/json';
     return config;
   },
   (error) => {
@@ -45,7 +46,7 @@ api.interceptors.response.use(
 
           const { access } = response.data;
           localStorage.setItem('access_token', access);
-          
+
           // Retry the original request with new token
           originalRequest.headers.Authorization = `Bearer ${access}`;
           return api(originalRequest);
@@ -151,6 +152,12 @@ export const authAPI = {
     return response.data;
   },
 
+  // Get dormitories list
+  getDormitories: async (): Promise<any[]> => {
+    const response = await api.get('/dormitories/');
+    return response.data;
+  },
+
   // Submit application
   submitApplication: async (applicationData: {
     user: number;
@@ -166,17 +173,29 @@ export const authAPI = {
     phone: number;
     passport: number;
   }): Promise<any> => {
-    const token = localStorage.getItem('access');
-    if (!token) {
-      throw new Error('Authentication required');
+    try {
+      console.log('Sending application data:', applicationData);
+      const response = await api.post('/application/create/', applicationData);
+      return response.data;
+    } catch (error: any) {
+      console.error('API Error Details:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      throw error;
     }
-    
-    const response = await api.post('/application/create/', applicationData, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    return response.data;
+  },
+
+  // Get user applications
+  getApplications: async (): Promise<any[]> => {
+    try {
+      const response = await api.get('/applications/');
+      return response.data;
+    } catch (error: any) {
+      console.error('Applications fetch error:', error);
+      throw error;
+    }
   },
 
 

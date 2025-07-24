@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Search, SlidersHorizontal, MapPin, Users, Star, Wifi, Shield, Car, Building2, Clock, CheckCircle } from 'lucide-react';
 import { PageType } from '../App';
-import { User, Listing } from '../types';
+import { User, Listing, Dormitory } from '../types';
 import Header from '../components/Header';
-import ListingCard from '../components/ListingCard';
 import { authAPI } from '../services/api';
 
 interface DormitoriesPageProps {
@@ -16,124 +15,176 @@ interface DormitoriesPageProps {
 
 const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onNavigate, user, onListingSelect, onApplicationStart }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [dormitories, setDormitories] = useState<Dormitory[]>([]);
+  const [filteredDormitories, setFilteredDormitories] = useState<Dormitory[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedFilters, setSelectedFilters] = useState({
     location: '',
     university: '',
     priceRange: '',
-    roomType: '',
+    capacity: '',
     amenities: [] as string[]
   });
-  const [sortBy, setSortBy] = useState('rating');
+  const [sortBy, setSortBy] = useState('name');
   const [showFilters, setShowFilters] = useState(false);
   const [provinces, setProvinces] = useState<{ id: number; name: string }[]>([]);
 
-  // API dan shaharlar ro'yxatini yuklash
+  // API dan yotoqxonalar va viloyatlarni yuklash
   useEffect(() => {
-    const fetchProvinces = async () => {
+    const fetchData = async () => {
       try {
-        const data = await authAPI.getProvinces();
-        setProvinces(data);
+        setLoading(true);
+        const [dormitoriesData, provincesData] = await Promise.all([
+          authAPI.getDormitories(),
+          authAPI.getProvinces()
+        ]);
+        
+        setDormitories(dormitoriesData);
+        setFilteredDormitories(dormitoriesData);
+        setProvinces(provincesData);
       } catch (error) {
-        console.error('Shaharlar yuklanmadi:', error);
+        console.error('Ma\'lumotlar yuklanmadi:', error);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchProvinces();
+    
+    fetchData();
   }, []);
 
-  const dormitories: Listing[] = [
-    {
-      id: '1',
-      title: 'TATU Yotoqxonasi - Zamonaviy Xonalar',
-      type: 'dormitory',
-      price: 300000,
-      location: 'Chilonzor, Toshkent',
-      university: 'TATU',
-      images: ['https://images.pexels.com/photos/1457842/pexels-photo-1457842.jpeg'],
-      amenities: ['WiFi', 'Konditsioner', 'Oshxona', 'Xavfsizlik'],
-      description: 'Zamonaviy jihozlangan yotoqxona xonalari',
-      capacity: 2,
-      available: true,
-      rating: 4.8,
-      reviews: 124,
-      features: {
-        furnished: true,
-        wifi: true,
-        parking: true,
-        security: true
-      },
-      rules: ['Sigaret chekish taqiqlanadi', 'Mehmonlar 22:00 gacha'],
-      coordinates: { lat: 41.2995, lng: 69.2401 }
-    },
-    {
-      id: '2',
-      title: 'Mirzo Ulug\'bek Yotoqxonasi',
-      type: 'dormitory',
-      price: 250000,
-      location: 'Mirzo Ulug\'bek, Toshkent',
-      university: 'MirU',
-      images: ['https://images.pexels.com/photos/271816/pexels-photo-271816.jpeg'],
-      amenities: ['WiFi', 'Oshxona', 'O\'quv xonasi', 'Sport zali'],
-      description: 'Qulay va arzon yotoqxona',
-      capacity: 3,
-      available: true,
-      rating: 4.5,
-      reviews: 89,
-      features: {
-        furnished: true,
-        wifi: true,
-        parking: false,
-        security: true
-      },
-      rules: ['Ovqat tayyorlash ruxsat etiladi', 'Shovqin qilish taqiqlanadi'],
-      coordinates: { lat: 41.3111, lng: 69.2797 }
-    },
-    {
-      id: '3',
-      title: 'TDTU Talabalar Shaharchasi',
-      type: 'dormitory',
-      price: 350000,
-      location: 'Yunusobod, Toshkent',
-      university: 'TDTU',
-      images: ['https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg'],
-      amenities: ['WiFi', 'Konditsioner', 'Sport zali', 'Kutubxona'],
-      description: 'Zamonaviy talabalar shaharchasi',
-      capacity: 2,
-      available: true,
-      rating: 4.7,
-      reviews: 156,
-      features: {
-        furnished: true,
-        wifi: true,
-        parking: true,
-        security: true
-      },
-      rules: ['Mehmonlar ro\'yhatdan o\'tishi shart', 'Tinchlik soatlari 22:00-07:00'],
-      coordinates: { lat: 41.3775, lng: 69.2718 }
+  // Qidiruv va filtrlash
+  useEffect(() => {
+    let filtered = dormitories;
+
+    // Qidiruv bo'yicha filtrlash
+    if (searchQuery) {
+      filtered = filtered.filter(dormitory =>
+        dormitory.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        dormitory.university.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        dormitory.address.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
+
+    // Filtrlar bo'yicha filtrlash
+    if (selectedFilters.university) {
+      filtered = filtered.filter(dormitory =>
+        dormitory.university.name === selectedFilters.university
+      );
+    }
+
+    if (selectedFilters.priceRange) {
+      const [min, max] = selectedFilters.priceRange.split('-').map(Number);
+      filtered = filtered.filter(dormitory => {
+        const price = dormitory.month_price;
+        if (max) {
+          return price >= min && price <= max;
+        } else {
+          return price >= min;
+        }
+      });
+    }
+
+    if (selectedFilters.capacity) {
+      const capacity = parseInt(selectedFilters.capacity);
+      filtered = filtered.filter(dormitory =>
+        dormitory.available_capacity >= capacity
+      );
+    }
+
+    // Saralash
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'price-low':
+          return a.month_price - b.month_price;
+        case 'price-high':
+          return b.month_price - a.month_price;
+        case 'capacity':
+          return b.available_capacity - a.available_capacity;
+        case 'distance':
+          return a.distance_to_university - b.distance_to_university;
+        default:
+          return a.name.localeCompare(b.name);
+      }
+    });
+
+    setFilteredDormitories(filtered);
+  }, [dormitories, searchQuery, selectedFilters, sortBy]);
+
+  // Yotoqxonani Listing formatiga o'tkazish
+  const convertDormitoryToListing = (dormitory: Dormitory): Listing => {
+    return {
+      id: dormitory.id.toString(),
+      title: dormitory.name,
+      type: 'dormitory',
+      price: dormitory.month_price,
+      location: dormitory.address,
+      university: dormitory.university.name,
+      images: dormitory.images.map(img => img.image),
+      amenities: dormitory.amenities.map(amenity => amenity.name),
+      description: dormitory.description,
+      capacity: dormitory.total_capacity,
+      available: dormitory.available_capacity > 0,
+      rating: 4.5, // Default rating
+      reviews: 0, // Default reviews
+      features: {
+        furnished: true,
+        wifi: dormitory.amenities.some(a => a.name.toLowerCase().includes('wifi')),
+        parking: dormitory.amenities.some(a => a.name.toLowerCase().includes('parking')),
+        security: dormitory.amenities.some(a => a.name.toLowerCase().includes('security'))
+      },
+      rules: dormitory.rules,
+      coordinates: {
+        lat: dormitory.latitude,
+        lng: dormitory.longitude
+      }
+    };
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('uz-UZ').format(price) + ' so\'m';
+  };
+
+  const universities = [...new Set(dormitories.map(d => d.university.name))];
+  const priceRanges = [
+    { label: '100,000 - 300,000', value: '100000-300000' },
+    { label: '300,000 - 500,000', value: '300000-500000' },
+    { label: '500,000 - 1,000,000', value: '500000-1000000' },
+    { label: '1,000,000+', value: '1000000' }
   ];
 
-  const universities = ['TATU', 'MirU', 'TDTU', 'TIQXMMI', 'Boshqa'];
-  const priceRanges = ['100,000-300,000', '300,000-500,000', '500,000-800,000', '800,000+'];
-  const roomTypes = ['Yakka xona', 'Ikki kishilik', 'Uch kishilik', 'To\'rt kishilik'];
-  const amenitiesList = ['WiFi', 'Konditsioner', 'Oshxona', 'Sport zali', 'Kutubxona', 'Xavfsizlik'];
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Header user={user} onNavigate={onNavigate} />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-300">Yotoqxonalar yuklanmoqda...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header user={user} onNavigate={onNavigate} />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-8"
+          className="text-center mb-8"
         >
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Universitet Yotoqxonalari
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            Yotoqxonalar
           </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            O'zbekistondagi eng yaxshi universitet yotoqxonalarini toping
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            O'zbekiston universitetlarining eng yaxshi yotoqxonalarini toping
           </p>
         </motion.div>
 
@@ -144,15 +195,15 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onNavigate, user, onL
           transition={{ duration: 0.6, delay: 0.1 }}
           className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mb-8"
         >
-          {/* Search Bar */}
           <div className="flex flex-col md:flex-row gap-4 mb-4">
+            {/* Search Input */}
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Yotoqxona nomini kiriting..."
+                placeholder="Yotoqxona, universitet yoki manzilni qidiring..."
                 className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
               />
             </div>
@@ -163,15 +214,16 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onNavigate, user, onL
                 onChange={(e) => setSortBy(e.target.value)}
                 className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
               >
-                <option value="rating">Reyting bo'yicha</option>
+                <option value="name">Nomi bo'yicha</option>
                 <option value="price-low">Arzon narx</option>
                 <option value="price-high">Qimmat narx</option>
-                <option value="newest">Yangi qo'shilgan</option>
+                <option value="capacity">Joy soni</option>
+                <option value="distance">Masofa</option>
               </select>
               
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setShowFilters(!showFilters)}
                 className="px-4 py-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors duration-200 flex items-center gap-2"
               >
@@ -190,23 +242,7 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onNavigate, user, onL
               transition={{ duration: 0.3 }}
               className="border-t border-gray-200 dark:border-gray-700 pt-4"
             >
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Shahar
-                  </label>
-                  <select
-                    value={selectedFilters.location}
-                    onChange={(e) => setSelectedFilters(prev => ({ ...prev, location: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
-                  >
-                    <option value="">Barcha shaharlar</option>
-                    {provinces.map(province => (
-                      <option key={province.id} value={province.name}>{province.name}</option>
-                    ))}
-                  </select>
-                </div>
-
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Universitet
@@ -234,37 +270,43 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onNavigate, user, onL
                   >
                     <option value="">Barcha narxlar</option>
                     {priceRanges.map(range => (
-                      <option key={range} value={range}>{range} so'm</option>
+                      <option key={range.value} value={range.value}>{range.label} so'm</option>
                     ))}
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Xona turi
+                    Minimal joy soni
                   </label>
                   <select
-                    value={selectedFilters.roomType}
-                    onChange={(e) => setSelectedFilters(prev => ({ ...prev, roomType: e.target.value }))}
+                    value={selectedFilters.capacity}
+                    onChange={(e) => setSelectedFilters(prev => ({ ...prev, capacity: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
                   >
-                    <option value="">Barcha turlar</option>
-                    {roomTypes.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
+                    <option value="">Istalgan</option>
+                    <option value="1">1+ joy</option>
+                    <option value="5">5+ joy</option>
+                    <option value="10">10+ joy</option>
+                    <option value="20">20+ joy</option>
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Qulayliklar
-                  </label>
-                  <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white">
-                    <option value="">Barcha qulayliklar</option>
-                    {amenitiesList.map(amenity => (
-                      <option key={amenity} value={amenity}>{amenity}</option>
-                    ))}
-                  </select>
+                <div className="flex items-end">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setSelectedFilters({
+                      location: '',
+                      university: '',
+                      priceRange: '',
+                      capacity: '',
+                      amenities: []
+                    })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                  >
+                    Tozalash
+                  </motion.button>
                 </div>
               </div>
             </motion.div>
@@ -274,39 +316,140 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onNavigate, user, onL
         {/* Results */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-gray-600 dark:text-gray-300">
-            {dormitories.length} ta yotoqxona topildi
+            <span className="font-semibold text-gray-900 dark:text-white">{filteredDormitories.length}</span> ta yotoqxona topildi
           </p>
         </div>
 
-        {/* Listings Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {dormitories.map((dormitory, index) => (
-            <motion.div
-              key={dormitory.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-            >
-              <ListingCard
-                listing={dormitory}
-                onSelect={() => onListingSelect(dormitory)}
-                user={user}
-              />
-            </motion.div>
-          ))}
-        </div>
+        {/* Dormitories Grid */}
+        {filteredDormitories.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-12"
+          >
+            <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              Yotoqxona topilmadi
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300">
+              Qidiruv shartlarini o'zgartirib qaytadan urinib ko'ring
+            </p>
+          </motion.div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredDormitories.map((dormitory, index) => (
+              <motion.div
+                key={dormitory.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 group"
+              >
+                {/* Image */}
+                <div className="relative h-48 overflow-hidden">
+                  <img
+                    src={dormitory.images[0]?.image || '/placeholder-dormitory.jpg'}
+                    alt={dormitory.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  
+                  {/* Availability Badge */}
+                  <div className="absolute top-3 left-3">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      dormitory.available_capacity > 0
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                    }`}>
+                      {dormitory.available_capacity > 0 ? 'Mavjud' : 'To\'liq'}
+                    </span>
+                  </div>
 
-        {/* Load More */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="text-center mt-12"
-        >
-          <button className="bg-gradient-to-r from-teal-600 to-green-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300">
-            Ko'proq Ko'rish
-          </button>
-        </motion.div>
+                  {/* Price Badge */}
+                  <div className="absolute top-3 right-3">
+                    <span className="px-3 py-1 bg-black/70 text-white rounded-full text-sm font-semibold">
+                      {formatPrice(dormitory.month_price)}/oy
+                    </span>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-6">
+                  {/* Title and University */}
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 line-clamp-1">
+                      {dormitory.name}
+                    </h3>
+                    <div className="flex items-center gap-2 text-teal-600 mb-2">
+                      <Building2 className="w-4 h-4" />
+                      <span className="text-sm font-medium">{dormitory.university.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                      <MapPin className="w-4 h-4" />
+                      <span className="text-sm line-clamp-1">{dormitory.address}</span>
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {dormitory.available_capacity}/{dormitory.total_capacity} joy
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {dormitory.distance_to_university} km
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Amenities */}
+                  <div className="flex items-center gap-3 mb-4">
+                    {dormitory.amenities.slice(0, 3).map((amenity) => (
+                      <div key={amenity.id} className="flex items-center gap-1 text-gray-600 dark:text-gray-300">
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                        <span className="text-xs">{amenity.name}</span>
+                      </div>
+                    ))}
+                    {dormitory.amenities.length > 3 && (
+                      <span className="text-xs text-gray-500">+{dormitory.amenities.length - 3} ko'proq</span>
+                    )}
+                  </div>
+
+                  {/* Description */}
+                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
+                    {dormitory.description}
+                  </p>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => onListingSelect(convertDormitoryToListing(dormitory))}
+                      className="flex-1 bg-gradient-to-r from-teal-600 to-green-600 text-white py-2 px-4 rounded-lg font-medium hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                    >
+                      Ko'rish
+                    </motion.button>
+                    
+                    {user && dormitory.available_capacity > 0 && (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => onApplicationStart(convertDormitoryToListing(dormitory))}
+                        className="px-4 py-2 border-2 border-teal-600 text-teal-600 rounded-lg font-medium hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all duration-300"
+                      >
+                        Ariza
+                      </motion.button>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
