@@ -5,6 +5,7 @@ import { PageType } from '../App';
 import { User, Application } from '../types';
 import Header from '../components/Header';
 import { authAPI } from '../services/api';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface DashboardPageProps {
   user: User | null;
@@ -12,6 +13,7 @@ interface DashboardPageProps {
 }
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ user, onNavigate }) => {
+  const { theme } = useTheme();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -270,7 +272,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ user, onNavigate }) => {
                       )}
 
                       {application.comment && (
-                        <p className="mt-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 p-2 rounded-lg">
+                        <p className={`mt-2 text-sm p-2 rounded-lg ${
+                          theme === 'dark' 
+                            ? 'text-gray-300 bg-gray-700' 
+                            : 'text-gray-700 bg-gray-50'
+                        }`}>
                           <span className="font-medium">Izoh:</span> {application.comment}
                         </p>
                       )}

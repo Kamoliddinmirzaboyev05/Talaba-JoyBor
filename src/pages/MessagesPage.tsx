@@ -4,6 +4,7 @@ import { Search, Send, Paperclip, Smile, Phone, Video, MoreVertical, ArrowLeft }
 import { PageType } from '../App';
 import { User, Conversation, Message } from '../types';
 import Header from '../components/Header';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface MessagesPageProps {
   user: User | null;
@@ -11,6 +12,7 @@ interface MessagesPageProps {
 }
 
 const MessagesPage: React.FC<MessagesPageProps> = ({ user, onNavigate }) => {
+  const { theme } = useTheme();
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messageText, setMessageText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -165,7 +167,11 @@ const MessagesPage: React.FC<MessagesPageProps> = ({ user, onNavigate }) => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Xabarlarni qidiring..."
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                    className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                      theme === 'dark' 
+                        ? 'border-gray-600 bg-gray-700 text-white' 
+                        : 'border-gray-300 bg-white text-gray-900'
+                    }`}
                   />
                 </div>
               </div>
@@ -320,7 +326,9 @@ const MessagesPage: React.FC<MessagesPageProps> = ({ user, onNavigate }) => {
                         <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
                           message.senderId === user.id
                             ? 'bg-gradient-to-r from-teal-600 to-green-600 text-white'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                            : theme === 'dark' 
+                              ? 'bg-gray-700 text-white' 
+                              : 'bg-gray-100 text-gray-900'
                         }`}>
                           <p className="text-sm">{message.content}</p>
                           <p className={`text-xs mt-1 ${
@@ -353,7 +361,11 @@ const MessagesPage: React.FC<MessagesPageProps> = ({ user, onNavigate }) => {
                           onChange={(e) => setMessageText(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                           placeholder="Xabar yozing..."
-                          className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                          className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                            theme === 'dark' 
+                              ? 'border-gray-600 bg-gray-700 text-white' 
+                              : 'border-gray-300 bg-white text-gray-900'
+                          }`}
                         />
                         <motion.button
                           whileHover={{ scale: 1.1 }}

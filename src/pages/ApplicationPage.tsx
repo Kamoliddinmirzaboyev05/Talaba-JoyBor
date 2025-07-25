@@ -5,6 +5,7 @@ import { PageType } from '../App';
 import Header from '../components/Header';
 import { authAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ApplicationPageProps {
   onNavigate: (page: PageType) => void;
@@ -27,6 +28,7 @@ interface ApplicationFormData {
 
 const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedListing }) => {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { theme } = useTheme();
 
   const [formData, setFormData] = useState<ApplicationFormData>({
     name: user?.first_name || '',
@@ -410,8 +412,11 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedL
                       <select
                         value={selectedDormitoryId}
                         onChange={(e) => setSelectedDormitoryId(e.target.value)}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.dormitory ? 'border-red-500' : 'border-gray-300'
-                          }`}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${
+                          theme === 'dark' 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        } ${errors.dormitory ? 'border-red-500' : ''}`}
                       >
                         <option value="">Yotoqxonani tanlang</option>
                         {dormitories.map((dormitory) => (
@@ -461,8 +466,11 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedL
                         type="text"
                         value={formData.name}
                         onChange={(e) => handleInputChange('name', e.target.value)}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.name ? 'border-red-500' : 'border-gray-300'
-                          }`}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${
+                          theme === 'dark' 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        } ${errors.name ? 'border-red-500' : ''}`}
                         placeholder="Aziz"
                       />
                     </div>
@@ -484,8 +492,11 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedL
                         type="text"
                         value={formData.fio}
                         onChange={(e) => handleInputChange('fio', e.target.value)}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.fio ? 'border-red-500' : 'border-gray-300'
-                          }`}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${
+                          theme === 'dark' 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        } ${errors.fio ? 'border-red-500' : ''}`}
                         placeholder="Karimov Aziz Akmalovich"
                       />
                     </div>
@@ -514,8 +525,11 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedL
                           setSelectedProvinceId(selectedProvince ? selectedProvince.id : null);
                           handleInputChange('village', '');
                         }}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.city ? 'border-red-500' : 'border-gray-300'
-                          }`}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${
+                          theme === 'dark' 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        } ${errors.city ? 'border-red-500' : ''}`}
                       >
                         <option value="">Viloyatni tanlang</option>
                         {provinces.map((province) => (
@@ -543,8 +557,11 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedL
                         value={formData.village}
                         onChange={(e) => handleInputChange('village', e.target.value)}
                         disabled={!selectedProvinceId || districts.length === 0}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.village ? 'border-red-500' : 'border-gray-300'
-                          } ${(!selectedProvinceId || districts.length === 0) ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${
+                          theme === 'dark' 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        } ${errors.village ? 'border-red-500' : ''} ${(!selectedProvinceId || districts.length === 0) ? 'opacity-60 cursor-not-allowed' : ''}`}
                       >
                         <option value="">
                           {!selectedProvinceId
@@ -580,8 +597,11 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedL
                       type="text"
                       value={formData.university}
                       onChange={(e) => handleInputChange('university', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.university ? 'border-red-500' : 'border-gray-300'
-                        }`}
+                      className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${
+                        theme === 'dark' 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      } ${errors.university ? 'border-red-500' : ''}`}
                       placeholder="TATU"
                     />
                   </div>
@@ -608,8 +628,11 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedL
                           const value = e.target.value.replace(/\D/g, '');
                           handleInputChange('phone', value);
                         }}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.phone ? 'border-red-500' : 'border-gray-300'
-                          }`}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${
+                          theme === 'dark' 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        } ${errors.phone ? 'border-red-500' : ''}`}
                         placeholder="998901234567"
                         maxLength={12}
                       />
@@ -632,8 +655,11 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedL
                         type="text"
                         value={formData.passport}
                         onChange={(e) => handleInputChange('passport', e.target.value.replace(/\D/g, ''))}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.passport ? 'border-red-500' : 'border-gray-300'
-                          }`}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${
+                          theme === 'dark' 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        } ${errors.passport ? 'border-red-500' : ''}`}
                         placeholder="123456789"
                         maxLength={10}
                       />
@@ -764,7 +790,11 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedL
                       value={formData.comment}
                       onChange={(e) => handleInputChange('comment', e.target.value)}
                       rows={4}
-                      className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 dark:bg-gray-700 dark:text-white resize-none"
+                      className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 resize-none ${
+                        theme === 'dark' 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
                       placeholder="Maxsus talablar yoki qo'shimcha ma'lumotlar..."
                     />
                   </div>

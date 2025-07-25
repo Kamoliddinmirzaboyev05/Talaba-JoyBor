@@ -4,15 +4,15 @@ import { Settings, Moon, Sun, Bell, Shield, Globe, Smartphone, Mail, Lock, Eye, 
 import { PageType } from '../App';
 import { User } from '../types';
 import Header from '../components/Header';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface SettingsPageProps {
   user: User | null;
   onNavigate: (page: PageType) => void;
-  darkMode: boolean;
-  onDarkModeToggle: (enabled: boolean) => void;
 }
 
-const SettingsPage: React.FC<SettingsPageProps> = ({ user, onNavigate, darkMode, onDarkModeToggle }) => {
+const SettingsPage: React.FC<SettingsPageProps> = ({ user, onNavigate }) => {
+  const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('general');
   const [notifications, setNotifications] = useState({
     email: true,
@@ -162,28 +162,28 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onNavigate, darkMode,
                   </h2>
                   
                   <div className="space-y-6">
-                    {/* Dark Mode */}
+                    {/* Theme Toggle */}
                     <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-xl">
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${darkMode ? 'bg-gray-800 text-yellow-400' : 'bg-yellow-100 text-yellow-600'}`}>
-                          {darkMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${theme === 'dark' ? 'bg-gray-800 text-yellow-400' : 'bg-yellow-100 text-yellow-600'}`}>
+                          {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
                         </div>
                         <div>
                           <h3 className="font-medium text-gray-900 dark:text-white">
-                            {darkMode ? "Qorong'u rejim" : "Kunduzgi rejim"}
+                            {theme === 'dark' ? "Qorong'u rejim" : "Kunduzgi rejim"}
                           </h3>
                           <p className="text-sm text-gray-600 dark:text-gray-300">
-                            {darkMode ? "Ko'zlaringizni himoya qilish uchun qorong'u mavzuni yoqing" : "Yorqin va qulay kunduzgi mavzuni yoqing"}
+                            {theme === 'dark' ? "Ko'zlaringizni himoya qilish uchun qorong'u mavzuni yoqing" : "Yorqin va qulay kunduzgi mavzuni yoqing"}
                           </p>
                         </div>
                       </div>
                       <motion.button
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => onDarkModeToggle(!darkMode)}
-                        className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${darkMode ? 'bg-teal-600' : 'bg-gray-300'}`}
+                        onClick={toggleTheme}
+                        className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${theme === 'dark' ? 'bg-teal-600' : 'bg-gray-300'}`}
                       >
                         <motion.div
-                          animate={{ x: darkMode ? 24 : 0 }}
+                          animate={{ x: theme === 'dark' ? 24 : 0 }}
                           transition={{ duration: 0.2 }}
                           className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md"
                         />
@@ -208,7 +208,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onNavigate, darkMode,
                       <select
                         value={language}
                         onChange={(e) => setLanguage(e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                        className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                          theme === 'dark' 
+                            ? 'border-gray-600 bg-gray-700 text-white' 
+                            : 'border-gray-300 bg-white text-gray-900'
+                        }`}
                       >
                         <option value="uz">O'zbek tili</option>
                         <option value="ru">Русский язык</option>
@@ -414,7 +418,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onNavigate, darkMode,
                       
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                             Joriy parol
                           </label>
                           <div className="relative">
@@ -422,7 +426,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onNavigate, darkMode,
                               type={showCurrentPassword ? 'text' : 'password'}
                               value={passwordData.current}
                               onChange={(e) => handlePasswordChange('current', e.target.value)}
-                              className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                              className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                                theme === 'dark' 
+                                  ? 'border-gray-600 bg-gray-700 text-white' 
+                                  : 'border-gray-300 bg-white text-gray-900'
+                              }`}
                             />
                             <button
                               type="button"
@@ -435,7 +443,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onNavigate, darkMode,
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                             Yangi parol
                           </label>
                           <div className="relative">
@@ -443,7 +451,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onNavigate, darkMode,
                               type={showNewPassword ? 'text' : 'password'}
                               value={passwordData.new}
                               onChange={(e) => handlePasswordChange('new', e.target.value)}
-                              className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                              className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                                theme === 'dark' 
+                                  ? 'border-gray-600 bg-gray-700 text-white' 
+                                  : 'border-gray-300 bg-white text-gray-900'
+                              }`}
                             />
                             <button
                               type="button"
@@ -456,14 +468,18 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onNavigate, darkMode,
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                             Parolni tasdiqlang
                           </label>
                           <input
                             type="password"
                             value={passwordData.confirm}
                             onChange={(e) => handlePasswordChange('confirm', e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                              theme === 'dark' 
+                                ? 'border-gray-600 bg-gray-700 text-white' 
+                                : 'border-gray-300 bg-white text-gray-900'
+                            }`}
                           />
                         </div>
 

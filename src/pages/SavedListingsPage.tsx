@@ -5,6 +5,7 @@ import { PageType } from '../App';
 import { User, Listing } from '../types';
 import Header from '../components/Header';
 import ListingCard from '../components/ListingCard';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface SavedListingsPageProps {
   user: User | null;
@@ -13,6 +14,7 @@ interface SavedListingsPageProps {
 }
 
 const SavedListingsPage: React.FC<SavedListingsPageProps> = ({ user, onNavigate, onListingSelect }) => {
+  const { theme } = useTheme();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'dormitory' | 'rental'>('all');
@@ -99,7 +101,11 @@ const SavedListingsPage: React.FC<SavedListingsPageProps> = ({ user, onNavigate,
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Saqlangan elonlarni qidiring..."
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                  theme === 'dark' 
+                    ? 'border-gray-600 bg-gray-700 text-white' 
+                    : 'border-gray-300 bg-white text-gray-900'
+                }`}
               />
             </div>
 
@@ -108,7 +114,11 @@ const SavedListingsPage: React.FC<SavedListingsPageProps> = ({ user, onNavigate,
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value as 'all' | 'dormitory' | 'rental')}
-                className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                className={`px-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                  theme === 'dark' 
+                    ? 'border-gray-600 bg-gray-700 text-white' 
+                    : 'border-gray-300 bg-white text-gray-900'
+                }`}
               >
                 <option value="all">Barcha turlar</option>
                 <option value="dormitory">Yotoqxonalar</option>
@@ -119,7 +129,11 @@ const SavedListingsPage: React.FC<SavedListingsPageProps> = ({ user, onNavigate,
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                className={`px-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                  theme === 'dark' 
+                    ? 'border-gray-600 bg-gray-700 text-white' 
+                    : 'border-gray-300 bg-white text-gray-900'
+                }`}
               >
                 <option value="newest">Yangi saqlangan</option>
                 <option value="oldest">Eski saqlangan</option>

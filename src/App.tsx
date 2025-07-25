@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -40,8 +41,8 @@ export type PageType =
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<PageType>('home');
   const { user, isLoading, isAuthenticated, login, logout } = useAuth();
+  const { theme } = useTheme();
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
-  const [darkMode, setDarkMode] = useState(false);
 
   // Redirect logic on load - only redirect to dashboard if on login/register page
   useEffect(() => {
@@ -51,19 +52,13 @@ function AppContent() {
   }, [isLoading, isAuthenticated, currentPage]);
 
   useEffect(() => {
-    // Check for system dark mode preference
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setDarkMode(prefersDark);
-  }, []);
-
-  useEffect(() => {
-    // Apply dark mode class to document
-    if (darkMode) {
+    // Theme ni document class ga qo'shish
+    if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-  }, [darkMode]);
+  }, [theme]);
 
   // Called after successful login/register
   const handleAuthSuccess = async (access: string, refresh: string) => {
@@ -114,7 +109,7 @@ function AppContent() {
       case 'notifications':
         return <NotificationsPage user={user} onNavigate={setCurrentPage} />;
       case 'settings':
-        return <SettingsPage user={user} onNavigate={setCurrentPage} darkMode={darkMode} onDarkModeToggle={setDarkMode} />;
+        return <SettingsPage user={user} onNavigate={setCurrentPage} />;
       case 'help':
         return <HelpPage onNavigate={setCurrentPage} />;
       case 'about':
@@ -128,31 +123,31 @@ function AppContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Yuklanmoqda...</p>
+          <div className="w-8 h-8 border-4 border-teal-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Yuklanmoqda...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark' : ''}`}>
-      <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
-        <AnimatePresence mode="wait">
-          {renderPage()}
-        </AnimatePresence>
-      </div>
+    <div className={`min-h-screen transition-colors duration-300 ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <AnimatePresence mode="wait">
+        {renderPage()}
+      </AnimatePresence>
     </div>
   );
 }
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

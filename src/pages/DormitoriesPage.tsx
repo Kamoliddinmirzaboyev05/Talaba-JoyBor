@@ -5,6 +5,7 @@ import { PageType } from '../App';
 import { User, Listing, Dormitory } from '../types';
 import Header from '../components/Header';
 import { authAPI } from '../services/api';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface DormitoriesPageProps {
   onNavigate: (page: PageType) => void;
@@ -14,6 +15,7 @@ interface DormitoriesPageProps {
 }
 
 const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onNavigate, user, onListingSelect, onApplicationStart }) => {
+  const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [dormitories, setDormitories] = useState<Dormitory[]>([]);
   const [filteredDormitories, setFilteredDormitories] = useState<Dormitory[]>([]);
@@ -204,7 +206,11 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onNavigate, user, onL
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Yotoqxona, universitet yoki manzilni qidiring..."
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                  theme === 'dark' 
+                    ? 'border-gray-600 bg-gray-700 text-white' 
+                    : 'border-gray-300 bg-white text-gray-900'
+                }`}
               />
             </div>
             
@@ -212,7 +218,11 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onNavigate, user, onL
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                className={`px-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                  theme === 'dark' 
+                    ? 'border-gray-600 bg-gray-700 text-white' 
+                    : 'border-gray-300 bg-white text-gray-900'
+                }`}
               >
                 <option value="name">Nomi bo'yicha</option>
                 <option value="price-low">Arzon narx</option>
@@ -250,7 +260,11 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onNavigate, user, onL
                   <select
                     value={selectedFilters.university}
                     onChange={(e) => setSelectedFilters(prev => ({ ...prev, university: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                      theme === 'dark' 
+                        ? 'border-gray-600 bg-gray-700 text-white' 
+                        : 'border-gray-300 bg-white text-gray-900'
+                    }`}
                   >
                     <option value="">Barcha universitetlar</option>
                     {universities.map(uni => (
@@ -266,7 +280,11 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onNavigate, user, onL
                   <select
                     value={selectedFilters.priceRange}
                     onChange={(e) => setSelectedFilters(prev => ({ ...prev, priceRange: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                      theme === 'dark' 
+                        ? 'border-gray-600 bg-gray-700 text-white' 
+                        : 'border-gray-300 bg-white text-gray-900'
+                    }`}
                   >
                     <option value="">Barcha narxlar</option>
                     {priceRanges.map(range => (
@@ -282,7 +300,11 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onNavigate, user, onL
                   <select
                     value={selectedFilters.capacity}
                     onChange={(e) => setSelectedFilters(prev => ({ ...prev, capacity: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                      theme === 'dark' 
+                        ? 'border-gray-600 bg-gray-700 text-white' 
+                        : 'border-gray-300 bg-white text-gray-900'
+                    }`}
                   >
                     <option value="">Istalgan</option>
                     <option value="1">1+ joy</option>

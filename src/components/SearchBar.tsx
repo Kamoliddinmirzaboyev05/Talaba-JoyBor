@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, MapPin, DollarSign, Filter, Calendar, X, Home, Building2, Users, Wifi } from 'lucide-react';
 import { authAPI } from '../services/api';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -13,6 +14,7 @@ interface Province {
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
+  const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [location, setLocation] = useState('');
   const [priceRange, setPriceRange] = useState('');
@@ -116,7 +118,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Yotoqxona, kvartira yoki joylashuvni qidiring..."
-                className="relative w-full pl-14 pr-6 py-5 bg-gray-50 dark:bg-gray-700 border-0 rounded-2xl focus:ring-2 focus:ring-teal-500 focus:bg-white dark:focus:bg-gray-600 transition-all duration-300 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-lg"
+                className={`relative w-full pl-14 pr-6 py-5 border-0 rounded-2xl focus:ring-2 focus:ring-teal-500 transition-all duration-300 text-lg ${
+                  theme === 'dark' 
+                    ? 'bg-gray-700 focus:bg-gray-600 text-white placeholder-gray-400' 
+                    : 'bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500'
+                }`}
               />
             </div>
 
@@ -130,7 +136,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   disabled={loadingProvinces}
-                  className="w-full pl-12 pr-4 py-5 bg-gray-50 dark:bg-gray-700 border-0 rounded-2xl focus:ring-2 focus:ring-teal-500 focus:bg-white dark:focus:bg-gray-600 transition-all duration-300 text-gray-900 dark:text-white appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`w-full pl-12 pr-4 py-5 border-0 rounded-2xl focus:ring-2 focus:ring-teal-500 transition-all duration-300 appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                    theme === 'dark' 
+                      ? 'bg-gray-700 focus:bg-gray-600 text-white' 
+                      : 'bg-gray-50 focus:bg-white text-gray-900'
+                  }`}
                 >
                   <option value="">
                     {loadingProvinces ? 'Yuklanmoqda...' : 'Shahar'}
@@ -149,7 +159,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
                 <select
                   value={priceRange}
                   onChange={(e) => setPriceRange(e.target.value)}
-                  className="w-full pl-12 pr-4 py-5 bg-gray-50 dark:bg-gray-700 border-0 rounded-2xl focus:ring-2 focus:ring-teal-500 focus:bg-white dark:focus:bg-gray-600 transition-all duration-300 text-gray-900 dark:text-white appearance-none cursor-pointer"
+                  className={`w-full pl-12 pr-4 py-5 border-0 rounded-2xl focus:ring-2 focus:ring-teal-500 transition-all duration-300 appearance-none cursor-pointer ${
+                    theme === 'dark' 
+                      ? 'bg-gray-700 focus:bg-gray-600 text-white' 
+                      : 'bg-gray-50 focus:bg-white text-gray-900'
+                  }`}
                 >
                   <option value="">Narx</option>
                   {priceRanges.map((range) => (
@@ -213,7 +227,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3 }}
-              className="border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30"
+              className={`border-t ${
+                theme === 'dark' 
+                  ? 'border-gray-700 bg-gray-700/30' 
+                  : 'border-gray-200 bg-gray-50/50'
+              }`}
             >
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

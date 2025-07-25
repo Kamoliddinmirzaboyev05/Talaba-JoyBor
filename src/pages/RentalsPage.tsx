@@ -6,6 +6,7 @@ import { User, Listing } from '../types';
 import Header from '../components/Header';
 import ListingCard from '../components/ListingCard';
 import { authAPI } from '../services/api';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface RentalsPageProps {
   onNavigate: (page: PageType) => void;
@@ -15,6 +16,7 @@ interface RentalsPageProps {
 }
 
 const RentalsPage: React.FC<RentalsPageProps> = ({ onNavigate, user, onListingSelect, onApplicationStart }) => {
+  const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
   const [selectedFilters, setSelectedFilters] = useState({
@@ -83,7 +85,11 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onNavigate, user, onListingSe
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Kvartira yoki xona qidiring..."
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                  theme === 'dark' 
+                    ? 'border-gray-600 bg-gray-700 text-white' 
+                    : 'border-gray-300 bg-white text-gray-900'
+                }`}
               />
             </div>
             
@@ -91,7 +97,11 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onNavigate, user, onListingSe
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                className={`px-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                  theme === 'dark' 
+                    ? 'border-gray-600 bg-gray-700 text-white' 
+                    : 'border-gray-300 bg-white text-gray-900'
+                }`}
               >
                 <option value="rating">Reyting bo'yicha</option>
                 <option value="price-low">Arzon narx</option>
@@ -152,7 +162,11 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onNavigate, user, onListingSe
                   <select
                     value={selectedFilters.location}
                     onChange={(e) => setSelectedFilters(prev => ({ ...prev, location: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                      theme === 'dark' 
+                        ? 'border-gray-600 bg-gray-700 text-white' 
+                        : 'border-gray-300 bg-white text-gray-900'
+                    }`}
                   >
                     <option value="">Barcha joylar</option>
                     {locations.map(location => (
@@ -168,7 +182,11 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onNavigate, user, onListingSe
                   <select
                     value={selectedFilters.priceRange}
                     onChange={(e) => setSelectedFilters(prev => ({ ...prev, priceRange: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                      theme === 'dark' 
+                        ? 'border-gray-600 bg-gray-700 text-white' 
+                        : 'border-gray-300 bg-white text-gray-900'
+                    }`}
                   >
                     <option value="">Barcha narxlar</option>
                     {priceRanges.map(range => (
@@ -184,7 +202,11 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onNavigate, user, onListingSe
                   <select
                     value={selectedFilters.roomType}
                     onChange={(e) => setSelectedFilters(prev => ({ ...prev, roomType: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                      theme === 'dark' 
+                        ? 'border-gray-600 bg-gray-700 text-white' 
+                        : 'border-gray-300 bg-white text-gray-900'
+                    }`}
                   >
                     <option value="">Barcha turlar</option>
                     {roomTypes.map(type => (
@@ -200,7 +222,11 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onNavigate, user, onListingSe
                   <select
                     value={selectedFilters.furnished}
                     onChange={(e) => setSelectedFilters(prev => ({ ...prev, furnished: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                      theme === 'dark' 
+                        ? 'border-gray-600 bg-gray-700 text-white' 
+                        : 'border-gray-300 bg-white text-gray-900'
+                    }`}
                   >
                     <option value="">Barcha turlar</option>
                     <option value="furnished">Jihozlangan</option>

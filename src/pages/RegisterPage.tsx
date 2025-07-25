@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, UserPlus, Phone } from 'lucide-react';
 import { PageType } from '../App';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface RegisterPageProps {
   onNavigate: (page: PageType) => void;
@@ -9,6 +10,7 @@ interface RegisterPageProps {
 }
 
 const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onAuthSuccess }) => {
+  const { theme } = useTheme();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     first_name: '',
@@ -176,7 +178,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onAuthSuccess }
               {Math.round((currentStep / 2) * 100)}%
             </span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div className={`w-full rounded-full h-2 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}>
             <motion.div
               initial={{ width: '50%' }}
               animate={{ width: `${(currentStep / 2) * 100}%` }}
@@ -222,9 +224,11 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onAuthSuccess }
                       type="text"
                       value={formData.first_name}
                       onChange={(e) => handleInputChange('first_name', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                        errors.first_name ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                        theme === 'dark' 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      } ${errors.first_name ? 'border-red-500' : ''}`}
                       placeholder="Aziz"
                     />
                   </div>
@@ -250,9 +254,11 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onAuthSuccess }
                       type="text"
                       value={formData.last_name}
                       onChange={(e) => handleInputChange('last_name', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                        errors.last_name ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                        theme === 'dark' 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      } ${errors.last_name ? 'border-red-500' : ''}`}
                       placeholder="Karimov"
                     />
                   </div>
@@ -278,9 +284,11 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onAuthSuccess }
                       type="text"
                       value={formData.username}
                       onChange={(e) => handleInputChange('username', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                        errors.username ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                        theme === 'dark' 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      } ${errors.username ? 'border-red-500' : ''}`}
                       placeholder="aziz_karimov"
                     />
                   </div>
@@ -306,9 +314,11 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onAuthSuccess }
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                        errors.email ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                        theme === 'dark' 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      } ${errors.email ? 'border-red-500' : ''}`}
                       placeholder="aziz@student.tatu.uz"
                     />
                   </div>
@@ -334,9 +344,11 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onAuthSuccess }
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                        errors.phone ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                        theme === 'dark' 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      } ${errors.phone ? 'border-red-500' : ''}`}
                       placeholder="+998901234567"
                     />
                   </div>
@@ -381,9 +393,11 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onAuthSuccess }
                       type={showPassword ? 'text' : 'password'}
                       value={formData.password}
                       onChange={(e) => handleInputChange('password', e.target.value)}
-                      className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                        errors.password ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                        theme === 'dark' 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      } ${errors.password ? 'border-red-500' : ''}`}
                       placeholder="Kuchli parol yarating"
                     />
                     <button
@@ -416,9 +430,11 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onAuthSuccess }
                       type={showConfirmPassword ? 'text' : 'password'}
                       value={formData.password2}
                       onChange={(e) => handleInputChange('password2', e.target.value)}
-                      className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                        errors.password2 ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                        theme === 'dark' 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      } ${errors.password2 ? 'border-red-500' : ''}`}
                       placeholder="Parolni qayta kiriting"
                     />
                     <button

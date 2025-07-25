@@ -4,6 +4,7 @@ import { Bell, Check, Trash2, Filter, Search, Calendar, MessageCircle, AlertCirc
 import { PageType } from '../App';
 import { User, Notification } from '../types';
 import Header from '../components/Header';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface NotificationsPageProps {
   user: User | null;
@@ -11,6 +12,7 @@ interface NotificationsPageProps {
 }
 
 const NotificationsPage: React.FC<NotificationsPageProps> = ({ user, onNavigate }) => {
+  const { theme } = useTheme();
   const [filter, setFilter] = useState<'all' | 'unread' | 'application' | 'message' | 'system'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -182,7 +184,11 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ user, onNavigate 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Bildirishnomalarni qidiring..."
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                  theme === 'dark' 
+                    ? 'border-gray-600 bg-gray-700 text-white' 
+                    : 'border-gray-300 bg-white text-gray-900'
+                }`}
               />
             </div>
 
@@ -192,7 +198,11 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ user, onNavigate 
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value as 'all' | 'unread' | 'application' | 'message' | 'system')}
-                className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:text-white"
+                className={`px-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                  theme === 'dark' 
+                    ? 'border-gray-600 bg-gray-700 text-white' 
+                    : 'border-gray-300 bg-white text-gray-900'
+                }`}
               >
                 <option value="all">Barchasi</option>
                 <option value="unread">O'qilmaganlar</option>

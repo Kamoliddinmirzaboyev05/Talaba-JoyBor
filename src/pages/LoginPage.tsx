@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, LogIn } from 'lucide-react';
 import { PageType } from '../App';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface LoginPageProps {
   onNavigate: (page: PageType) => void;
@@ -9,6 +10,7 @@ interface LoginPageProps {
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onAuthSuccess }) => {
+  const { theme } = useTheme();
   const [formData, setFormData] = useState({
     username: '',
     password: ''
@@ -140,9 +142,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onAuthSuccess }) => {
                   type="text"
                   value={formData.username}
                   onChange={(e) => handleInputChange('username', e.target.value)}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                    errors.username ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                    theme === 'dark' 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } ${errors.username ? 'border-red-500' : ''}`}
                   placeholder="foydalanuvchi_nomi"
                 />
               </div>
@@ -168,9 +172,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onAuthSuccess }) => {
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
-                  className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                    errors.password ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                    theme === 'dark' 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } ${errors.password ? 'border-red-500' : ''}`}
                   placeholder="Parolingizni kiriting"
                 />
                 <button
@@ -235,17 +241,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onAuthSuccess }) => {
           </div>
         </motion.div>
 
-        {/* Demo Credentials */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800"
-        >
-          <p className="text-sm text-blue-800 dark:text-blue-200 text-center">
-            <strong>API ulangan:</strong> Haqiqiy foydalanuvchi nomi va parol kiriting
-          </p>
-        </motion.div>
+
       </motion.div>
     </div>
   );
