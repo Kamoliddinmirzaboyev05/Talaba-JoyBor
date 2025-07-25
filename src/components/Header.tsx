@@ -73,7 +73,8 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
             onClick={() => onNavigate("home")}
             className="flex items-center gap-2"
           >
-            <img src="/logo.png" alt="JoyBor" className="w-10 h-10" />
+            <img src="/darklogo.svg" alt="JoyBor" className="w-10 h-10" />
+          
             <span className="text-xl font-bold text-gray-900 dark:text-white">
               JoyBor
             </span>
