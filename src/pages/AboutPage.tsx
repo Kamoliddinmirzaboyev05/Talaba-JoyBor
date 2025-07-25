@@ -41,49 +41,49 @@ const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
 
   const team = [
     {
-      name: 'Aziz Karimov',
-      role: 'Asoschisi va CEO',
-      image: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg',
-      description: 'TATU bitiruvchisi, 5 yillik IT tajriba'
+      name: 'Kamoliddin Mirzaboyev',
+      role: 'Founder & Lead Frontend Developer',
+      image: 'imgs/Kamoliddin.png',
+      description: 'Loyhaning asoschisi va asosiy frontend dasturchi'
     },
     {
-      name: 'Malika Tosheva',
-      role: 'Mahsulot Menejeri',
-      image: 'https://images.pexels.com/photos/3763188/pexels-photo-3763188.jpeg',
-      description: 'UX/UI dizayn va mahsulot rivojlantirish mutaxassisi'
+      name: 'Asadbek Mirmahmudov',
+      role: 'Project Manager & Frontend Developer',
+      image: 'imgs/Asadbek.png',
+      description: 'Frontendda ishlaydi, jamoani boshqaradi va resurslarni ta’minlaydi'
     },
     {
-      name: 'Bobur Alimov',
-      role: 'Texnik Direktor',
-      image: 'https://images.pexels.com/photos/3785077/pexels-photo-3785077.jpeg',
-      description: 'Full-stack dasturchi, 7 yillik tajriba'
+      name: 'Vohobjonov Sardorbek',
+      role: 'Core Backend Developer',
+      image: 'imgs/Sardorbek.png',
+      description: 'Loyhaning asosiy backend qismini ishlab chiqmoqda'
     },
     {
-      name: 'Dilnoza Rahimova',
-      role: 'Marketing Menejeri',
-      image: 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg',
-      description: 'Raqamli marketing va SMM mutaxassisi'
+      name: 'Akbarkhojayev Abboskhoja',
+      role: 'DevOps Engineer & Support Backend Developer',
+      image: 'imgs/Abboskhoja.png',
+      description: 'Serverga joylash, hosting va backenddagi texnik muammolarni hal qiladi'
     }
   ];
-
+  
   const timeline = [
     {
-      year: '2023',
+      year: '2024',
       title: 'Loyiha Boshlandi',
       description: 'JoyBor g\'oyasi tug\'ildi va dastlabki ishlanma yaratildi'
     },
     {
-      year: '2024',
+      year: '2025',
       title: 'Beta Versiya',
       description: 'Birinchi foydalanuvchilar bilan beta test o\'tkazildi'
     },
     {
-      year: '2024',
+      year: '2025',
       title: 'Rasmiy Ishga Tushirish',
       description: 'Platforma rasmiy ravishda ishga tushirildi'
     },
     {
-      year: '2025',
+      year: '2026',
       title: 'Kengayish',
       description: 'Barcha viloyatlarga xizmat ko\'rsatish rejalashtirilmoqda'
     }
