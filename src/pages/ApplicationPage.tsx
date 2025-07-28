@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Phone, GraduationCap, CheckCircle, AlertCircle, MapPin, FileText, MessageSquare, Building, Upload, X } from 'lucide-react';
-import { PageType } from '../App';
 import Header from '../components/Header';
 import { authAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-
-interface ApplicationPageProps {
-  onNavigate: (page: PageType) => void;
-  selectedListing?: any | null;
-}
+import { getGlobalSelectedListing } from '../App';
 
 interface ApplicationFormData {
   name: string;
@@ -26,7 +22,9 @@ interface ApplicationFormData {
   passport_image_second?: File | null;
 }
 
-const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedListing }) => {
+const ApplicationPage: React.FC = () => {
+  const navigate = useNavigate();
+  const selectedListing = getGlobalSelectedListing();
   const { user, isAuthenticated, isLoading } = useAuth();
   const { theme } = useTheme();
 
@@ -141,6 +139,65 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedL
     );
   }
 
+  // Pasport raqami validatsiya funksiyasi
+  const validatePassportFormat = (passport: string): boolean => {
+    // O'zbekiston pasport formati: 2 ta harf + 7 ta raqam (masalan: AA1234567)
+    const passportRegex = /^[A-Z]{2}\d{7}$/;
+    return passportRegex.test(passport);
+  };
+
+  const handlePassportChange = (value: string) => {
+    // Faqat lotin harflari va raqamlarni qabul qilish
+    const cleanValue = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    
+    // Format bo'yicha tekshirish va to'g'rilash
+    let formattedValue = '';
+    for (let i = 0; i < cleanValue.length && i < 9; i++) {
+      const char = cleanValue[i];
+      if (i < 2) {
+        // Birinchi 2 ta belgi faqat harflar bo'lishi kerak
+        if (/[A-Z]/.test(char)) {
+          formattedValue += char;
+        }
+      } else {
+        // Keyingi 7 ta belgi faqat raqamlar bo'lishi kerak
+        if (/[0-9]/.test(char)) {
+          formattedValue += char;
+        }
+      }
+    }
+    
+    setFormData(prev => ({
+      ...prev,
+      passport: formattedValue
+    }));
+
+    // Real-time validatsiya
+    if (formattedValue.length > 0) {
+      if (formattedValue.length < 2) {
+        setErrors(prev => ({ ...prev, passport: 'Avval 2 ta harf kiriting (masalan: AA)' }));
+      } else if (formattedValue.length < 9) {
+        const remainingChars = 9 - formattedValue.length;
+        const needLetters = Math.max(0, 2 - formattedValue.replace(/[0-9]/g, '').length);
+        const needNumbers = Math.max(0, 7 - formattedValue.replace(/[A-Z]/g, '').length);
+        
+        if (needLetters > 0) {
+          setErrors(prev => ({ ...prev, passport: `Yana ${needLetters} ta harf kerak` }));
+        } else if (needNumbers > 0) {
+          setErrors(prev => ({ ...prev, passport: `Yana ${needNumbers} ta raqam kerak` }));
+        } else {
+          setErrors(prev => ({ ...prev, passport: `Yana ${remainingChars} ta belgi kerak` }));
+        }
+      } else if (!validatePassportFormat(formattedValue)) {
+        setErrors(prev => ({ ...prev, passport: 'Pasport formati: 2 ta harf + 7 ta raqam (AA1234567)' }));
+      } else {
+        setErrors(prev => ({ ...prev, passport: '' }));
+      }
+    } else {
+      setErrors(prev => ({ ...prev, passport: '' }));
+    }
+  };
+
   const handleInputChange = (field: keyof ApplicationFormData, value: string | File | null) => {
     setFormData(prev => ({
       ...prev,
@@ -192,9 +249,12 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedL
     }
 
     // Passport validation
-    const passportNumbers = formData.passport.replace(/\D/g, '');
-    if (formData.passport && (passportNumbers.length < 8 || passportNumbers.length > 10)) {
-      newErrors.passport = 'Pasport raqami 8-10 raqamdan iborat bo\'lishi kerak';
+    if (formData.passport) {
+      if (formData.passport.length !== 9) {
+        newErrors.passport = 'Pasport raqami 9 ta belgidan iborat bo\'lishi kerak (2 harf + 7 raqam)';
+      } else if (!validatePassportFormat(formData.passport)) {
+        newErrors.passport = 'Pasport formati noto\'g\'ri. To\'g\'ri format: AA1234567';
+      }
     }
 
     setErrors(newErrors);
@@ -208,16 +268,16 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedL
 
     try {
       const phoneNumber = formData.phone.replace(/\D/g, '');
-      const passportNumber = formData.passport.replace(/\D/g, '');
-
+      
       if (!phoneNumber || phoneNumber.length < 9) {
         setErrors({ phone: 'Telefon raqam noto\'g\'ri formatda' });
         setIsSubmitting(false);
         return;
       }
 
-      if (!passportNumber || passportNumber.length < 8) {
-        setErrors({ passport: 'Pasport raqami noto\'g\'ri formatda' });
+      // Pasport validatsiyasi - to'liq format bilan
+      if (!formData.passport || !validatePassportFormat(formData.passport)) {
+        setErrors({ passport: 'Pasport raqami noto\'g\'ri formatda. To\'g\'ri format: AA1234567' });
         setIsSubmitting(false);
         return;
       }
@@ -243,7 +303,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedL
       formDataToSend.append('village', formData.village.trim());
       formDataToSend.append('university', formData.university.trim());
       formDataToSend.append('phone', phoneNumber);
-      formDataToSend.append('passport', passportNumber);
+      formDataToSend.append('passport', formData.passport.trim());
 
       // Add files if they exist
       if (formData.document) {
@@ -273,7 +333,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedL
 
       setSubmitSuccess(true);
       setTimeout(() => {
-        onNavigate('dashboard');
+        navigate('/dashboard');
       }, 3000);
 
     } catch (error: any) {
@@ -305,7 +365,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedL
   if (submitSuccess) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Header onNavigate={onNavigate} />
+        <Header />
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -328,7 +388,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedL
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => onNavigate('dashboard')}
+              onClick={() => navigate('/dashboard')}
               className="bg-gradient-to-r from-teal-600 to-green-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
             >
               Dashboard ga o'tish
@@ -341,7 +401,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedL
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header onNavigate={onNavigate} />
+      <Header />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
@@ -649,19 +709,22 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedL
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                       Pasport Raqami <span className="text-red-500">*</span>
                     </label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                      Format: 2 ta harf + 7 ta raqam (masalan: AA1234567)
+                    </p>
                     <div className="relative">
                       <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="text"
                         value={formData.passport}
-                        onChange={(e) => handleInputChange('passport', e.target.value.replace(/\D/g, ''))}
+                        onChange={(e) => handlePassportChange(e.target.value)}
                         className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${
                           theme === 'dark' 
                             ? 'bg-gray-700 border-gray-600 text-white' 
                             : 'bg-white border-gray-300 text-gray-900'
                         } ${errors.passport ? 'border-red-500' : ''}`}
-                        placeholder="123456789"
-                        maxLength={10}
+                        placeholder="AA1234567"
+                        maxLength={9}
                       />
                     </div>
                     {errors.passport && (
@@ -669,6 +732,21 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ onNavigate, selectedL
                         <AlertCircle className="w-4 h-4" />
                         {errors.passport}
                       </p>
+                    )}
+                    {!errors.passport && formData.passport && formData.passport.length > 0 && (
+                      <div className="mt-1">
+                        {formData.passport.length < 9 ? (
+                          <p className="text-yellow-600 text-xs flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            {9 - formData.passport.length} ta belgi qoldi
+                          </p>
+                        ) : validatePassportFormat(formData.passport) ? (
+                          <p className="text-green-600 text-xs flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3" />
+                            To'g'ri format
+                          </p>
+                        ) : null}
+                      </div>
                     )}
                   </div>
                 </div>

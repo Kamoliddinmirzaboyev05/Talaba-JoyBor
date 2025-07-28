@@ -158,6 +158,12 @@ export const authAPI = {
     return response.data;
   },
 
+  // Get apartments list (ijara xonadonlar)
+  getApartments: async (): Promise<any[]> => {
+    const response = await api.get('/apartments/');
+    return response.data;
+  },
+
   // Submit application
   submitApplication: async (applicationData: {
     user: number;

@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, UserPlus, Phone } from 'lucide-react';
-import { PageType } from '../App';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 
-interface RegisterPageProps {
-  onNavigate: (page: PageType) => void;
-  onAuthSuccess: (access: string, refresh: string) => void;
-}
-
-const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onAuthSuccess }) => {
+const RegisterPage: React.FC = () => {
   const { theme } = useTheme();
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const from = location.state?.from?.pathname || '/dashboard';
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     first_name: '',
@@ -93,7 +94,8 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onAuthSuccess }
       const data = await response.json();
       localStorage.setItem('access', data.access);
       localStorage.setItem('refresh', data.refresh);
-      onAuthSuccess(data.access, data.refresh); // update auth context and UI
+      await login(data.access, data.refresh);
+      navigate(from, { replace: true });
     } catch {
       setGeneralError('Network error or server is down.');
     } finally {
@@ -144,7 +146,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onAuthSuccess }
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => onNavigate('home')}
+            onClick={() => navigate('/')}
             className="inline-flex items-center gap-2 text-teal-600 hover:text-teal-700 mb-6 transition-colors duration-200"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -492,7 +494,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onAuthSuccess }
             <p className="text-gray-600 dark:text-gray-300">
               Hisobingiz bormi?{' '}
               <button
-                onClick={() => onNavigate('login')}
+                onClick={() => navigate('/login')}
                 className="text-teal-600 hover:text-teal-700 font-medium transition-colors duration-200"
               >
                 Kirish

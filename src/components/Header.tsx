@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   Home,
   User,
@@ -11,44 +12,35 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
-import { PageType } from "../App";
 import { useAuth } from "../contexts/AuthContext";
 
-interface HeaderProps {
-  onNavigate: (page: PageType) => void;
-}
-
-const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
+const Header: React.FC = () => {
+  const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   const menuItems = [
-    { label: "Bosh Sahifa", page: "home" as PageType, icon: Home },
-    { label: "Yotoqxonalar", page: "dormitories" as PageType, icon: Home },
-    { label: "Ijara Xonadonlar", page: "rentals" as PageType, icon: Home },
-
-    { label: "Yordam", page: "help" as PageType, icon: MessageCircle },
-    { label: "Biz Haqimizda", page: "about" as PageType, icon: User },
-    { label: "Aloqa", page: "contact" as PageType, icon: MessageCircle },
+    { label: "Bosh Sahifa", path: "/", icon: Home },
+    { label: "Yotoqxonalar", path: "/dormitories", icon: Home },
+    { label: "Ijara Xonadonlar", path: "/rentals", icon: Home },
+    { label: "Yordam", path: "/help", icon: MessageCircle },
+    { label: "Biz Haqimizda", path: "/about", icon: User },
+    { label: "Aloqa", path: "/contact", icon: MessageCircle },
   ];
 
   const profileMenuItems = [
-    { label: "Profil", page: "profile" as PageType, icon: User },
-    { label: "Dashboard", page: "dashboard" as PageType, icon: Home },
-    { label: "Xabarlar", page: "messages" as PageType, icon: MessageCircle },
-    { label: "Saqlangan", page: "saved" as PageType, icon: Heart },
-    {
-      label: "Bildirishnomalar",
-      page: "notifications" as PageType,
-      icon: Bell,
-    },
-    { label: "Sozlamalar", page: "settings" as PageType, icon: Settings },
+    { label: "Profil", path: "/profile", icon: User },
+    { label: "Dashboard", path: "/dashboard", icon: Home },
+    { label: "Xabarlar", path: "/messages", icon: MessageCircle },
+    { label: "Saqlangan", path: "/saved", icon: Heart },
+    { label: "Bildirishnomalar", path: "/notifications", icon: Bell },
+    { label: "Sozlamalar", path: "/settings", icon: Settings },
   ];
 
   const handleLogout = () => {
     logout();
-    onNavigate("home");
+    navigate("/");
     setIsProfileMenuOpen(false);
   };
 
@@ -70,7 +62,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => onNavigate("home")}
+            onClick={() => navigate("/")}
             className="flex items-center gap-2"
           >
             <img src="/darklogo.svg" alt="JoyBor" className="w-10 h-10" />
@@ -83,20 +75,20 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <button
-              onClick={() => onNavigate("dormitories")}
+              onClick={() => navigate("/dormitories")}
               className="text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
             >
               Yotoqxonalar
             </button>
             <button
-              onClick={() => onNavigate("rentals")}
+              onClick={() => navigate("/rentals")}
               className="text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
             >
               Ijara Xonadonlar
             </button>
 
             <button
-              onClick={() => onNavigate("help")}
+              onClick={() => navigate("/help")}
               className="text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
             >
               Yordam
@@ -111,7 +103,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => onNavigate("notifications")}
+                  onClick={() => navigate("/notifications")}
                   className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
                 >
                   <Bell className="w-6 h-6" />
@@ -122,7 +114,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => onNavigate("messages")}
+                  onClick={() => navigate("/messages")}
                   className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
                 >
                   <MessageCircle className="w-6 h-6" />
@@ -164,9 +156,9 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                       >
                         {profileMenuItems.map((item) => (
                           <button
-                            key={item.page}
+                            key={item.path}
                             onClick={() => {
-                              onNavigate(item.page);
+                              navigate(item.path);
                               setIsProfileMenuOpen(false);
                             }}
                             className="w-full flex items-center gap-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
@@ -193,7 +185,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => onNavigate("login")}
+                  onClick={() => navigate("/login")}
                   className="text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 font-medium transition-colors duration-200"
                 >
                   Kirish
@@ -201,7 +193,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => onNavigate("register")}
+                  onClick={() => navigate("/register")}
                   className="bg-gradient-to-r from-teal-600 to-green-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-all duration-300"
                 >
                   Ro'yhatdan O'tish
@@ -239,9 +231,9 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
             <div className="px-4 py-4 space-y-2">
               {menuItems.map((item) => (
                 <button
-                  key={item.page}
+                  key={item.path}
                   onClick={() => {
-                    onNavigate(item.page);
+                    navigate(item.path);
                     setIsMenuOpen(false);
                   }}
                   className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
@@ -256,7 +248,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                   <hr className="my-3 border-gray-200 dark:border-gray-700" />
                   <button
                     onClick={() => {
-                      onNavigate("login");
+                      navigate("/login");
                       setIsMenuOpen(false);
                     }}
                     className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
@@ -266,7 +258,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                   </button>
                   <button
                     onClick={() => {
-                      onNavigate("register");
+                      navigate("/register");
                       setIsMenuOpen(false);
                     }}
                     className="w-full bg-gradient-to-r from-teal-600 to-green-600 text-white px-3 py-2 rounded-lg font-medium hover:shadow-lg transition-all duration-300"

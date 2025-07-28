@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, SlidersHorizontal, MapPin, Users, Star, Wifi, Shield, Car, Building2, Clock, CheckCircle } from 'lucide-react';
-import { PageType } from '../App';
-import { User, Listing, Dormitory } from '../types';
+import { Listing, Dormitory } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
 import { authAPI } from '../services/api';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface DormitoriesPageProps {
-  onNavigate: (page: PageType) => void;
-  user: User | null;
   onListingSelect: (listing: Listing) => void;
   onApplicationStart: (listing: Listing) => void;
 }
 
-const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onNavigate, user, onListingSelect, onApplicationStart }) => {
+const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onApplicationStart }) => {
+  const { user } = useAuth();
   const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [dormitories, setDormitories] = useState<Dormitory[]>([]);
@@ -157,7 +156,7 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onNavigate, user, onL
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Header user={user} onNavigate={onNavigate} />
+        <Header />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
@@ -172,7 +171,7 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onNavigate, user, onL
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header user={user} onNavigate={onNavigate} />
+      <Header />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}

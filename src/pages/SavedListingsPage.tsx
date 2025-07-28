@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, Search, Grid, List, Trash2, Share2, Eye } from 'lucide-react';
-import { PageType } from '../App';
-import { User, Listing } from '../types';
+import { Listing } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
 import ListingCard from '../components/ListingCard';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface SavedListingsPageProps {
-  user: User | null;
-  onNavigate: (page: PageType) => void;
   onListingSelect: (listing: Listing) => void;
 }
 
-const SavedListingsPage: React.FC<SavedListingsPageProps> = ({ user, onNavigate, onListingSelect }) => {
+const SavedListingsPage: React.FC<SavedListingsPageProps> = ({ onListingSelect }) => {
+  const { user } = useAuth();
   const { theme } = useTheme();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,7 +59,7 @@ const SavedListingsPage: React.FC<SavedListingsPageProps> = ({ user, onNavigate,
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header user={user} onNavigate={onNavigate} />
+      <Header />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}

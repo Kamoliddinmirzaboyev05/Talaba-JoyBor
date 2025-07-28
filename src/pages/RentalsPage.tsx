@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, SlidersHorizontal, Map } from 'lucide-react';
-import { PageType } from '../App';
-import { User, Listing } from '../types';
+import { Search, SlidersHorizontal, Map, Building2 } from 'lucide-react';
+import { Listing } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
 import ListingCard from '../components/ListingCard';
 import { authAPI } from '../services/api';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface RentalsPageProps {
-  onNavigate: (page: PageType) => void;
-  user: User | null;
   onListingSelect: (listing: Listing) => void;
   onApplicationStart: (listing: Listing) => void;
 }
 
-const RentalsPage: React.FC<RentalsPageProps> = ({ onNavigate, user, onListingSelect, onApplicationStart }) => {
+const RentalsPage: React.FC<RentalsPageProps> = ({ onListingSelect, onApplicationStart }) => {
+  const { user } = useAuth();
   const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
@@ -27,6 +26,9 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onNavigate, user, onListingSe
   });
   const [sortBy, setSortBy] = useState('rating');
   const [provinces, setProvinces] = useState<{ id: number; name: string }[]>([]);
+  const [apartments, setApartments] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
 
   // API dan shaharlar ro'yxatini yuklash
   useEffect(() => {
@@ -40,10 +42,72 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onNavigate, user, onListingSe
     };
     fetchProvinces();
   }, []);
-  const [showFilters, setShowFilters] = useState(false);
 
-  // Hozircha ijara uchun API yo'q, shuning uchun bo'sh array
-  const rentals: Listing[] = [];
+  // API dan apartments ma'lumotlarini yuklash
+  useEffect(() => {
+    const fetchApartments = async () => {
+      try {
+        setLoading(true);
+        const apartmentsData = await authAPI.getApartments();
+
+        // API strukturasiga mos apartments mapping
+        const convertedListings: Listing[] = apartmentsData.map((apartment: any) => ({
+          id: apartment.id.toString(),
+          title: apartment.title || 'Ijara Xonadon',
+          type: 'rental' as const,
+          price: apartment.monthly_price || 0,
+          location: apartment.exact_address || 'Manzil ko\'rsatilmagan',
+          university: `${apartment.room_type} - ${apartment.gender}`,
+          images: apartment.images?.map((img: any) => img.image) || ['/placeholder-apartment.jpg'],
+          amenities: apartment.amenities?.map((amenity: any) => amenity.name) || [],
+          description: apartment.description || 'Tavsif mavjud emas',
+          capacity: apartment.total_rooms || 1,
+          available: apartment.available_rooms > 0,
+          rating: 4.0, // Default rating
+          reviews: 0, // Default reviews
+          features: {
+            furnished: true, // Default
+            wifi: apartment.amenities?.some((a: any) => 
+              a.name?.toLowerCase().includes('wifi') || 
+              a.name?.toLowerCase().includes('internet')
+            ) || false,
+            parking: apartment.amenities?.some((a: any) => 
+              a.name?.toLowerCase().includes('parking') || 
+              a.name?.toLowerCase().includes('avtomobil')
+            ) || false,
+            security: apartment.amenities?.some((a: any) => 
+              a.name?.toLowerCase().includes('security') || 
+              a.name?.toLowerCase().includes('xavfsizlik')
+            ) || false
+          },
+          rules: [],
+          coordinates: {
+            lat: 41.2995, // Default Tashkent coordinates
+            lng: 69.2401
+          },
+          // Qo'shimcha apartment ma'lumotlari
+          rooms: apartment.total_rooms || 1,
+          available_rooms: apartment.available_rooms || 0,
+          room_type: apartment.room_type || '1 kishilik',
+          gender: apartment.gender || 'Aralash',
+          owner: apartment.user || 'Egasi ko\'rsatilmagan',
+          phone_number: apartment.phone_number || '',
+          province: apartment.province || 1,
+          created_at: apartment.created_at || new Date().toISOString(),
+          is_active: apartment.is_active !== false
+        }));
+
+        setApartments(convertedListings);
+      } catch (error) {
+        console.error('Apartments yuklanmadi:', error);
+        setApartments([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApartments();
+  }, []);
 
   const locations = ['Chilonzor', 'Yunusobod', 'Mirzo Ulug\'bek', 'Shayxontohur', 'Yakkasaroy'];
   const priceRanges = ['1,000,000-2,000,000', '2,000,000-3,000,000', '3,000,000-4,000,000', '4,000,000+'];
@@ -51,7 +115,7 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onNavigate, user, onListingSe
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header user={user} onNavigate={onNavigate} />
+      <Header />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
@@ -241,7 +305,7 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onNavigate, user, onListingSe
         {/* Results */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-gray-600 dark:text-gray-300">
-            {rentals.length} ta ijara xonadoni topildi
+            {loading ? 'Yuklanmoqda...' : `${apartments.length} ta ijara xonadoni topildi`}
           </p>
         </div>
 
@@ -265,22 +329,43 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onNavigate, user, onListingSe
 
         {/* Listings Grid */}
         {viewMode === 'grid' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {rentals.map((rental, index) => (
-              <motion.div
-                key={rental.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-              >
-                <ListingCard
-                  listing={rental}
-                  onSelect={() => onListingSelect(rental)}
-                  user={user}
-                />
-              </motion.div>
-            ))}
-          </div>
+          <>
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-gray-600 dark:text-gray-300">Ijara xonadonlar yuklanmoqda...</p>
+                </div>
+              </div>
+            ) : apartments.length === 0 ? (
+              <div className="text-center py-12">
+                <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  Ijara xonadonlar topilmadi
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Hozircha ijara xonadonlar mavjud emas
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {apartments.map((apartment, index) => (
+                  <motion.div
+                    key={apartment.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: index * 0.1 }}
+                  >
+                    <ListingCard
+                      listing={apartment}
+                      onSelect={() => onListingSelect(apartment)}
+                      user={user}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         {/* Load More */}

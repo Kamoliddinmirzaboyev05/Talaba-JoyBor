@@ -1,14 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Clock, Send, MessageCircle, Facebook, Instagram, Instagram as Telegram } from 'lucide-react';
-import { PageType } from '../App';
 import Header from '../components/Header';
 
-interface ContactPageProps {
-  onNavigate: (page: PageType) => void;
-}
-
-const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
+const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -110,7 +105,7 @@ const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header user={null} onNavigate={onNavigate} />
+      <Header />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}

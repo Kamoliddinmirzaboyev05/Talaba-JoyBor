@@ -1,14 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { HelpCircle, Search, ChevronRight, MessageCircle, Phone, Mail, Book, Video, FileText } from 'lucide-react';
-import { PageType } from '../App';
 import Header from '../components/Header';
 
-interface HelpPageProps {
-  onNavigate: (page: PageType) => void;
-}
-
-const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
+const HelpPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState('general');
@@ -158,7 +153,7 @@ const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header user={null} onNavigate={onNavigate} />
+      <Header />
       
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}

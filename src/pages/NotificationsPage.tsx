@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Check, Trash2, Filter, Search, Calendar, MessageCircle, AlertCircle, CheckCircle, Info } from 'lucide-react';
-import { PageType } from '../App';
-import { User, Notification } from '../types';
+import { Notification } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
 import { useTheme } from '../contexts/ThemeContext';
 
-interface NotificationsPageProps {
-  user: User | null;
-  onNavigate: (page: PageType) => void;
-}
-
-const NotificationsPage: React.FC<NotificationsPageProps> = ({ user, onNavigate }) => {
+const NotificationsPage: React.FC = () => {
+  const { user } = useAuth();
   const { theme } = useTheme();
   const [filter, setFilter] = useState<'all' | 'unread' | 'application' | 'message' | 'system'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -115,14 +111,14 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ user, onNavigate 
     
     // Navigate based on actionUrl
     if (notification.actionUrl) {
-      const page = notification.actionUrl.replace('/', '') as PageType;
-      onNavigate(page);
+      // Bu yerda navigate hook ishlatish kerak
+      // onNavigate(page);
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header user={user} onNavigate={onNavigate} />
+      <Header />
       
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}

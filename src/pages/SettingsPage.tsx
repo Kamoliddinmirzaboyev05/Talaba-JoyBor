@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Settings, Moon, Sun, Bell, Shield, Globe, Smartphone, Mail, Lock, Eye, EyeOff, Save } from 'lucide-react';
-import { PageType } from '../App';
-import { User } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
 import { useTheme } from '../contexts/ThemeContext';
 
-interface SettingsPageProps {
-  user: User | null;
-  onNavigate: (page: PageType) => void;
-}
-
-const SettingsPage: React.FC<SettingsPageProps> = ({ user, onNavigate }) => {
+const SettingsPage: React.FC = () => {
+  const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('general');
   const [notifications, setNotifications] = useState({
@@ -91,7 +86,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onNavigate }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header user={user} onNavigate={onNavigate} />
+      <Header />
       
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}

@@ -1,14 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Target, Users, Award, Heart, MapPin, TrendingUp, Shield, Clock } from 'lucide-react';
-import { PageType } from '../App';
 import Header from '../components/Header';
 
-interface AboutPageProps {
-  onNavigate: (page: PageType) => void;
-}
-
-const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
+const AboutPage: React.FC = () => {
   const stats = [
     { label: 'Faol Talabalar', value: '2,500+', icon: Users, color: 'text-blue-600' },
     { label: 'Yashash Joylari', value: '650+', icon: MapPin, color: 'text-green-600' },
@@ -91,7 +86,7 @@ const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header user={null} onNavigate={onNavigate} />
+      <Header />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero Section */}

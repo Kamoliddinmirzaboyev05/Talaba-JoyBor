@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, MapPin, Users, Wifi, Car, Shield, Heart, Share2, MessageCircle, Calendar, Phone, Mail, CheckCircle } from 'lucide-react';
-import { PageType } from '../App';
-import { User, Listing } from '../types';
+import { Listing } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
+import { getGlobalSelectedListing, setGlobalSelectedListing } from '../App';
 
-interface ListingDetailPageProps {
-  listing: Listing | null;
-  onNavigate: (page: PageType) => void;
-  user: User | null;
-  onApplicationStart: (listing: Listing) => void;
-}
-
-const ListingDetailPage: React.FC<ListingDetailPageProps> = ({ listing, onNavigate, user, onApplicationStart }) => {
+const ListingDetailPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const listing = getGlobalSelectedListing();
+  
+  const onApplicationStart = (listing: Listing) => {
+    setGlobalSelectedListing(listing);
+    navigate('/application');
+  };
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
 
@@ -24,7 +27,7 @@ const ListingDetailPage: React.FC<ListingDetailPageProps> = ({ listing, onNaviga
             Elon topilmadi
           </h2>
           <button
-            onClick={() => onNavigate('home')}
+            onClick={() => navigate('/')}
             className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors duration-200"
           >
             Bosh sahifaga qaytish
@@ -52,7 +55,7 @@ const ListingDetailPage: React.FC<ListingDetailPageProps> = ({ listing, onNaviga
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header user={user} onNavigate={onNavigate} />
+      <Header />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
@@ -62,7 +65,7 @@ const ListingDetailPage: React.FC<ListingDetailPageProps> = ({ listing, onNaviga
           transition={{ duration: 0.5 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => onNavigate('home')}
+          onClick={() => navigate('/')}
           className="flex items-center gap-2 text-teal-600 hover:text-teal-700 mb-6 transition-colors duration-200"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -366,7 +369,7 @@ const ListingDetailPage: React.FC<ListingDetailPageProps> = ({ listing, onNaviga
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => onNavigate('login')}
+                    onClick={() => navigate('/login')}
                     className="w-full bg-gradient-to-r from-teal-600 to-green-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
                   >
                     Ariza Yuborish Uchun Kiring

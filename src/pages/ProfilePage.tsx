@@ -1,7 +1,7 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Phone, GraduationCap, MapPin, Edit3, Save, X, Camera, Shield, Lock, FileText, Clock, CheckCircle, XCircle, Eye } from 'lucide-react';
-import { PageType } from '../App';
+
 import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -367,7 +367,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
 
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      <Header onNavigate={onNavigate} />
+      <Header />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div

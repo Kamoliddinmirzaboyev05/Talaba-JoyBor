@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Send, Paperclip, Smile, Phone, Video, MoreVertical, ArrowLeft } from 'lucide-react';
-import { PageType } from '../App';
-import { User, Conversation, Message } from '../types';
+import { Conversation, Message } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
 import { useTheme } from '../contexts/ThemeContext';
 
-interface MessagesPageProps {
-  user: User | null;
-  onNavigate: (page: PageType) => void;
-}
-
-const MessagesPage: React.FC<MessagesPageProps> = ({ user, onNavigate }) => {
+const MessagesPage: React.FC = () => {
+  const { user } = useAuth();
   const { theme } = useTheme();
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messageText, setMessageText] = useState('');
@@ -146,7 +142,7 @@ const MessagesPage: React.FC<MessagesPageProps> = ({ user, onNavigate }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header user={user} onNavigate={onNavigate} />
+      <Header />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden" style={{ height: 'calc(100vh - 200px)' }}>

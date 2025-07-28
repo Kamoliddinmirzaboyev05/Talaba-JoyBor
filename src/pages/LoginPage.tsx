@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, LogIn } from 'lucide-react';
-import { PageType } from '../App';
+import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
-interface LoginPageProps {
-  onNavigate: (page: PageType) => void;
-  onAuthSuccess: (access: string, refresh: string) => void;
-}
-
-const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onAuthSuccess }) => {
+const LoginPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const { theme } = useTheme();
   const [formData, setFormData] = useState({
     username: '',
@@ -60,7 +58,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onAuthSuccess }) => {
       const data = await response.json();
       localStorage.setItem('access', data.access);
       localStorage.setItem('refresh', data.refresh);
-      onAuthSuccess(data.access, data.refresh); // update auth context and UI
+      await login(data.access, data.refresh);
+      navigate(from, { replace: true });
     } catch {
       setGeneralError('Network error or server is down.');
     } finally {
@@ -88,7 +87,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onAuthSuccess }) => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => onNavigate('home')}
+            onClick={() => navigate('/')}
             className="inline-flex items-center gap-2 text-teal-600 hover:text-teal-700 mb-6 transition-colors duration-200"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -232,7 +231,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onAuthSuccess }) => {
             <p className="text-gray-600 dark:text-gray-300">
               Hisobingiz yo'qmi?{' '}
               <button
-                onClick={() => onNavigate('register')}
+                onClick={() => navigate('/register')}
                 className="text-teal-600 hover:text-teal-700 font-medium transition-colors duration-200"
               >
                 Ro'yhatdan o'ting
