@@ -4,23 +4,46 @@ Allow: /
 # Sitemap joylashuvi
 Sitemap: https://joyboronline.uz/sitemap.xml
 
-# Qidirish sahifalarini indekslashga ruxsat berish
-Allow: /kurslar
-Allow: /topshiriqlar
-Allow: /resurslar
-Allow: /resume
-Allow: /kodlar
-Allow: /dashboard
+# Asosiy sahifalarni indekslashga ruxsat berish
+Allow: /
+Allow: /dormitories
+Allow: /rentals
+Allow: /about
+Allow: /contact
+Allow: /help
+Allow: /login
+Allow: /register
 
-# Maxfiy sahifalarni bloklash
+# Himoyalangan sahifalarni bloklash
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /messages
+Disallow: /settings
+Disallow: /application
 Disallow: /admin/
 Disallow: /api/
 Disallow: /private/
 Disallow: /*.json$
 Disallow: /*?*
+Disallow: /src/
+Disallow: /node_modules/
 
-# Crawl delay (ixtiyoriy)
+# Media fayllar uchun ruxsat
+Allow: /imgs/
+Allow: /*.jpg
+Allow: /*.jpeg
+Allow: /*.png
+Allow: /*.svg
+Allow: /*.webp
+Allow: /*.ico
+
+# Crawl delay
 Crawl-delay: 1
+
+# Google uchun maxsus qoidalar
+User-agent: Googlebot
+Crawl-delay: 1
+Allow: /
 
 # Bing uchun maxsus qoidalar
 User-agent: bingbot
@@ -29,3 +52,15 @@ Crawl-delay: 2
 # Yandex uchun maxsus qoidalar
 User-agent: YandexBot
 Crawl-delay: 1
+
+# Facebook crawler
+User-agent: facebookexternalhit
+Allow: /
+
+# Twitter crawler
+User-agent: Twitterbot
+Allow: /
+
+# Telegram crawler
+User-agent: TelegramBot
+Allow: /

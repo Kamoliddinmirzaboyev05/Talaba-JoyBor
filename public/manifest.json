@@ -1,17 +1,53 @@
 {
-  "name": "JoyBor - Talabalar uchun turar joy",
+  "name": "JoyBor - Talabalar uchun zamonaviy turar joy platformasi",
   "short_name": "JoyBor",
-  "description": "O'zbekistondagi talabalar uchun yotoqxona va ijara uylarini topish platformasi",
+  "description": "O'zbekistondagi talabalar uchun eng yaxshi yotoqxona va ijara uylarini topish platformasi. 2500+ faol talaba, 650+ turar joy.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#ffffff",
-  "theme_color": "#0D9488",
+  "theme_color": "#0d9488",
+  "categories": ["education", "lifestyle", "utilities"],
+  "lang": "uz",
+  "dir": "ltr",
   "icons": [
     {
-      "src": "/logo.svg",
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32 48x48",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/darklogo.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-desktop.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshot-mobile.jpg", 
+      "sizes": "375x667",
+      "type": "image/jpeg",
+      "form_factor": "narrow"
     }
   ]
 }
