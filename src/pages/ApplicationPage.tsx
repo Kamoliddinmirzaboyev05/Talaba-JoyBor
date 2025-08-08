@@ -7,6 +7,7 @@ import { authAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { getGlobalSelectedListing } from '../App';
+import { Dormitory } from '../types';
 
 interface ApplicationFormData {
   name: string;
@@ -44,7 +45,7 @@ const ApplicationPage: React.FC = () => {
 
   const [provinces, setProvinces] = useState<{ id: number; name: string }[]>([]);
   const [districts, setDistricts] = useState<{ id: number; name: string; province: number }[]>([]);
-  const [dormitories, setDormitories] = useState<any[]>([]);
+  const [dormitories, setDormitories] = useState<Dormitory[]>([]);
   const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(null);
   const [selectedDormitoryId, setSelectedDormitoryId] = useState<string>(selectedListing?.id || '');
   const [isSubmitting, setIsSubmitting] = useState(false);

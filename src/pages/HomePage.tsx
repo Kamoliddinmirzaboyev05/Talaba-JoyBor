@@ -1,13 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { Search, Users, Shield, Home, Building2, ChevronRight, MessageCircle } from 'lucide-react';
-import { Listing } from '../types';
-import { useAuth } from '../contexts/AuthContext';
-import Header from '../components/Header';
-import SearchBar from '../components/SearchBar';
-import ListingCard from '../components/ListingCard';
-import { authAPI } from '../services/api';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import {
+  Search,
+  Users,
+  Shield,
+  Home,
+  Building2,
+  ChevronRight,
+  MessageCircle,
+} from "lucide-react";
+import { Listing } from "../types";
+import { useAuth } from "../contexts/AuthContext";
+import Header from "../components/Header";
+import SearchBar from "../components/SearchBar";
+import ListingCard from "../components/ListingCard";
+import { authAPI } from "../services/api";
+
+interface Statistics {
+  dormitories_count: number;
+  apartments_count: number;
+  users_count: number;
+  applications_count: number;
+}
 
 interface HomePageProps {
   onListingSelect: (listing: Listing) => void;
@@ -18,6 +33,12 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [featuredListings, setFeaturedListings] = useState<Listing[]>([]);
+  const [statistics, setStatistics] = useState<Statistics>({
+    dormitories_count: 0,
+    apartments_count: 0,
+    users_count: 0,
+    applications_count: 0,
+  });
   const [loading, setLoading] = useState(true);
 
   // API dan yotoqxonalar va apartments ni yuklash
@@ -25,90 +46,119 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
     const fetchListings = async () => {
       try {
         setLoading(true);
-        
+
         // Yotoqxonalar va apartments ni parallel yuklash
         const [dormitoriesData, apartmentsData] = await Promise.all([
           authAPI.getDormitories().catch(() => []),
-          authAPI.getApartments().catch(() => [])
+          authAPI.getApartments().catch(() => []),
         ]);
 
         // Dormitory ma'lumotlarini Listing formatiga o'tkazish
-        const convertedDormitories: Listing[] = dormitoriesData.slice(0, 2).map((dormitory: any) => ({
-          id: `dorm-${dormitory.id}`,
-          title: dormitory.name,
-          type: 'dormitory' as const,
-          price: dormitory.month_price,
-          location: dormitory.address,
-          university: dormitory.university?.name || 'Universitet ko\'rsatilmagan',
-          images: dormitory.images?.map((img: any) => img.image) || ['/placeholder-dormitory.jpg'],
-          amenities: dormitory.amenities?.map((amenity: any) => amenity.name) || [],
-          description: dormitory.description || 'Tavsif mavjud emas',
-          capacity: dormitory.total_capacity || 1,
-          available: dormitory.available_capacity > 0,
-          rating: 4.5,
-          reviews: 0,
-          features: {
-            furnished: true,
-            wifi: dormitory.amenities?.some((a: any) => a.name?.toLowerCase().includes('wifi')) || false,
-            parking: dormitory.amenities?.some((a: any) => a.name?.toLowerCase().includes('parking')) || false,
-            security: dormitory.amenities?.some((a: any) => a.name?.toLowerCase().includes('security')) || false
-          },
-          rules: dormitory.rules || [],
-          coordinates: {
-            lat: dormitory.latitude || 41.2995,
-            lng: dormitory.longitude || 69.2401
-          }
-        }));
+        const convertedDormitories: Listing[] = dormitoriesData
+          .slice(0, 2)
+          .map((dormitory: any) => ({
+            id: `dorm-${dormitory.id}`,
+            title: dormitory.name,
+            type: "dormitory" as const,
+            price: dormitory.month_price,
+            location: dormitory.address,
+            university:
+              dormitory.university?.name || "Universitet ko'rsatilmagan",
+            images: dormitory.images?.map((img: any) => img.image) || [
+              "/placeholder-dormitory.jpg",
+            ],
+            amenities:
+              dormitory.amenities?.map((amenity: any) => amenity.name) || [],
+            description: dormitory.description || "Tavsif mavjud emas",
+            capacity: dormitory.total_capacity || 1,
+            available: dormitory.available_capacity > 0,
+            rating: 4.5,
+            reviews: 0,
+            features: {
+              furnished: true,
+              wifi:
+                dormitory.amenities?.some((a: any) =>
+                  a.name?.toLowerCase().includes("wifi")
+                ) || false,
+              parking:
+                dormitory.amenities?.some((a: any) =>
+                  a.name?.toLowerCase().includes("parking")
+                ) || false,
+              security:
+                dormitory.amenities?.some((a: any) =>
+                  a.name?.toLowerCase().includes("security")
+                ) || false,
+            },
+            rules: dormitory.rules || [],
+            coordinates: {
+              lat: dormitory.latitude || 41.2995,
+              lng: dormitory.longitude || 69.2401,
+            },
+          }));
 
         // Apartments ma'lumotlarini API strukturasiga mos qilib mapping
-        const convertedApartments: Listing[] = apartmentsData.slice(0, 2).map((apartment: any) => ({
-          id: `apt-${apartment.id}`,
-          title: apartment.title || 'Ijara Xonadon',
-          type: 'rental' as const,
-          price: apartment.monthly_price || 0,
-          location: apartment.exact_address || 'Manzil ko\'rsatilmagan',
-          university: `${apartment.room_type || '1 kishilik'} - ${apartment.gender || 'Aralash'}`,
-          images: apartment.images?.map((img: any) => img.image) || ['/placeholder-apartment.jpg'],
-          amenities: apartment.amenities?.map((amenity: any) => amenity.name) || [],
-          description: apartment.description || 'Tavsif mavjud emas',
-          capacity: apartment.total_rooms || 1,
-          available: apartment.available_rooms > 0,
-          rating: 4.0,
-          reviews: 0,
-          features: {
-            furnished: true,
-            wifi: apartment.amenities?.some((a: any) => 
-              a.name?.toLowerCase().includes('wifi') || 
-              a.name?.toLowerCase().includes('internet')
-            ) || false,
-            parking: apartment.amenities?.some((a: any) => 
-              a.name?.toLowerCase().includes('parking')
-            ) || false,
-            security: apartment.amenities?.some((a: any) => 
-              a.name?.toLowerCase().includes('security')
-            ) || false
-          },
-          rules: [],
-          coordinates: {
-            lat: 41.2995,
-            lng: 69.2401
-          },
-          // Qo'shimcha apartment ma'lumotlari
-          rooms: apartment.total_rooms || 1,
-          available_rooms: apartment.available_rooms || 0,
-          room_type: apartment.room_type || '1 kishilik',
-          gender: apartment.gender || 'Aralash',
-          owner: apartment.user || 'Egasi ko\'rsatilmagan',
-          phone_number: apartment.phone_number || '',
-          province: apartment.province || 1
-        }));
+        const convertedApartments: Listing[] = apartmentsData
+          .slice(0, 2)
+          .map((apartment: any) => ({
+            id: `apt-${apartment.id}`,
+            title: apartment.title || "Ijara Xonadon",
+            type: "rental" as const,
+            price: apartment.monthly_price || 0,
+            location: apartment.exact_address || "Manzil ko'rsatilmagan",
+            university: `${apartment.room_type || "1 kishilik"} - ${
+              apartment.gender || "Aralash"
+            }`,
+            images: apartment.images?.map((img: any) => img.image) || [
+              "/placeholder-apartment.jpg",
+            ],
+            amenities:
+              apartment.amenities?.map((amenity: any) => amenity.name) || [],
+            description: apartment.description || "Tavsif mavjud emas",
+            capacity: apartment.total_rooms || 1,
+            available: apartment.available_rooms > 0,
+            rating: 4.0,
+            reviews: 0,
+            features: {
+              furnished: true,
+              wifi:
+                apartment.amenities?.some(
+                  (a: any) =>
+                    a.name?.toLowerCase().includes("wifi") ||
+                    a.name?.toLowerCase().includes("internet")
+                ) || false,
+              parking:
+                apartment.amenities?.some((a: any) =>
+                  a.name?.toLowerCase().includes("parking")
+                ) || false,
+              security:
+                apartment.amenities?.some((a: any) =>
+                  a.name?.toLowerCase().includes("security")
+                ) || false,
+            },
+            rules: [],
+            coordinates: {
+              lat: 41.2995,
+              lng: 69.2401,
+            },
+            // Qo'shimcha apartment ma'lumotlari
+            rooms: apartment.total_rooms || 1,
+            available_rooms: apartment.available_rooms || 0,
+            room_type: apartment.room_type || "1 kishilik",
+            gender: apartment.gender || "Aralash",
+            owner: apartment.user || "Egasi ko'rsatilmagan",
+            phone_number: apartment.phone_number || "",
+            province: apartment.province || 1,
+          }));
 
         // Yotoqxonalar va apartments ni birlashtirish
         const allListings = [...convertedDormitories, ...convertedApartments];
         setFeaturedListings(allListings);
-        
+
+        // Statistikalarni yuklash
+        const stats = await authAPI.getStatistics();
+        setStatistics(stats);
       } catch (error) {
-        console.error('Ma\'lumotlar yuklanmadi:', error);
+        console.error("Ma'lumotlar yuklanmadi:", error);
         setFeaturedListings([]);
       } finally {
         setLoading(false);
@@ -119,34 +169,54 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
   }, []);
 
   const stats = [
-    { icon: Home, label: 'Yotoqxonalar', value: '150+', color: 'text-teal-600' },
-    { icon: Building2, label: 'Ijara Xonadonlar', value: '500+', color: 'text-green-600' },
-    { icon: Users, label: 'Faol Talabalar', value: '2,500+', color: 'text-indigo-600' },
-    { icon: Shield, label: 'Tasdiqlangan Elonlar', value: '98%', color: 'text-purple-600' }
+    {
+      icon: Home,
+      label: "Yotoqxonalar",
+      value: `${statistics.dormitories_count}`,
+      color: "text-teal-600",
+    },
+    {
+      icon: Building2,
+      label: "Ijara Xonadonlar",
+      value: `${statistics.apartments_count}`,
+      color: "text-green-600",
+    },
+    {
+      icon: Users,
+      label: "Faol Foydalanuvchilar",
+      value: "Yangi",
+      color: "text-indigo-600",
+    },
+    {
+      icon: Shield,
+      label: "Ishonchli Platforma",
+      value: "24/7",
+      color: "text-purple-600",
+    },
   ];
 
   const howItWorks = [
     {
       step: 1,
-      title: 'Qidiring',
-      description: 'O\'zingizga mos yotoqxona yoki kvartira toping',
+      title: "Qidiring",
+      description: "O'zingizga mos yotoqxona yoki kvartira toping",
       icon: Search,
-      color: 'bg-teal-100 text-teal-600'
+      color: "bg-teal-100 text-teal-600",
     },
     {
       step: 2,
-      title: 'Ariza Yuboring',
-      description: 'Tanlagan joyingizga onlayn ariza yuboring',
+      title: "Ariza Yuboring",
+      description: "Tanlagan joyingizga onlayn ariza yuboring",
       icon: MessageCircle,
-      color: 'bg-green-100 text-green-600'
+      color: "bg-green-100 text-green-600",
     },
     {
       step: 3,
-      title: 'Ko\'chib O\'ting',
-      description: 'Tasdiqlangandan so\'ng yangi uyingizga ko\'chib o\'ting',
+      title: "Ko'chib O'ting",
+      description: "Tasdiqlangandan so'ng yangi uyingizga ko'chib o'ting",
       icon: Home,
-      color: 'bg-indigo-100 text-indigo-600'
-    }
+      color: "bg-indigo-100 text-indigo-600",
+    },
   ];
 
   return (
@@ -171,15 +241,15 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
               Turar Joy Toping
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-              O'zbekistondagi eng yaxshi yotoqxonalar va ijara xonadonlarini bir joyda.
-              Tez, oson va ishonchli.
+              O'zbekistondagi eng yaxshi yotoqxonalar va ijara xonadonlarini bir
+              joyda. Tez, oson va ishonchli.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/dormitories')}
+                onClick={() => navigate("/dormitories")}
                 className="bg-gradient-to-r from-teal-600 to-teal-700 text-white px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 <Home className="w-5 h-5" />
@@ -188,7 +258,7 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/rentals')}
+                onClick={() => navigate("/rentals")}
                 className="bg-gradient-to-r from-green-600 to-green-700 text-white px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 <Building2 className="w-5 h-5" />
@@ -196,7 +266,7 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
               </motion.button>
             </div>
 
-            <SearchBar onSearch={() => { }} />
+            <SearchBar onSearch={() => {}} />
           </motion.div>
         </div>
       </section>
@@ -213,11 +283,17 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 className="text-center"
               >
-                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4`}>
+                <div
+                  className={`inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4`}
+                >
                   <stat.icon className={`w-8 h-8 ${stat.color}`} />
                 </div>
-                <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{stat.value}</div>
-                <div className="text-gray-600 dark:text-gray-300">{stat.label}</div>
+                <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  {stat.value}
+                </div>
+                <div className="text-gray-600 dark:text-gray-300">
+                  {stat.label}
+                </div>
               </motion.div>
             ))}
           </div>
@@ -245,7 +321,9 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <div className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-gray-600 dark:text-gray-300">Yotoqxonalar yuklanmoqda...</p>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Yotoqxonalar yuklanmoqda...
+                </p>
               </div>
             </div>
           ) : featuredListings.length === 0 ? (
@@ -284,7 +362,7 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
             className="text-center mt-12"
           >
             <button
-              onClick={() => navigate('/dormitories')}
+              onClick={() => navigate("/dormitories")}
               className="bg-gradient-to-r from-teal-600 to-green-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 inline-flex items-center gap-2"
             >
               Barcha Elonlarni Ko'rish
@@ -323,7 +401,9 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
                 {index < howItWorks.length - 1 && (
                   <div className="hidden md:block absolute top-12 left-1/2 w-full h-0.5 bg-gradient-to-r from-teal-200 to-green-200 dark:from-teal-800 dark:to-green-800 transform translate-x-1/2" />
                 )}
-                <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full ${step.color} mb-6 relative z-10`}>
+                <div
+                  className={`inline-flex items-center justify-center w-24 h-24 rounded-full ${step.color} mb-6 relative z-10`}
+                >
                   <step.icon className="w-10 h-10" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
@@ -350,22 +430,22 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
               Bugun O'z Uyingizni Toping!
             </h2>
             <p className="text-teal-100 mb-8 max-w-2xl mx-auto">
-              Minglab talabalar bizning platformamiz orqali o'zlariga mos yashash joyini topdilar.
-              Endi sizning navbatingiz!
+              Minglab talabalar bizning platformamiz orqali o'zlariga mos
+              yashash joyini topdilar. Endi sizning navbatingiz!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => navigate(user ? '/dashboard' : '/register')}
+                onClick={() => navigate(user ? "/dashboard" : "/register")}
                 className="bg-white text-teal-600 px-8 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-colors duration-300"
               >
-                {user ? 'Dashboard' : 'Ro\'yhatdan O\'tish'}
+                {user ? "Dashboard" : "Ro'yhatdan O'tish"}
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/about')}
+                onClick={() => navigate("/about")}
                 className="border-2 border-white text-white px-8 py-3 rounded-xl font-semibold hover:bg-white hover:text-teal-600 transition-all duration-300"
               >
                 Batafsil Ma'lumot

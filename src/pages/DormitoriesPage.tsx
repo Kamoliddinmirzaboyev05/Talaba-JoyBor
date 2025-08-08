@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, SlidersHorizontal, MapPin, Users, Star, Wifi, Shield, Car, Building2, Clock, CheckCircle } from 'lucide-react';
+import { Search, SlidersHorizontal, MapPin, Users, Star, Wifi, Shield, Car, Building2, Clock, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Listing, Dormitory } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
@@ -28,6 +28,7 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
   });
   const [sortBy, setSortBy] = useState('name');
   const [showFilters, setShowFilters] = useState(false);
+  const [imageIndexes, setImageIndexes] = useState<{[key: number]: number}>({});
   const [provinces, setProvinces] = useState<{ id: number; name: string }[]>([]);
 
   // API dan yotoqxonalar va viloyatlarni yuklash
@@ -143,6 +144,28 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('uz-UZ').format(price) + ' so\'m';
+  };
+
+  const nextImage = (dormitoryId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const dormitory = dormitories.find(d => d.id === dormitoryId);
+    if (dormitory && dormitory.images.length > 1) {
+      setImageIndexes(prev => ({
+        ...prev,
+        [dormitoryId]: ((prev[dormitoryId] || 0) + 1) % dormitory.images.length
+      }));
+    }
+  };
+
+  const prevImage = (dormitoryId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const dormitory = dormitories.find(d => d.id === dormitoryId);
+    if (dormitory && dormitory.images.length > 1) {
+      setImageIndexes(prev => ({
+        ...prev,
+        [dormitoryId]: ((prev[dormitoryId] || 0) - 1 + dormitory.images.length) % dormitory.images.length
+      }));
+    }
   };
 
   const universities = [...new Set(dormitories.map(d => d.university.name))];
@@ -368,26 +391,79 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
               >
                 {/* Image */}
                 <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={dormitory.images[0]?.image || '/placeholder-dormitory.jpg'}
+                  <motion.img
+                    key={`dorm-${dormitory.id}-${imageIndexes[dormitory.id] || 0}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    src={dormitory.images[imageIndexes[dormitory.id] || 0]?.image || '/placeholder-dormitory.svg'}
                     alt={dormitory.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/placeholder-dormitory.svg';
+                    }}
                   />
                   
+                  {/* Image Navigation */}
+                  {dormitory.images && dormitory.images.length > 1 && (
+                    <>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => prevImage(dormitory.id, e)}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-black/60 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-black/80 backdrop-blur-sm shadow-lg"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => nextImage(dormitory.id, e)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-black/60 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-black/80 backdrop-blur-sm shadow-lg"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </motion.button>
+                      
+                      {/* Image Indicators */}
+                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex gap-1 bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
+                        {dormitory.images.map((_, index) => (
+                          <motion.button
+                            key={index}
+                            whileHover={{ scale: 1.2 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setImageIndexes(prev => ({...prev, [dormitory.id]: index}));
+                            }}
+                            className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                              index === (imageIndexes[dormitory.id] || 0) ? 'bg-white' : 'bg-white/50 hover:bg-white/70'
+                            }`}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Image Counter */}
+                      <div className="absolute top-2 right-2 z-10 px-2 py-1 bg-black/60 text-white text-xs rounded-full backdrop-blur-sm">
+                        {(imageIndexes[dormitory.id] || 0) + 1}/{dormitory.images.length}
+                      </div>
+                    </>
+                  )}
+                  
                   {/* Availability Badge */}
-                  <div className="absolute top-3 left-3">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  <div className="absolute top-3 left-3 z-10">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm shadow-lg ${
                       dormitory.available_capacity > 0
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                        ? 'bg-green-100/90 text-green-800 dark:bg-green-900/60 dark:text-green-300'
+                        : 'bg-red-100/90 text-red-800 dark:bg-red-900/60 dark:text-red-300'
                     }`}>
                       {dormitory.available_capacity > 0 ? 'Mavjud' : 'To\'liq'}
                     </span>
                   </div>
 
                   {/* Price Badge */}
-                  <div className="absolute top-3 right-3">
-                    <span className="px-3 py-1 bg-black/70 text-white rounded-full text-sm font-semibold">
+                  <div className="absolute bottom-3 left-3 z-10">
+                    <span className="px-3 py-1 bg-black/70 text-white rounded-full text-sm font-semibold backdrop-blur-sm shadow-lg">
                       {formatPrice(dormitory.month_price)}/oy
                     </span>
                   </div>

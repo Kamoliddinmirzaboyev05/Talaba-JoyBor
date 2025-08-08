@@ -1,23 +1,210 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Star, MapPin, Users, Wifi, Car, Shield, Heart, Share2, MessageCircle, Calendar, Phone, Mail, CheckCircle } from 'lucide-react';
-import { Listing } from '../types';
-import { useAuth } from '../contexts/AuthContext';
-import Header from '../components/Header';
-import { getGlobalSelectedListing, setGlobalSelectedListing } from '../App';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  ArrowLeft,
+  Star,
+  MapPin,
+  Users,
+  Wifi,
+  Car,
+  Shield,
+  Heart,
+  Share2,
+  MessageCircle,
+  Calendar,
+  Phone,
+  Mail,
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { Listing } from "../types";
+import { useAuth } from "../contexts/AuthContext";
+import Header from "../components/Header";
+import { getGlobalSelectedListing, setGlobalSelectedListing } from "../App";
+import { authAPI } from "../services/api";
 
 const ListingDetailPage: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const listing = getGlobalSelectedListing();
-  
+  const [listing, setListing] = useState<Listing | null>(
+    getGlobalSelectedListing()
+  );
+  const [loading, setLoading] = useState(false);
+
   const onApplicationStart = (listing: Listing) => {
     setGlobalSelectedListing(listing);
-    navigate('/application');
+    navigate("/application");
   };
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  // Load listing data if not available
+  useEffect(() => {
+    const loadListing = async () => {
+      if (!listing && id) {
+        setLoading(true);
+        try {
+          // Try to find listing from API
+          const [dormitories, apartments] = await Promise.all([
+            authAPI.getDormitories(),
+            authAPI.getApartments(),
+          ]);
+
+          // Convert API data to Listing format
+          const allListings: Listing[] = [
+            ...dormitories.map((dorm: any) => ({
+              id: `dorm-${dorm.id}`,
+              title: dorm.name,
+              type: "dormitory" as const,
+              price: dorm.month_price,
+              location: dorm.address,
+              university: dorm.university.name,
+              images: dorm.images?.map((img: any) => img.image) || [],
+              amenities:
+                dorm.amenities?.map((amenity: any) => amenity.name) || [],
+              description: dorm.description || "Tavsif mavjud emas",
+              capacity: dorm.total_capacity || 1,
+              available: dorm.available_capacity > 0,
+              rating: 4.5,
+              reviews: 12,
+              features: {
+                furnished: true,
+                wifi:
+                  dorm.amenities?.some((a: any) =>
+                    a.name.toLowerCase().includes("wifi")
+                  ) || false,
+                parking:
+                  dorm.amenities?.some((a: any) =>
+                    a.name.toLowerCase().includes("parking")
+                  ) || false,
+                security:
+                  dorm.amenities?.some((a: any) =>
+                    a.name.toLowerCase().includes("security")
+                  ) || false,
+              },
+              rules: dorm.rules || [],
+              coordinates: {
+                lat: dorm.latitude || 0,
+                lng: dorm.longitude || 0,
+              },
+            })),
+            ...apartments.map((apt: any) => ({
+              id: `apt-${apt.id}`,
+              title: apt.name || apt.title,
+              type: "rental" as const,
+              price: apt.month_price || apt.price,
+              location: apt.address || apt.location,
+              university: apt.university?.name || "Umumiy",
+              images: apt.images?.map((img: any) => img.image || img) || [],
+              amenities:
+                apt.amenities?.map((amenity: any) => amenity.name || amenity) ||
+                [],
+              description: apt.description || "Tavsif mavjud emas",
+              capacity: apt.capacity || 1,
+              available: true,
+              rating: 4.3,
+              reviews: 8,
+              landlord: apt.landlord,
+              features: {
+                furnished: true,
+                wifi:
+                  apt.amenities?.some((a: any) =>
+                    (a.name || a).toLowerCase().includes("wifi")
+                  ) || false,
+                parking:
+                  apt.amenities?.some((a: any) =>
+                    (a.name || a).toLowerCase().includes("parking")
+                  ) || false,
+                security:
+                  apt.amenities?.some((a: any) =>
+                    (a.name || a).toLowerCase().includes("security")
+                  ) || false,
+              },
+              rules: apt.rules || [],
+              coordinates: {
+                lat: apt.latitude || 0,
+                lng: apt.longitude || 0,
+              },
+            })),
+          ];
+
+          const foundListing = allListings.find((l) => l.id === id);
+          if (foundListing) {
+            setListing(foundListing);
+            setGlobalSelectedListing(foundListing);
+          }
+        } catch (error) {
+          console.error("Listing yuklanmadi:", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadListing();
+  }, [id, listing]);
+
+  // Reset image index when listing changes
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [listing?.id]);
+
+  // Keyboard navigation for image slider
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (!listing?.images || listing.images.length <= 1) return;
+
+      if (e.key === "ArrowLeft") {
+        prevImage();
+      } else if (e.key === "ArrowRight") {
+        nextImage();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [listing]);
+
+  // Touch handlers for mobile swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe && listing?.images && listing.images.length > 1) {
+      nextImage();
+    }
+    if (isRightSwipe && listing?.images && listing.images.length > 1) {
+      prevImage();
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Yuklanmoqda...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!listing) {
     return (
@@ -27,7 +214,7 @@ const ListingDetailPage: React.FC = () => {
             Elon topilmadi
           </h2>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors duration-200"
           >
             Bosh sahifaga qaytish
@@ -38,25 +225,29 @@ const ListingDetailPage: React.FC = () => {
   }
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('uz-UZ').format(price) + ' so\'m';
+    return new Intl.NumberFormat("uz-UZ").format(price) + " so'm";
   };
 
   const nextImage = () => {
-    setCurrentImageIndex((prev) => 
-      prev === listing.images.length - 1 ? 0 : prev + 1
-    );
+    if (listing.images && listing.images.length > 0) {
+      setCurrentImageIndex((prev) =>
+        prev === listing.images.length - 1 ? 0 : prev + 1
+      );
+    }
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => 
-      prev === 0 ? listing.images.length - 1 : prev - 1
-    );
+    if (listing.images && listing.images.length > 0) {
+      setCurrentImageIndex((prev) =>
+        prev === 0 ? listing.images.length - 1 : prev - 1
+      );
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <motion.button
@@ -65,7 +256,7 @@ const ListingDetailPage: React.FC = () => {
           transition={{ duration: 0.5 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => navigate('/')}
+          onClick={() => navigate("/")}
           className="flex items-center gap-2 text-teal-600 hover:text-teal-700 mb-6 transition-colors duration-200"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -80,75 +271,109 @@ const ListingDetailPage: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="relative h-96 rounded-2xl overflow-hidden mb-6"
+              className="relative h-96 rounded-2xl overflow-hidden mb-6 group"
             >
-              <img
-                src={listing.images[currentImageIndex]}
+              <motion.img
+                key={`${listing.id}-${currentImageIndex}`}
+                initial={{ opacity: 0, scale: 1.05 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+                src={
+                  listing.images && listing.images.length > 0
+                    ? listing.images[currentImageIndex]
+                    : "/placeholder-room.svg"
+                }
                 alt={listing.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/placeholder-room.svg";
+                }}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
               />
-              
-              {listing.images.length > 1 && (
+
+              {listing.images && listing.images.length > 1 && (
                 <>
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                     onClick={prevImage}
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors duration-200"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-all duration-200 backdrop-blur-sm shadow-lg"
                   >
-                    ‹
-                  </button>
-                  <button
+                    <ChevronLeft className="w-6 h-6 ml-0.5" />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                     onClick={nextImage}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors duration-200"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-all duration-200 backdrop-blur-sm shadow-lg"
                   >
-                    ›
-                  </button>
-                  
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-                    {listing.images.map((_, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setCurrentImageIndex(index)}
-                        className={`w-3 h-3 rounded-full transition-colors duration-200 ${
-                          index === currentImageIndex ? 'bg-white' : 'bg-white/50'
-                        }`}
-                      />
-                    ))}
+                    <ChevronRight className="w-6 h-6 mr-0.5" />
+                  </motion.button>
+
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2 bg-black/40 px-3 py-2 rounded-full backdrop-blur-sm shadow-lg">
+                    {listing.images &&
+                      listing.images.map((_, index) => (
+                        <motion.button
+                          key={index}
+                          whileHover={{ scale: 1.2 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => setCurrentImageIndex(index)}
+                          className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                            index === currentImageIndex
+                              ? "bg-white shadow-sm"
+                              : "bg-white/50 hover:bg-white/70"
+                          }`}
+                        />
+                      ))}
                   </div>
                 </>
               )}
 
               {/* Action Buttons */}
-              <div className="absolute top-4 right-4 flex gap-2">
+              <div className="absolute top-4 right-4 z-10 flex gap-2">
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setIsLiked(!isLiked)}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200 ${
-                    isLiked 
-                      ? 'bg-red-500 text-white' 
-                      : 'bg-white/90 text-gray-600 hover:bg-white'
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200 shadow-lg ${
+                    isLiked
+                      ? "bg-red-500 text-white"
+                      : "bg-white/90 text-gray-600 hover:bg-white backdrop-blur-sm"
                   }`}
                 >
-                  <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
+                  <Heart
+                    className={`w-5 h-5 ${isLiked ? "fill-current" : ""}`}
+                  />
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  className="w-10 h-10 bg-white/90 text-gray-600 rounded-full flex items-center justify-center hover:bg-white transition-colors duration-200"
+                  className="w-10 h-10 bg-white/90 text-gray-600 rounded-full flex items-center justify-center hover:bg-white transition-colors duration-200 backdrop-blur-sm shadow-lg"
                 >
                   <Share2 className="w-5 h-5" />
                 </motion.button>
               </div>
 
-              {/* Type Badge */}
-              <div className="absolute top-4 left-4">
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                  listing.type === 'dormitory' 
-                    ? 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300'
-                    : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                }`}>
-                  {listing.type === 'dormitory' ? 'Yotoqxona' : 'Ijara'}
+              {/* Type Badge and Image Counter */}
+              <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-semibold shadow-lg backdrop-blur-sm ${
+                    listing.type === "dormitory"
+                      ? "bg-teal-100/90 text-teal-800 dark:bg-teal-900/60 dark:text-teal-300"
+                      : "bg-green-100/90 text-green-800 dark:bg-green-900/60 dark:text-green-300"
+                  }`}
+                >
+                  {listing.type === "dormitory" ? "Yotoqxona" : "Ijara"}
                 </span>
+                {listing.images && listing.images.length > 1 && (
+                  <span className="px-3 py-1 bg-black/60 text-white text-sm rounded-full backdrop-blur-sm shadow-lg">
+                    {currentImageIndex + 1} / {listing.images.length}
+                  </span>
+                )}
               </div>
             </motion.div>
 
@@ -224,7 +449,9 @@ const ListingDetailPage: React.FC = () => {
                     <div className="w-10 h-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center">
                       <Wifi className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                     </div>
-                    <span className="text-gray-700 dark:text-gray-300">WiFi</span>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      WiFi
+                    </span>
                   </div>
                 )}
                 {listing.features.parking && (
@@ -232,7 +459,9 @@ const ListingDetailPage: React.FC = () => {
                     <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
                       <Car className="w-5 h-5 text-green-600 dark:text-green-400" />
                     </div>
-                    <span className="text-gray-700 dark:text-gray-300">Parking</span>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      Parking
+                    </span>
                   </div>
                 )}
                 {listing.features.security && (
@@ -240,17 +469,25 @@ const ListingDetailPage: React.FC = () => {
                     <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
                       <Shield className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                     </div>
-                    <span className="text-gray-700 dark:text-gray-300">Xavfsizlik</span>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      Xavfsizlik
+                    </span>
                   </div>
                 )}
-                {listing.amenities.map((amenity, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
-                      <CheckCircle className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                {listing.amenities &&
+                  listing.amenities.length > 0 &&
+                  listing.amenities.map((amenity, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+                        <CheckCircle className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                      </div>
+                      <span className="text-gray-700 dark:text-gray-300">
+                        {typeof amenity === "string"
+                          ? amenity
+                          : (amenity as any)?.name || "Qulaylik"}
+                      </span>
                     </div>
-                    <span className="text-gray-700 dark:text-gray-300">{amenity}</span>
-                  </div>
-                ))}
+                  ))}
               </div>
             </motion.div>
 
@@ -265,12 +502,25 @@ const ListingDetailPage: React.FC = () => {
                 Qoidalar
               </h2>
               <ul className="space-y-2">
-                {listing.rules.map((rule, index) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-teal-600 rounded-full mt-2 flex-shrink-0" />
-                    <span className="text-gray-600 dark:text-gray-300">{rule}</span>
+                {listing.rules && listing.rules.length > 0 ? (
+                  listing.rules.map((rule, index) => (
+                    <li key={index} className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-teal-600 rounded-full mt-2 flex-shrink-0" />
+                      <span className="text-gray-600 dark:text-gray-300">
+                        {typeof rule === "string"
+                          ? rule
+                          : (rule as any)?.rule || (rule as any)?.name || "Qoida"}
+                      </span>
+                    </li>
+                  ))
+                ) : (
+                  <li className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full mt-2 flex-shrink-0" />
+                    <span className="text-gray-500 dark:text-gray-400">
+                      Qoidalar haqida ma'lumot yo'q
+                    </span>
                   </li>
-                ))}
+                )}
               </ul>
             </motion.div>
           </div>
@@ -284,7 +534,7 @@ const ListingDetailPage: React.FC = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="bg-white dark:bg-gray-800 rounded-2xl p-6 mb-6 sticky top-8"
             >
-              {listing.type === 'rental' && listing.landlord ? (
+              {listing.type === "rental" && listing.landlord ? (
                 <>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                     Uy egasi
@@ -314,7 +564,7 @@ const ListingDetailPage: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-3 mb-6">
                     <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                       <Phone className="w-4 h-4" />
@@ -338,7 +588,9 @@ const ListingDetailPage: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                       <Mail className="w-4 h-4" />
-                      <span className="text-sm">info@{listing.university.toLowerCase()}.uz</span>
+                      <span className="text-sm">
+                        info@{listing.university.toLowerCase()}.uz
+                      </span>
                     </div>
                   </div>
                 </>
@@ -369,7 +621,7 @@ const ListingDetailPage: React.FC = () => {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => navigate('/login')}
+                    onClick={() => navigate("/login")}
                     className="w-full bg-gradient-to-r from-teal-600 to-green-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
                   >
                     Ariza Yuborish Uchun Kiring

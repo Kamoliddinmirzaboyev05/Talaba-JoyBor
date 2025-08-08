@@ -90,7 +90,7 @@ function AppContent() {
   // Helper functions for navigation
   const handleListingSelect = (listing: Listing) => {
     setGlobalSelectedListing(listing);
-    navigate('/listing-detail');
+    navigate(`/listing/${listing.id}`);
   };
 
   const handleApplicationStart = (listing: Listing) => {
@@ -123,7 +123,7 @@ function AppContent() {
         <Route path="/application" element={<ProtectedRoute><ApplicationPage /></ProtectedRoute>} />
         
         {/* Listing detail can be accessed by anyone */}
-        <Route path="/listing-detail" element={<ListingDetailPage />} />
+        <Route path="/listing/:id" element={<ListingDetailPage />} />
         
         {/* Catch all route */}
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -136,7 +136,7 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <AppContent />
         </Router>
       </AuthProvider>

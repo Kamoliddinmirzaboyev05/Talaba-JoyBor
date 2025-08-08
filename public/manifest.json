@@ -1,7 +1,7 @@
 {
   "name": "JoyBor - Talabalar uchun zamonaviy turar joy platformasi",
   "short_name": "JoyBor",
-  "description": "O'zbekistondagi talabalar uchun eng yaxshi yotoqxona va ijara uylarini topish platformasi. 2500+ faol talaba, 650+ turar joy.",
+  "description": "O'zbekistondagi talabalar uchun eng yaxshi yotoqxona va ijara uylarini topish platformasi. Qulay, xavfsiz va arzon turar joylar.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

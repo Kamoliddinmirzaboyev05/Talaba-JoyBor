@@ -204,6 +204,37 @@ export const authAPI = {
     }
   },
 
+  // Get platform statistics
+  getStatistics: async (): Promise<{
+    dormitories_count: number;
+    apartments_count: number;
+    users_count: number;
+    applications_count: number;
+  }> => {
+    try {
+      // Server da /statistics/ endpoint yo'q, shuning uchun mavjud endpoint lardan foydalanib hisoblaymiz
+      const [dormitories, apartments] = await Promise.all([
+        api.get('/dormitories/'),
+        api.get('/apartments/')
+      ]);
+
+      return {
+        dormitories_count: dormitories.data.length || 0,
+        apartments_count: apartments.data.length || 0,
+        users_count: 0, // Bu ma'lumot hozircha mavjud emas
+        applications_count: 0 // Bu ma'lumot hozircha mavjud emas
+      };
+    } catch (error: any) {
+      console.error('Statistics fetch error:', error);
+      // Return default values if API fails
+      return {
+        dormitories_count: 0,
+        apartments_count: 0,
+        users_count: 0,
+        applications_count: 0
+      };
+    }
+  },
 
 };
 

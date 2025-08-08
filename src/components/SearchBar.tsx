@@ -213,7 +213,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
                 <span>Bugun yangilangan</span>
               </div>
               <div className="px-3 py-1 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded-full font-medium">
-                150+ natija
+                Natijalar
               </div>
             </div>
           </div>

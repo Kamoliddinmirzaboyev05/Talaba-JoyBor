@@ -1,14 +1,62 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Target, Users, Award, Heart, MapPin, TrendingUp, Shield, Clock } from 'lucide-react';
 import Header from '../components/Header';
+import { authAPI } from '../services/api';
+
+interface Statistics {
+  dormitories_count: number;
+  apartments_count: number;
+  users_count: number;
+  applications_count: number;
+}
 
 const AboutPage: React.FC = () => {
+  const [statistics, setStatistics] = useState<Statistics>({
+    dormitories_count: 0,
+    apartments_count: 0,
+    users_count: 0,
+    applications_count: 0
+  });
+
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      try {
+        const stats = await authAPI.getStatistics();
+        setStatistics(stats);
+      } catch (error) {
+        console.error('Statistikalar yuklanmadi:', error);
+      }
+    };
+
+    fetchStatistics();
+  }, []);
+
   const stats = [
-    { label: 'Faol Talabalar', value: '2,500+', icon: Users, color: 'text-blue-600' },
-    { label: 'Yashash Joylari', value: '650+', icon: MapPin, color: 'text-green-600' },
-    { label: 'Muvaffaqiyatli Joylashtirishlar', value: '1,200+', icon: Award, color: 'text-purple-600' },
-    { label: 'Qoniqish Darajasi', value: '98%', icon: Heart, color: 'text-red-600' }
+    { 
+      label: 'Yotoqxonalar', 
+      value: `${statistics.dormitories_count}`, 
+      icon: Users, 
+      color: 'text-blue-600' 
+    },
+    { 
+      label: 'Ijara Xonadonlar', 
+      value: `${statistics.apartments_count}`, 
+      icon: MapPin, 
+      color: 'text-green-600' 
+    },
+    { 
+      label: 'Jami Turar Joylar', 
+      value: `${statistics.dormitories_count + statistics.apartments_count}`, 
+      icon: Award, 
+      color: 'text-purple-600' 
+    },
+    { 
+      label: 'Xizmat Vaqti', 
+      value: '24/7', 
+      icon: Heart, 
+      color: 'text-red-600' 
+    }
   ];
 
   const features = [

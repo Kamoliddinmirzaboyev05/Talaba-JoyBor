@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Star, MapPin, Users, Wifi, Car, Shield, Eye, MessageCircle, Share2 } from 'lucide-react';
+import { Heart, Star, MapPin, Users, Wifi, Car, Shield, Eye, MessageCircle, Share2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Listing, User } from '../types';
 
 interface ListingCardProps {
@@ -13,6 +13,8 @@ interface ListingCardProps {
 const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user, onApplicationStart }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('uz-UZ').format(price) + ' so\'m';
@@ -30,16 +32,20 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user, onAp
 
   const nextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentImageIndex((prev) => 
-      prev === listing.images.length - 1 ? 0 : prev + 1
-    );
+    if (listing.images && listing.images.length > 0) {
+      setCurrentImageIndex((prev) => 
+        prev === listing.images.length - 1 ? 0 : prev + 1
+      );
+    }
   };
 
   const prevImage = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentImageIndex((prev) => 
-      prev === 0 ? listing.images.length - 1 : prev - 1
-    );
+    if (listing.images && listing.images.length > 0) {
+      setCurrentImageIndex((prev) => 
+        prev === 0 ? listing.images.length - 1 : prev - 1
+      );
+    }
   };
 
   const handleLike = (e: React.MouseEvent) => {
@@ -57,6 +63,35 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user, onAp
     // Message functionality
   };
 
+  // Touch handlers for mobile swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe && listing?.images && listing.images.length > 1) {
+      setCurrentImageIndex((prev) => 
+        prev === listing.images.length - 1 ? 0 : prev + 1
+      );
+    }
+    if (isRightSwipe && listing?.images && listing.images.length > 1) {
+      setCurrentImageIndex((prev) => 
+        prev === 0 ? listing.images.length - 1 : prev - 1
+      );
+    }
+  };
+
   return (
     <motion.div
       whileHover={{ y: -5 }}
@@ -66,38 +101,64 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user, onAp
     >
       {/* Image Section */}
       <div className="relative h-48 overflow-hidden">
-        <img
-          src={listing.images[currentImageIndex]}
+        <motion.img
+          key={`${listing.id}-${currentImageIndex}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          src={listing.images && listing.images.length > 0 ? listing.images[currentImageIndex] : '/placeholder-room.svg'}
           alt={listing.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = '/placeholder-room.svg';
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         />
         
         {/* Image Navigation */}
-        {listing.images.length > 1 && (
+        {listing.images && listing.images.length > 1 && (
           <>
-            <button
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
               onClick={prevImage}
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-black/60 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-black/80 backdrop-blur-sm shadow-lg"
             >
-              ‹
-            </button>
-            <button
+              <ChevronLeft className="w-4 h-4" />
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
               onClick={nextImage}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-black/60 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-black/80 backdrop-blur-sm shadow-lg"
             >
-              ›
-            </button>
+              <ChevronRight className="w-4 h-4" />
+            </motion.button>
             
             {/* Image Indicators */}
-            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1">
-              {listing.images.map((_, index) => (
-                <div
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex gap-1 bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
+              {listing.images && listing.images.map((_, index) => (
+                <motion.button
                   key={index}
-                  className={`w-2 h-2 rounded-full transition-colors duration-200 ${
-                    index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                  whileHover={{ scale: 1.2 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentImageIndex(index);
+                  }}
+                  className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                    index === currentImageIndex ? 'bg-white' : 'bg-white/50 hover:bg-white/70'
                   }`}
                 />
               ))}
+            </div>
+
+            {/* Image Counter */}
+            <div className="absolute top-2 right-2 z-10 px-2 py-1 bg-black/60 text-white text-xs rounded-full backdrop-blur-sm">
+              {currentImageIndex + 1}/{listing.images.length}
             </div>
           </>
         )}
