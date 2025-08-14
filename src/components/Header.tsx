@@ -65,9 +65,10 @@ const Header: React.FC = () => {
             onClick={() => navigate("/")}
             className="flex items-center gap-2"
           >
-            <img src="/darklogo.svg" alt="JoyBor" className="w-10 h-10" />
-          
-            <span className="text-xl font-bold text-gray-900 dark:text-white">
+            <div className="w-10 h-10 bg-gradient-to-r from-teal-600 to-green-600 rounded-xl flex items-center justify-center">
+              <Home className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-green-600 bg-clip-text text-transparent">
               JoyBor
             </span>
           </motion.button>

@@ -38,8 +38,8 @@ const ListingDetailPage: React.FC = () => {
     setGlobalSelectedListing(listing);
     navigate("/application");
   };
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
@@ -149,9 +149,17 @@ const ListingDetailPage: React.FC = () => {
     loadListing();
   }, [id, listing]);
 
-  // Reset image index when listing changes
+  // Sahifa yuklanganda yuqoriga scroll qilish
   useEffect(() => {
-    setCurrentImageIndex(0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  // Listing o'zgarganda ham yuqoriga scroll qilish va image index reset
+  useEffect(() => {
+    if (listing) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setCurrentImageIndex(0);
+    }
   }, [listing?.id]);
 
   // Keyboard navigation for image slider
@@ -170,30 +178,7 @@ const ListingDetailPage: React.FC = () => {
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, [listing]);
 
-  // Touch handlers for mobile swipe
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe && listing?.images && listing.images.length > 1) {
-      nextImage();
-    }
-    if (isRightSwipe && listing?.images && listing.images.length > 1) {
-      prevImage();
-    }
-  };
 
   if (loading) {
     return (
@@ -229,7 +214,7 @@ const ListingDetailPage: React.FC = () => {
   };
 
   const nextImage = () => {
-    if (listing.images && listing.images.length > 0) {
+    if (listing?.images && listing.images.length > 0) {
       setCurrentImageIndex((prev) =>
         prev === listing.images.length - 1 ? 0 : prev + 1
       );
@@ -237,12 +222,39 @@ const ListingDetailPage: React.FC = () => {
   };
 
   const prevImage = () => {
-    if (listing.images && listing.images.length > 0) {
+    if (listing?.images && listing.images.length > 0) {
       setCurrentImageIndex((prev) =>
         prev === 0 ? listing.images.length - 1 : prev - 1
       );
     }
   };
+
+  // Touch handlers for mobile swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe && listing?.images && listing.images.length > 1) {
+      nextImage();
+    }
+    if (isRightSwipe && listing?.images && listing.images.length > 1) {
+      prevImage();
+    }
+  };
+
+
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -263,119 +275,119 @@ const ListingDetailPage: React.FC = () => {
           Orqaga
         </motion.button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
           {/* Main Content */}
-          <div className="lg:col-span-2">
-            {/* Image Gallery */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="relative h-96 rounded-2xl overflow-hidden mb-6 group"
-            >
-              <motion.img
-                key={`${listing.id}-${currentImageIndex}`}
-                initial={{ opacity: 0, scale: 1.05 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.4, ease: "easeInOut" }}
-                src={
-                  listing.images && listing.images.length > 0
-                    ? listing.images[currentImageIndex]
-                    : "/placeholder-room.svg"
-                }
-                alt={listing.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = "/placeholder-room.svg";
-                }}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-              />
+          <div className="flex-1 lg:max-w-4xl space-y-6">
+                         {/* Image Gallery */}
+             {/* Image Gallery */}
+             <motion.div
+               initial={{ opacity: 0, y: 20 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 0.6 }}
+               className="relative h-96 rounded-2xl overflow-hidden mb-6 group"
+             >
+               <motion.img
+                 key={`${listing.id}-${currentImageIndex}`}
+                 initial={{ opacity: 0, scale: 1.05 }}
+                 animate={{ opacity: 1, scale: 1 }}
+                 exit={{ opacity: 0, scale: 0.95 }}
+                 transition={{ duration: 0.4, ease: "easeInOut" }}
+                 src={
+                   listing.images && listing.images.length > 0
+                     ? listing.images[currentImageIndex]
+                     : "/placeholder-room.svg"
+                 }
+                 alt={listing.title}
+                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                 onError={(e) => {
+                   const target = e.target as HTMLImageElement;
+                   target.src = "/placeholder-room.svg";
+                 }}
+                 onTouchStart={handleTouchStart}
+                 onTouchMove={handleTouchMove}
+                 onTouchEnd={handleTouchEnd}
+               />
 
-              {listing.images && listing.images.length > 1 && (
-                <>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={prevImage}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-all duration-200 backdrop-blur-sm shadow-lg"
-                  >
-                    <ChevronLeft className="w-6 h-6 ml-0.5" />
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={nextImage}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-all duration-200 backdrop-blur-sm shadow-lg"
-                  >
-                    <ChevronRight className="w-6 h-6 mr-0.5" />
-                  </motion.button>
+               {/* Navigation Buttons */}
+               {listing.images && listing.images.length > 1 && (
+                 <>
+                   <motion.button
+                     whileHover={{ scale: 1.1 }}
+                     whileTap={{ scale: 0.9 }}
+                     onClick={prevImage}
+                     className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-all duration-200 backdrop-blur-sm shadow-lg opacity-0 group-hover:opacity-100"
+                   >
+                     <ChevronLeft className="w-6 h-6" />
+                   </motion.button>
+                   <motion.button
+                     whileHover={{ scale: 1.1 }}
+                     whileTap={{ scale: 0.9 }}
+                     onClick={nextImage}
+                     className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-all duration-200 backdrop-blur-sm shadow-lg opacity-0 group-hover:opacity-100"
+                   >
+                     <ChevronRight className="w-6 h-6" />
+                   </motion.button>
 
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2 bg-black/40 px-3 py-2 rounded-full backdrop-blur-sm shadow-lg">
-                    {listing.images &&
-                      listing.images.map((_, index) => (
-                        <motion.button
-                          key={index}
-                          whileHover={{ scale: 1.2 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => setCurrentImageIndex(index)}
-                          className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                            index === currentImageIndex
-                              ? "bg-white shadow-sm"
-                              : "bg-white/50 hover:bg-white/70"
-                          }`}
-                        />
-                      ))}
-                  </div>
-                </>
-              )}
+                   {/* Image Indicators */}
+                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2 bg-black/40 px-3 py-2 rounded-full backdrop-blur-sm shadow-lg">
+                     {listing.images.map((_, index) => (
+                       <motion.button
+                         key={index}
+                         whileHover={{ scale: 1.2 }}
+                         whileTap={{ scale: 0.9 }}
+                         onClick={() => setCurrentImageIndex(index)}
+                         className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                           index === currentImageIndex
+                             ? "bg-white shadow-sm"
+                             : "bg-white/50 hover:bg-white/70"
+                         }`}
+                       />
+                     ))}
+                   </div>
 
-              {/* Action Buttons */}
-              <div className="absolute top-4 right-4 z-10 flex gap-2">
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setIsLiked(!isLiked)}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200 shadow-lg ${
-                    isLiked
-                      ? "bg-red-500 text-white"
-                      : "bg-white/90 text-gray-600 hover:bg-white backdrop-blur-sm"
-                  }`}
-                >
-                  <Heart
-                    className={`w-5 h-5 ${isLiked ? "fill-current" : ""}`}
-                  />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="w-10 h-10 bg-white/90 text-gray-600 rounded-full flex items-center justify-center hover:bg-white transition-colors duration-200 backdrop-blur-sm shadow-lg"
-                >
-                  <Share2 className="w-5 h-5" />
-                </motion.button>
-              </div>
+                   {/* Image Counter */}
+                   <div className="absolute top-4 right-4 z-10 px-3 py-1 bg-black/60 text-white text-sm rounded-full backdrop-blur-sm shadow-lg">
+                     {currentImageIndex + 1} / {listing.images.length}
+                   </div>
+                 </>
+               )}
 
-              {/* Type Badge and Image Counter */}
-              <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-semibold shadow-lg backdrop-blur-sm ${
-                    listing.type === "dormitory"
-                      ? "bg-teal-100/90 text-teal-800 dark:bg-teal-900/60 dark:text-teal-300"
-                      : "bg-green-100/90 text-green-800 dark:bg-green-900/60 dark:text-green-300"
-                  }`}
-                >
-                  {listing.type === "dormitory" ? "Yotoqxona" : "Ijara"}
-                </span>
-                {listing.images && listing.images.length > 1 && (
-                  <span className="px-3 py-1 bg-black/60 text-white text-sm rounded-full backdrop-blur-sm shadow-lg">
-                    {currentImageIndex + 1} / {listing.images.length}
-                  </span>
-                )}
-              </div>
-            </motion.div>
+               {/* Action Buttons */}
+               <div className="absolute top-4 left-4 z-10 flex gap-2">
+                 <motion.button
+                   whileHover={{ scale: 1.1 }}
+                   whileTap={{ scale: 0.9 }}
+                   onClick={() => setIsLiked(!isLiked)}
+                   className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200 shadow-lg ${
+                     isLiked
+                       ? "bg-red-500 text-white"
+                       : "bg-white/90 text-gray-600 hover:bg-white backdrop-blur-sm"
+                   }`}
+                 >
+                   <Heart className={`w-5 h-5 ${isLiked ? "fill-current" : ""}`} />
+                 </motion.button>
+                 <motion.button
+                   whileHover={{ scale: 1.1 }}
+                   whileTap={{ scale: 0.9 }}
+                   className="w-10 h-10 bg-white/90 text-gray-600 rounded-full flex items-center justify-center hover:bg-white transition-colors duration-200 backdrop-blur-sm shadow-lg"
+                 >
+                   <Share2 className="w-5 h-5" />
+                 </motion.button>
+               </div>
+
+               {/* Type Badge */}
+               <div className="absolute bottom-4 left-4 z-10">
+                 <span
+                   className={`px-3 py-1 rounded-full text-sm font-semibold shadow-lg backdrop-blur-sm ${
+                     listing.type === "dormitory"
+                       ? "bg-teal-100/90 text-teal-800 dark:bg-teal-900/60 dark:text-teal-300"
+                       : "bg-green-100/90 text-green-800 dark:bg-green-900/60 dark:text-green-300"
+                   }`}
+                 >
+                   {listing.type === "dormitory" ? "Yotoqxona" : "Ijara"}
+                 </span>
+               </div>
+             </motion.div>
 
             {/* Title and Rating */}
             <motion.div
@@ -526,13 +538,13 @@ const ListingDetailPage: React.FC = () => {
           </div>
 
           {/* Sidebar */}
-          <div className="lg:col-span-1">
+          <div className="lg:w-80 lg:flex-shrink-0 lg:sticky lg:top-20 lg:self-start space-y-6">
             {/* Contact Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 mb-6 sticky top-8"
+              className="bg-white dark:bg-gray-800 rounded-2xl p-6 mb-6"
             >
               {listing.type === "rental" && listing.landlord ? (
                 <>

@@ -168,6 +168,8 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
     }
   };
 
+
+
   const universities = [...new Set(dormitories.map(d => d.university.name))];
   const priceRanges = [
     { label: '100,000 - 300,000', value: '100000-300000' },
@@ -449,25 +451,25 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
                       </div>
                     </>
                   )}
-                  
-                  {/* Availability Badge */}
-                  <div className="absolute top-3 left-3 z-10">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm shadow-lg ${
-                      dormitory.available_capacity > 0
-                        ? 'bg-green-100/90 text-green-800 dark:bg-green-900/60 dark:text-green-300'
-                        : 'bg-red-100/90 text-red-800 dark:bg-red-900/60 dark:text-red-300'
-                    }`}>
-                      {dormitory.available_capacity > 0 ? 'Mavjud' : 'To\'liq'}
-                    </span>
-                  </div>
+                   
+                   {/* Availability Badge */}
+                   <div className="absolute top-3 left-3 z-30">
+                     <span className={`px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm shadow-lg ${
+                       dormitory.available_capacity > 0
+                         ? 'bg-green-100/90 text-green-800 dark:bg-green-900/60 dark:text-green-300'
+                         : 'bg-red-100/90 text-red-800 dark:bg-red-900/60 dark:text-red-300'
+                     }`}>
+                       {dormitory.available_capacity > 0 ? 'Mavjud' : 'To\'liq'}
+                     </span>
+                   </div>
 
-                  {/* Price Badge */}
-                  <div className="absolute bottom-3 left-3 z-10">
-                    <span className="px-3 py-1 bg-black/70 text-white rounded-full text-sm font-semibold backdrop-blur-sm shadow-lg">
-                      {formatPrice(dormitory.month_price)}/oy
-                    </span>
-                  </div>
-                </div>
+                   {/* Price Badge */}
+                   <div className="absolute bottom-3 left-3 z-30">
+                     <span className="px-3 py-1 bg-black/70 text-white rounded-full text-sm font-semibold backdrop-blur-sm shadow-lg">
+                       {formatPrice(dormitory.month_price)}/oy
+                     </span>
+                   </div>
+                 </div>
 
                 {/* Content */}
                 <div className="p-6">
