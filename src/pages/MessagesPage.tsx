@@ -9,6 +9,11 @@ import { useTheme } from '../contexts/ThemeContext';
 const MessagesPage: React.FC = () => {
   const { user } = useAuth();
   const { theme } = useTheme();
+
+  // Sahifa yuklanganda yuqoriga scroll qilish
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messageText, setMessageText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');

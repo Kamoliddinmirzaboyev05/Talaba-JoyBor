@@ -25,6 +25,8 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [featuredListings, setFeaturedListings] = useState<Listing[]>([]);
+  const [allListings, setAllListings] = useState<Listing[]>([]);
+  const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
   const [statistics, setStatistics] = useState<Statistics>({
     dormitories_count: 0,
     apartments_count: 0,
@@ -32,11 +34,77 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
     applications_count: 0
   });
   const [loading, setLoading] = useState(true);
+  const [searchFilters, setSearchFilters] = useState({
+    query: '',
+    location: '',
+    university: '',
+    priceRange: '',
+    roomType: '',
+    amenities: '',
+    distance: ''
+  });
 
   // Sahifa yuklanganda yuqoriga scroll qilish
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
+
+  // Qidiruv funksiyasi
+  const handleSearch = (searchData: any) => {
+    setSearchFilters(searchData);
+    
+    // Agar qidiruv bo'lsa, yotoqxonalar sahifasiga o'tish
+    if (searchData.query || searchData.location || searchData.university || searchData.priceRange) {
+      navigate('/dormitories', { 
+        state: { 
+          searchFilters: searchData 
+        } 
+      });
+    }
+  };
+
+  // Filtrlash funksiyasi
+  useEffect(() => {
+    let filtered = allListings;
+
+    // Qidiruv bo'yicha filtrlash
+    if (searchFilters.query) {
+      filtered = filtered.filter(listing =>
+        listing.title.toLowerCase().includes(searchFilters.query.toLowerCase()) ||
+        listing.location.toLowerCase().includes(searchFilters.query.toLowerCase()) ||
+        listing.university.toLowerCase().includes(searchFilters.query.toLowerCase())
+      );
+    }
+
+    // Joylashuv bo'yicha filtrlash
+    if (searchFilters.location) {
+      filtered = filtered.filter(listing =>
+        listing.location.toLowerCase().includes(searchFilters.location.toLowerCase())
+      );
+    }
+
+    // Universitet bo'yicha filtrlash
+    if (searchFilters.university) {
+      filtered = filtered.filter(listing =>
+        listing.university === searchFilters.university
+      );
+    }
+
+    // Narx oralig'i bo'yicha filtrlash
+    if (searchFilters.priceRange) {
+      const [min, max] = searchFilters.priceRange.split('-').map(Number);
+      filtered = filtered.filter(listing => {
+        const price = listing.price;
+        if (max) {
+          return price >= min && price <= max;
+        } else {
+          return price >= min;
+        }
+      });
+    }
+
+    setFilteredListings(filtered);
+  }, [allListings, searchFilters]);
 
   // API dan yotoqxonalar va apartments ni yuklash
   useEffect(() => {
@@ -108,8 +176,10 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
         }));
 
         // Yotoqxonalar va apartments ni birlashtirish
-        const allListings = [...convertedDormitories, ...convertedApartments];
-        setFeaturedListings(allListings);
+        const allListingsData = [...convertedDormitories, ...convertedApartments];
+        setAllListings(allListingsData);
+        setFeaturedListings(allListingsData.slice(0, 6)); // Faqat 6 ta ko'rsatish
+        setFilteredListings(allListingsData);
         
         // Statistikalarni yuklash
         const stats = await authAPI.getStatistics();
@@ -223,7 +293,7 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
               </motion.button>
             </div>
 
-            <SearchBar onSearch={() => { }} />
+            <SearchBar onSearch={handleSearch} />
           </motion.div>
         </div>
       </section>

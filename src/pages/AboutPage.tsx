@@ -12,6 +12,11 @@ interface Statistics {
 }
 
 const AboutPage: React.FC = () => {
+  // Sahifa yuklanganda yuqoriga scroll qilish
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   const [statistics, setStatistics] = useState<Statistics>({
     dormitories_count: 0,
     apartments_count: 0,
@@ -147,10 +152,10 @@ const AboutPage: React.FC = () => {
           <div className="w-20 h-20 bg-gradient-to-r from-teal-600 to-green-600 rounded-full flex items-center justify-center mx-auto mb-8">
             <Target className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
             Biz Haqimizda
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed px-4">
             JoyBor - O'zbekiston talabalarining yashash joy muammosini hal qilish uchun yaratilgan 
             zamonaviy platforma. Bizning maqsadimiz har bir talabaga qulay, xavfsiz va arzon yashash 
             joyini topishda yordam berishdir.
@@ -190,10 +195,10 @@ const AboutPage: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="bg-gradient-to-r from-teal-600 to-green-600 rounded-3xl p-12 text-white text-center mb-20"
+          className="bg-gradient-to-r from-teal-600 to-green-600 rounded-3xl p-6 sm:p-12 text-white text-center mb-20"
         >
-          <h2 className="text-3xl font-bold mb-6">Bizning Missiyamiz</h2>
-          <p className="text-xl text-teal-100 max-w-4xl mx-auto leading-relaxed">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-6">Bizning Missiyamiz</h2>
+          <p className="text-lg sm:text-xl text-teal-100 max-w-4xl mx-auto leading-relaxed px-4">
             Har bir talabaning ta'lim olish jarayonida eng muhim ehtiyojlaridan biri - qulay yashash joyi. 
             Biz bu muammoni hal qilish uchun ishonchli, tez va oson foydalaniladigan platforma yaratdik. 
             Maqsadimiz - O'zbekistondagi barcha talabalar uchun sifatli yashash joylarini topishni 
@@ -209,7 +214,7 @@ const AboutPage: React.FC = () => {
           className="mb-20"
         >
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">
               Nima Uchun JoyBor?
             </h2>
             <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
@@ -224,12 +229,12 @@ const AboutPage: React.FC = () => {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.6 + index * 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-shadow duration-300"
               >
                 <div className="w-12 h-12 bg-gradient-to-r from-teal-600 to-green-600 rounded-xl flex items-center justify-center mb-6">
                   <feature.icon className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4">
                   {feature.title}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">
@@ -248,15 +253,16 @@ const AboutPage: React.FC = () => {
           className="mb-20"
         >
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Bizning Yo'limiz
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto px-4">
               JoyBor platformasining rivojlanish tarixi
             </p>
           </div>
 
-          <div className="relative">
+          {/* Desktop Timeline */}
+          <div className="relative hidden md:block">
             <div className="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gradient-to-b from-teal-600 to-green-600 rounded-full"></div>
             
             <div className="space-y-12">
@@ -291,6 +297,44 @@ const AboutPage: React.FC = () => {
               ))}
             </div>
           </div>
+
+          {/* Mobile Timeline */}
+          <div className="md:hidden space-y-8">
+            {timeline.map((item, index) => (
+              <motion.div
+                key={item.year}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.8 + index * 0.2 }}
+                className="relative"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 mt-2">
+                    <div className="w-6 h-6 bg-gradient-to-r from-teal-600 to-green-600 rounded-full flex items-center justify-center">
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex-1 bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+                    <div className="text-2xl sm:text-3xl font-bold text-teal-600 mb-3">
+                      {item.year}
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                      {item.title}
+                    </h3>
+                    <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Connecting line for mobile */}
+                {index < timeline.length - 1 && (
+                  <div className="absolute left-3 top-8 w-0.5 h-8 bg-gradient-to-b from-teal-600 to-green-600 rounded-full"></div>
+                )}
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
 
         {/* Team Section */}
@@ -301,7 +345,7 @@ const AboutPage: React.FC = () => {
           className="mb-20"
         >
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">
               Bizning Jamoa
             </h2>
             <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
@@ -339,37 +383,84 @@ const AboutPage: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* CTA Section */}
+        {/* Contact Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 1.1 }}
-          className="bg-white dark:bg-gray-800 rounded-3xl p-12 text-center shadow-xl"
+          className="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-12 text-center shadow-xl"
         >
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
-            Bizga Qo'shiling!
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6">
+            Biz Bilan Bog'laning!
           </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-            JoyBor jamoasiga qo'shiling va O'zbekiston talabalarining hayotini 
-            yaxshilashda bizga yordam bering.
+          <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+            Savollaringiz bormi? Yordam kerakmi? Bizga murojaat qiling!
           </p>
+          
+          {/* Contact Info */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 max-w-2xl mx-auto">
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-2xl p-4 sm:p-6">
+              <div className="w-12 h-12 bg-gradient-to-r from-teal-600 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Telefon
+              </h3>
+              <a 
+                href="tel:+998889563848" 
+                className="text-teal-600 dark:text-teal-400 hover:underline font-medium"
+              >
+                +998 88 956 38 48
+              </a>
+            </div>
+            
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-2xl p-4 sm:p-6">
+              <div className="w-12 h-12 bg-gradient-to-r from-teal-600 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Telegram Bot
+              </h3>
+              <a 
+                href="https://t.me/Joyboronlinebot" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-teal-600 dark:text-teal-400 hover:underline font-medium"
+              >
+                @Joyboronlinebot
+              </a>
+            </div>
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <motion.button
+            <motion.a
+              href="https://t.me/Joyboronlinebot"
+              target="_blank"
+              rel="noopener noreferrer"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => onNavigate('contact')}
-              className="bg-gradient-to-r from-teal-600 to-green-600 text-white px-8 py-4 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
+              className="bg-gradient-to-r from-teal-600 to-green-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 inline-flex items-center justify-center gap-2"
             >
-              Bog'lanish
-            </motion.button>
-            <motion.button
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
+              Telegram Orqali Bog'lanish
+            </motion.a>
+            <motion.a
+              href="tel:+998889563848"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => onNavigate('register')}
-              className="border-2 border-teal-600 text-teal-600 px-8 py-4 rounded-xl font-semibold hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all duration-300"
+              className="border-2 border-teal-600 text-teal-600 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all duration-300 inline-flex items-center justify-center gap-2"
             >
-              Ro'yhatdan O'tish
-            </motion.button>
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+              </svg>
+              Qo'ng'iroq Qilish
+            </motion.a>
           </div>
         </motion.div>
       </div>

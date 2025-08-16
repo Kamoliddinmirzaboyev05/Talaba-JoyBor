@@ -8,6 +8,11 @@ import { useTheme } from '../contexts/ThemeContext';
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  // Sahifa yuklanganda yuqoriga scroll qilish
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
   const { theme } = useTheme();
   const [formData, setFormData] = useState({
     username: '',

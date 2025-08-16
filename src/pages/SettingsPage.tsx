@@ -8,6 +8,11 @@ import { useTheme } from '../contexts/ThemeContext';
 const SettingsPage: React.FC = () => {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
+
+  // Sahifa yuklanganda yuqoriga scroll qilish
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
   const [activeTab, setActiveTab] = useState('general');
   const [notifications, setNotifications] = useState({
     email: true,

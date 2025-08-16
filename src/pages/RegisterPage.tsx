@@ -8,6 +8,11 @@ import { useAuth } from '../contexts/AuthContext';
 const RegisterPage: React.FC = () => {
   const { theme } = useTheme();
   const { login } = useAuth();
+
+  // Sahifa yuklanganda yuqoriga scroll qilish
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
   const navigate = useNavigate();
   const location = useLocation();
   

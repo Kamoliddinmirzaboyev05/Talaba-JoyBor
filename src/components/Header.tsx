@@ -11,6 +11,10 @@ import {
   Heart,
   Settings,
   LogOut,
+  Building2,
+  HelpCircle,
+  Users,
+  Phone,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -22,11 +26,11 @@ const Header: React.FC = () => {
 
   const menuItems = [
     { label: "Bosh Sahifa", path: "/", icon: Home },
-    { label: "Yotoqxonalar", path: "/dormitories", icon: Home },
+    { label: "Yotoqxonalar", path: "/dormitories", icon: Building2 },
     { label: "Ijara Xonadonlar", path: "/rentals", icon: Home },
-    { label: "Yordam", path: "/help", icon: MessageCircle },
-    { label: "Biz Haqimizda", path: "/about", icon: User },
-    { label: "Aloqa", path: "/contact", icon: MessageCircle },
+    { label: "Yordam", path: "/help", icon: HelpCircle },
+    { label: "Biz Haqimizda", path: "/about", icon: Users },
+    { label: "Aloqa", path: "/contact", icon: Phone },
   ];
 
   const profileMenuItems = [
@@ -65,10 +69,8 @@ const Header: React.FC = () => {
             onClick={() => navigate("/")}
             className="flex items-center gap-2"
           >
-            <div className="w-10 h-10 bg-gradient-to-r from-teal-600 to-green-600 rounded-xl flex items-center justify-center">
-              <Home className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-green-600 bg-clip-text text-transparent">
+            <img src="/logo.svg" alt="JoyBor" className="w-10 h-10" />
+            <span className="text-xl font-bold text-gray-900 dark:text-white">
               JoyBor
             </span>
           </motion.button>
@@ -108,19 +110,15 @@ const Header: React.FC = () => {
                   className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
                 >
                   <Bell className="w-6 h-6" />
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                  {/* Only show when there are notifications */}
+                  {false && (
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                      3
+                    </span>
+                  )}
                 </motion.button>
 
-                {/* Messages */}
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => navigate("/messages")}
-                  className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
-                >
-                  <MessageCircle className="w-6 h-6" />
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"></span>
-                </motion.button>
+
 
                 {/* Profile Menu */}
                 <div className="relative">

@@ -28,6 +28,11 @@ import { authAPI } from "../services/api";
 const ListingDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+
+  // Sahifa yuklanganda yuqoriga scroll qilish
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
   const { user } = useAuth();
   const [listing, setListing] = useState<Listing | null>(
     getGlobalSelectedListing()

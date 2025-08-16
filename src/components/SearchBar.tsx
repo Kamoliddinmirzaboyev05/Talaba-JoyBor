@@ -1,14 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, DollarSign, Filter, Calendar, X, Home, Building2, Users, Wifi } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Search, MapPin, DollarSign, Building2 } from 'lucide-react';
 import { authAPI } from '../services/api';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface SearchBarProps {
-  onSearch: (query: string) => void;
+  onSearch: (searchData: {
+    query: string;
+    location: string;
+    university: string;
+    priceRange: string;
+    roomType: string;
+    amenities: string;
+    distance: string;
+  }) => void;
 }
 
 interface Province {
+  id: number;
+  name: string;
+}
+
+interface University {
   id: number;
   name: string;
 }
@@ -17,50 +30,63 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [location, setLocation] = useState('');
+  const [university, setUniversity] = useState('');
   const [priceRange, setPriceRange] = useState('');
   const [roomType, setRoomType] = useState('');
   const [amenities, setAmenities] = useState('');
   const [distance, setDistance] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [provinces, setProvinces] = useState<Province[]>([]);
+  const [universities, setUniversities] = useState<University[]>([]);
   const [loadingProvinces, setLoadingProvinces] = useState(true);
+  const [loadingUniversities, setLoadingUniversities] = useState(true);
 
-  // API dan shaharlar ro'yxatini yuklash
+  // API dan shaharlar va universitetlar ro'yxatini yuklash
   useEffect(() => {
-    const fetchProvinces = async () => {
+    const fetchData = async () => {
       try {
-        const data = await authAPI.getProvinces();
-        setProvinces(data);
-      } catch (error) {
-        console.error('Shaharlar yuklanmadi:', error);
-        // Fallback shaharlar ro'yxati
-        setProvinces([
-          { id: 1, name: 'Toshkent' },
-          { id: 2, name: 'Samarqand' },
-          { id: 3, name: 'Buxoro' },
-          { id: 4, name: 'Andijon' },
-          { id: 5, name: 'Namangan' },
-          { id: 6, name: 'Farg\'ona' }
+        const [provincesData, universitiesData] = await Promise.all([
+          authAPI.getProvinces().catch(() => [
+            { id: 1, name: 'Toshkent' },
+            { id: 2, name: 'Samarqand' },
+            { id: 3, name: 'Buxoro' },
+            { id: 4, name: 'Andijon' },
+            { id: 5, name: 'Namangan' },
+            { id: 6, name: 'Farg\'ona' }
+          ]),
+          authAPI.getUniversities()
         ]);
+        
+        setProvinces(provincesData);
+        setUniversities(universitiesData);
+      } catch (error) {
+        console.error('Ma\'lumotlar yuklanmadi:', error);
       } finally {
         setLoadingProvinces(false);
+        setLoadingUniversities(false);
       }
     };
 
-    fetchProvinces();
+    fetchData();
   }, []);
 
   const handleSearch = () => {
-    onSearch(searchQuery);
+    onSearch({
+      query: searchQuery,
+      location,
+      university,
+      priceRange,
+      roomType: '',
+      amenities: '',
+      distance: ''
+    });
   };
 
   const clearFilters = () => {
     setSearchQuery('');
     setLocation('');
+    setUniversity('');
     setPriceRange('');
-    setRoomType('');
-    setAmenities('');
-    setDistance('');
   };
 
 
@@ -71,28 +97,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     { label: '1,000,000 - 2,000,000 so\'m', value: '1000000-2000000' },
     { label: '2,000,000 - 3,000,000 so\'m', value: '2000000-3000000' },
     { label: '3,000,000+ so\'m', value: '3000000+' }
-  ];
-
-  const roomTypes = [
-    { label: 'Yakka xona', value: 'single', icon: Home },
-    { label: 'Ikki kishilik', value: 'double', icon: Users },
-    { label: 'Uch kishilik', value: 'triple', icon: Users },
-    { label: 'Kvartira', value: 'apartment', icon: Building2 }
-  ];
-
-  const amenitiesList = [
-    { label: 'WiFi', value: 'wifi', icon: Wifi },
-    { label: 'Konditsioner', value: 'ac', icon: '❄️' },
-    { label: 'Oshxona', value: 'kitchen', icon: '🍳' },
-    { label: 'Avtoturargoh', value: 'parking', icon: '🚗' },
-    { label: 'Xavfsizlik', value: 'security', icon: '🛡️' }
-  ];
-
-  const distances = [
-    { label: '1 km gacha', value: '1km' },
-    { label: '3 km gacha', value: '3km' },
-    { label: '5 km gacha', value: '5km' },
-    { label: '10 km gacha', value: '10km' }
   ];
 
   return (
@@ -153,6 +157,30 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
                 </select>
               </div>
 
+              {/* University Dropdown */}
+              <div className="relative group min-w-[250px]">
+                <Building2 className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-hover:text-teal-500 transition-colors duration-200 z-10" />
+                <select
+                  value={university}
+                  onChange={(e) => setUniversity(e.target.value)}
+                  disabled={loadingUniversities}
+                  className={`w-full pl-12 pr-4 py-5 border-0 rounded-2xl focus:ring-2 focus:ring-teal-500 transition-all duration-300 appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                    theme === 'dark' 
+                      ? 'bg-gray-700 focus:bg-gray-600 text-white' 
+                      : 'bg-gray-50 focus:bg-white text-gray-900'
+                  }`}
+                >
+                  <option value="">
+                    {loadingUniversities ? 'Yuklanmoqda...' : 'Universitet'}
+                  </option>
+                  {universities.map((uni) => (
+                    <option key={uni.id} value={uni.name}>
+                      {uni.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Price Range */}
               <div className="relative group min-w-[220px]">
                 <DollarSign className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-hover:text-teal-500 transition-colors duration-200 z-10" />
@@ -185,167 +213,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             </div>
           </div>
 
-          {/* Filter Toggle & Stats */}
-          <div className="flex items-center justify-between mt-6">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-                showFilters 
-                  ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300' 
-                  : 'text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`}
-            >
-              <Filter className="w-4 h-4" />
-              Qo'shimcha Filtrlar
-              <motion.div
-                animate={{ rotate: showFilters ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                ▼
-              </motion.div>
-            </motion.button>
 
-            <div className="flex items-center gap-6 text-sm">
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                <Calendar className="w-4 h-4" />
-                <span>Bugun yangilangan</span>
-              </div>
-              <div className="px-3 py-1 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded-full font-medium">
-                Natijalar
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Advanced Filters */}
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className={`border-t ${
-                theme === 'dark' 
-                  ? 'border-gray-700 bg-gray-700/30' 
-                  : 'border-gray-200 bg-gray-50/50'
-              }`}
-            >
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  
-                  {/* Room Type */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                      Xona Turi
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {roomTypes.map((type) => (
-                        <motion.button
-                          key={type.value}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => setRoomType(roomType === type.value ? '' : type.value)}
-                          className={`p-3 rounded-xl border-2 transition-all duration-200 flex items-center gap-2 text-sm font-medium ${
-                            roomType === type.value
-                              ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300'
-                              : 'border-gray-200 dark:border-gray-600 hover:border-teal-300 text-gray-700 dark:text-gray-300'
-                          }`}
-                        >
-                          <type.icon className="w-4 h-4" />
-                          {type.label}
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
 
-                  {/* Amenities */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                      Qulayliklar
-                    </label>
-                    <div className="space-y-2">
-                      {amenitiesList.map((amenity) => (
-                        <motion.button
-                          key={amenity.value}
-                          whileHover={{ scale: 1.01 }}
-                          whileTap={{ scale: 0.99 }}
-                          onClick={() => setAmenities(amenities === amenity.value ? '' : amenity.value)}
-                          className={`w-full p-3 rounded-xl border-2 transition-all duration-200 flex items-center gap-3 text-sm font-medium ${
-                            amenities === amenity.value
-                              ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300'
-                              : 'border-gray-200 dark:border-gray-600 hover:border-teal-300 text-gray-700 dark:text-gray-300'
-                          }`}
-                        >
-                          <span className="text-lg">{typeof amenity.icon === 'string' ? amenity.icon : <amenity.icon className="w-4 h-4" />}</span>
-                          {amenity.label}
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Distance */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                      Universitetgacha Masofa
-                    </label>
-                    <div className="space-y-2">
-                      {distances.map((dist) => (
-                        <motion.button
-                          key={dist.value}
-                          whileHover={{ scale: 1.01 }}
-                          whileTap={{ scale: 0.99 }}
-                          onClick={() => setDistance(distance === dist.value ? '' : dist.value)}
-                          className={`w-full p-3 rounded-xl border-2 transition-all duration-200 text-sm font-medium ${
-                            distance === dist.value
-                              ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300'
-                              : 'border-gray-200 dark:border-gray-600 hover:border-teal-300 text-gray-700 dark:text-gray-300'
-                          }`}
-                        >
-                          {dist.label}
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Filter Actions */}
-                <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200 dark:border-gray-600">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={clearFilters}
-                    className="flex items-center gap-2 px-6 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium transition-colors duration-200"
-                  >
-                    <X className="w-4 h-4" />
-                    Tozalash
-                  </motion.button>
-                  
-                  <div className="flex gap-3">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => setShowFilters(false)}
-                      className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-all duration-200"
-                    >
-                      Yopish
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={handleSearch}
-                      className="px-8 py-3 bg-gradient-to-r from-teal-600 to-green-600 text-white rounded-xl hover:shadow-lg font-semibold transition-all duration-300"
-                    >
-                      Filtrlarni Qo'llash
-                    </motion.button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </motion.div>
   );

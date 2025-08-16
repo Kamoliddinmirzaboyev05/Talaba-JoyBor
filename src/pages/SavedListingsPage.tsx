@@ -14,6 +14,11 @@ interface SavedListingsPageProps {
 const SavedListingsPage: React.FC<SavedListingsPageProps> = ({ onListingSelect }) => {
   const { user } = useAuth();
   const { theme } = useTheme();
+
+  // Sahifa yuklanganda yuqoriga scroll qilish
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'dormitory' | 'rental'>('all');
@@ -52,9 +57,32 @@ const SavedListingsPage: React.FC<SavedListingsPageProps> = ({ onListingSelect }
     console.log('Removing from saved:', listingId);
   };
 
-  const handleShare = (listing: Listing) => {
-    // Share functionality
-    console.log('Sharing listing:', listing.id);
+  const handleShare = async (listing: Listing) => {
+    const shareData = {
+      title: `${listing.title} - JoyBor`,
+      text: `${listing.description || 'Yotoqxona haqida ma\'lumot'} - ${listing.price} so'm/oy`,
+      url: `${window.location.origin}/listing/${listing.id}`
+    };
+
+    try {
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(shareData.url);
+        // You can add a toast notification here
+        alert('Link nusxalandi!');
+      }
+    } catch (error) {
+      console.error('Share failed:', error);
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        alert('Link nusxalandi!');
+      } catch (clipboardError) {
+        console.error('Clipboard failed:', clipboardError);
+      }
+    }
   };
 
   return (

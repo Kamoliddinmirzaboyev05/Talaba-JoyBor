@@ -93,6 +93,11 @@ interface Application {
 const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
   const { updateUserProfile } = useAuth();
   const { theme } = useTheme();
+
+  // Sahifa yuklanganda yuqoriga scroll qilish
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [editedProfile, setEditedProfile] = useState<ProfileData | null>(null);

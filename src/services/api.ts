@@ -204,6 +204,29 @@ export const authAPI = {
     }
   },
 
+  // Get universities list
+  getUniversities: async (): Promise<{ id: number; name: string }[]> => {
+    try {
+      const response = await api.get('/universities/');
+      return response.data;
+    } catch (error: any) {
+      console.error('Universities fetch error:', error);
+      // Fallback universitetlar ro'yxati
+      return [
+        { id: 1, name: 'Toshkent Davlat Universiteti' },
+        { id: 2, name: 'Samarqand Davlat Universiteti' },
+        { id: 3, name: 'Buxoro Davlat Universiteti' },
+        { id: 4, name: 'Andijon Davlat Universiteti' },
+        { id: 5, name: 'Namangan Davlat Universiteti' },
+        { id: 6, name: 'Farg\'ona Davlat Universiteti' },
+        { id: 7, name: 'Toshkent Axborot Texnologiyalari Universiteti' },
+        { id: 8, name: 'Toshkent Moliya Instituti' },
+        { id: 9, name: 'O\'zbekiston Milliy Universiteti' },
+        { id: 10, name: 'Toshkent Tibbiyot Akademiyasi' }
+      ];
+    }
+  },
+
   // Get platform statistics
   getStatistics: async (): Promise<{
     dormitories_count: number;

@@ -1,32 +1,13 @@
 <svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="400" height="300" fill="#F3F4F6"/>
-  <!-- Building structure -->
-  <rect x="100" y="80" width="200" height="160" fill="#E5E7EB" stroke="#D1D5DB" stroke-width="2"/>
-  <!-- Windows -->
-  <rect x="120" y="100" width="20" height="25" fill="#9CA3AF"/>
-  <rect x="150" y="100" width="20" height="25" fill="#9CA3AF"/>
-  <rect x="180" y="100" width="20" height="25" fill="#9CA3AF"/>
-  <rect x="210" y="100" width="20" height="25" fill="#9CA3AF"/>
-  <rect x="240" y="100" width="20" height="25" fill="#9CA3AF"/>
-  <rect x="270" y="100" width="20" height="25" fill="#9CA3AF"/>
-  
-  <rect x="120" y="140" width="20" height="25" fill="#9CA3AF"/>
-  <rect x="150" y="140" width="20" height="25" fill="#9CA3AF"/>
-  <rect x="180" y="140" width="20" height="25" fill="#9CA3AF"/>
-  <rect x="210" y="140" width="20" height="25" fill="#9CA3AF"/>
-  <rect x="240" y="140" width="20" height="25" fill="#9CA3AF"/>
-  <rect x="270" y="140" width="20" height="25" fill="#9CA3AF"/>
-  
-  <rect x="120" y="180" width="20" height="25" fill="#9CA3AF"/>
-  <rect x="150" y="180" width="20" height="25" fill="#9CA3AF"/>
-  <rect x="180" y="180" width="20" height="25" fill="#9CA3AF"/>
-  <rect x="210" y="180" width="20" height="25" fill="#9CA3AF"/>
-  <rect x="240" y="180" width="20" height="25" fill="#9CA3AF"/>
-  <rect x="270" y="180" width="20" height="25" fill="#9CA3AF"/>
-  
-  <!-- Door -->
-  <rect x="185" y="200" width="30" height="40" fill="#6B7280"/>
-  <circle cx="205" cy="220" r="2" fill="#F3F4F6"/>
-  
-  <text x="200" y="270" text-anchor="middle" font-family="Arial" font-size="16" fill="#6B7280">Yotoqxona rasmi yo'q</text>
+  <rect x="50" y="50" width="300" height="200" rx="8" fill="#E5E7EB"/>
+  <rect x="80" y="80" width="60" height="60" rx="4" fill="#D1D5DB"/>
+  <rect x="160" y="80" width="60" height="60" rx="4" fill="#D1D5DB"/>
+  <rect x="240" y="80" width="60" height="60" rx="4" fill="#D1D5DB"/>
+  <rect x="80" y="160" width="60" height="60" rx="4" fill="#D1D5DB"/>
+  <rect x="160" y="160" width="60" height="60" rx="4" fill="#D1D5DB"/>
+  <rect x="240" y="160" width="60" height="60" rx="4" fill="#D1D5DB"/>
+  <path d="M200 120L190 130H210L200 120Z" fill="#9CA3AF"/>
+  <circle cx="200" cy="140" r="8" fill="#9CA3AF"/>
+  <text x="200" y="270" text-anchor="middle" fill="#6B7280" font-family="Arial, sans-serif" font-size="14">Yotoqxona rasmi</text>
 </svg>

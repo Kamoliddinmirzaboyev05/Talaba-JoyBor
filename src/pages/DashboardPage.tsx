@@ -27,6 +27,11 @@ const DashboardPage: React.FC = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Sahifa yuklanganda yuqoriga scroll qilish
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   // API dan arizalarni yuklash
   useEffect(() => {
     const fetchApplications = async () => {

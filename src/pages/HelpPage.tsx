@@ -6,6 +6,11 @@ import Header from '../components/Header';
 const HelpPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
+
+  // Sahifa yuklanganda yuqoriga scroll qilish
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
   const [activeCategory, setActiveCategory] = useState('general');
 
   const categories = [

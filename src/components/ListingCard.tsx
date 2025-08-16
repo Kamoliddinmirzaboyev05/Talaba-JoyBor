@@ -51,9 +51,34 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user, onAp
     setIsLiked(!isLiked);
   };
 
-  const handleShare = (e: React.MouseEvent) => {
+  const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Share functionality
+    
+    const shareData = {
+      title: `${listing.title} - JoyBor`,
+      text: `${listing.description || 'Yotoqxona haqida ma\'lumot'} - ${listing.price} so'm/oy`,
+      url: `${window.location.origin}/listing/${listing.id}`
+    };
+
+    try {
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(shareData.url);
+        // You can add a toast notification here
+        alert('Link nusxalandi!');
+      }
+    } catch (error) {
+      console.error('Share failed:', error);
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        alert('Link nusxalandi!');
+      } catch (clipboardError) {
+        console.error('Clipboard failed:', clipboardError);
+      }
+    }
   };
 
   const handleMessage = (e: React.MouseEvent) => {

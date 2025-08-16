@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Check, Trash2, Filter, Search, Calendar, MessageCircle, AlertCircle, CheckCircle, Info } from 'lucide-react';
 import { Notification } from '../types';
@@ -9,6 +9,11 @@ import { useTheme } from '../contexts/ThemeContext';
 const NotificationsPage: React.FC = () => {
   const { user } = useAuth();
   const { theme } = useTheme();
+
+  // Sahifa yuklanganda yuqoriga scroll qilish
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
   const [filter, setFilter] = useState<'all' | 'unread' | 'application' | 'message' | 'system'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 

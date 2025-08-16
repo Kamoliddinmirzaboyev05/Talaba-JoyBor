@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Clock, Send, MessageCircle, Facebook, Instagram, Instagram as Telegram } from 'lucide-react';
 import Header from '../components/Header';
 
 const ContactPage: React.FC = () => {
+  // Sahifa yuklanganda yuqoriga scroll qilish
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -18,31 +23,31 @@ const ContactPage: React.FC = () => {
     {
       icon: Phone,
       title: 'Telefon',
-      details: ['+998 71 123 45 67', '+998 90 123 45 67'],
+      details: ['+998 88 956 38 48'],
       color: 'from-green-500 to-green-600'
     },
     {
-      icon: Mail,
-      title: 'Email',
-      details: ['info@joybor', 'support@joybor'],
+      icon: MessageCircle,
+      title: 'Telegram Bot',
+      details: ['@Joyboronlinebot'],
       color: 'from-blue-500 to-blue-600'
     },
     {
       icon: MapPin,
       title: 'Manzil',
-      details: ['Toshkent sh., Chilonzor t.', 'Bunyodkor ko\'chasi, 12-uy'],
+      details: ['Toshkent sh., O\'zbekiston'],
       color: 'from-purple-500 to-purple-600'
     },
     {
       icon: Clock,
       title: 'Ish vaqti',
-      details: ['Dushanba - Juma: 9:00 - 18:00', 'Shanba: 10:00 - 15:00'],
+      details: ['24/7 Onlayn Xizmat'],
       color: 'from-orange-500 to-orange-600'
     }
   ];
 
   const socialLinks = [
-    { icon: Telegram, label: 'Telegram', url: 'https://t.me/joybor_uz', color: 'text-blue-500' },
+    { icon: MessageCircle, label: 'Telegram Bot', url: 'https://t.me/Joyboronlinebot', color: 'text-blue-500' },
     { icon: Instagram, label: 'Instagram', url: 'https://instagram.com/joybor', color: 'text-pink-500' },
     { icon: Facebook, label: 'Facebook', url: 'https://facebook.com/joybor', color: 'text-blue-600' }
   ];

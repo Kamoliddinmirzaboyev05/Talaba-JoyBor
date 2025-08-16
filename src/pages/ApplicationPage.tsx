@@ -11,7 +11,7 @@ import { Dormitory } from '../types';
 
 interface ApplicationFormData {
   name: string;
-  fio: string;
+  familiya: string;
   city: string;
   village: string;
   university: string;
@@ -29,9 +29,14 @@ const ApplicationPage: React.FC = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { theme } = useTheme();
 
+  // Sahifa yuklanganda yuqoriga scroll qilish
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   const [formData, setFormData] = useState<ApplicationFormData>({
     name: user?.first_name || '',
-    fio: `${user?.first_name || ''} ${user?.last_name || ''}`.trim(),
+    familiya: user?.last_name || '',
     city: '',
     village: '',
     university: '',
@@ -65,7 +70,7 @@ const ApplicationPage: React.FC = () => {
       setFormData(prev => ({
         ...prev,
         name: user.first_name || '',
-        fio: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
+        familiya: user.last_name || '',
         phone: user.phone || '',
       }));
     }
@@ -235,8 +240,8 @@ const ApplicationPage: React.FC = () => {
 
     // Required fields validation
     if (!selectedDormitoryId) newErrors.dormitory = 'Yotoqxona tanlanishi shart';
+    if (!formData.familiya.trim()) newErrors.familiya = 'Familiya kiritilishi shart';
     if (!formData.name.trim()) newErrors.name = 'Ism kiritilishi shart';
-    if (!formData.fio.trim()) newErrors.fio = 'F.I.O kiritilishi shart';
     if (!formData.city.trim()) newErrors.city = 'Viloyat tanlanishi shart';
     if (!formData.village.trim()) newErrors.village = 'Tuman tanlanishi shart';
     if (!formData.university.trim()) newErrors.university = 'Universitet kiritilishi shart';
@@ -299,7 +304,7 @@ const ApplicationPage: React.FC = () => {
       formDataToSend.append('status', 'PENDING');
       formDataToSend.append('comment', formData.comment.trim() || '');
       formDataToSend.append('name', formData.name.trim());
-      formDataToSend.append('fio', formData.fio.trim());
+      formDataToSend.append('fio', formData.familiya.trim());
       formDataToSend.append('city', formData.city.trim());
       formDataToSend.append('village', formData.village.trim());
       formDataToSend.append('university', formData.university.trim());
@@ -515,8 +520,34 @@ const ApplicationPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Name and FIO */}
+                {/* Familiya and Name */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Familiya <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        value={formData.familiya}
+                        onChange={(e) => handleInputChange('familiya', e.target.value)}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${
+                          theme === 'dark' 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        } ${errors.familiya ? 'border-red-500' : ''}`}
+                        placeholder="Karimov"
+                      />
+                    </div>
+                    {errors.familiya && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.familiya}
+                      </p>
+                    )}
+                  </div>
+
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                       Ism <span className="text-red-500">*</span>
@@ -539,32 +570,6 @@ const ApplicationPage: React.FC = () => {
                       <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
                         <AlertCircle className="w-4 h-4" />
                         {errors.name}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      F.I.O <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="text"
-                        value={formData.fio}
-                        onChange={(e) => handleInputChange('fio', e.target.value)}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${
-                          theme === 'dark' 
-                            ? 'bg-gray-700 border-gray-600 text-white' 
-                            : 'bg-white border-gray-300 text-gray-900'
-                        } ${errors.fio ? 'border-red-500' : ''}`}
-                        placeholder="Karimov Aziz Akmalovich"
-                      />
-                    </div>
-                    {errors.fio && (
-                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" />
-                        {errors.fio}
                       </p>
                     )}
                   </div>
