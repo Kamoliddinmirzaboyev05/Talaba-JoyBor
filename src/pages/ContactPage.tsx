@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Mail, Phone, MapPin, Clock, Send, MessageCircle, Facebook, Instagram, Instagram as Telegram } from 'lucide-react';
 import Header from '../components/Header';
 
 const ContactPage: React.FC = () => {
+  const navigate = useNavigate();
   // Sahifa yuklanganda yuqoriga scroll qilish
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -313,7 +315,7 @@ const ContactPage: React.FC = () => {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => onNavigate('help')}
+                onClick={() => navigate('/help')}
                 className="bg-teal-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-teal-700 transition-colors duration-200"
               >
                 FAQ Bo'limiga O'tish

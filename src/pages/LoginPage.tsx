@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, LogIn } from 'lucide-react';
@@ -64,7 +64,7 @@ const LoginPage: React.FC = () => {
       localStorage.setItem('access', data.access);
       localStorage.setItem('refresh', data.refresh);
       await login(data.access, data.refresh);
-      navigate(from, { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch {
       setGeneralError('Network error or server is down.');
     } finally {

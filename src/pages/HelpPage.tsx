@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { HelpCircle, Search, ChevronRight, MessageCircle, Phone, Mail, Book, Video, FileText } from 'lucide-react';
 import Header from '../components/Header';
 
 const HelpPage: React.FC = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
 
@@ -337,7 +339,7 @@ const HelpPage: React.FC = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => onNavigate('contact')}
+                  onClick={() => navigate('/contact')}
                   className="bg-white text-teal-600 px-6 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-colors duration-300"
                 >
                   Bog'lanish

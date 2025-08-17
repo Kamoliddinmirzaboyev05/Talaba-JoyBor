@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Settings, Moon, Sun, Bell, Shield, Globe, Smartphone, Mail, Lock, Eye, EyeOff, Save } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
@@ -8,6 +9,7 @@ import { useTheme } from '../contexts/ThemeContext';
 const SettingsPage: React.FC = () => {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
 
   // Sahifa yuklanganda yuqoriga scroll qilish
   useEffect(() => {
@@ -45,7 +47,7 @@ const SettingsPage: React.FC = () => {
             Tizimga kirish talab etiladi
           </h2>
           <button
-            onClick={() => onNavigate('login')}
+            onClick={() => navigate('/login')}
             className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors duration-200"
           >
             Tizimga kirish

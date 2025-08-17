@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Heart, Search, Grid, List, Trash2, Share2, Eye } from 'lucide-react';
 import { Listing } from '../types';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,6 +15,7 @@ interface SavedListingsPageProps {
 const SavedListingsPage: React.FC<SavedListingsPageProps> = ({ onListingSelect }) => {
   const { user } = useAuth();
   const { theme } = useTheme();
+  const navigate = useNavigate();
 
   // Sahifa yuklanganda yuqoriga scroll qilish
   useEffect(() => {
@@ -32,7 +34,7 @@ const SavedListingsPage: React.FC<SavedListingsPageProps> = ({ onListingSelect }
             Tizimga kirish talab etiladi
           </h2>
           <button
-            onClick={() => onNavigate('login')}
+            onClick={() => navigate('/login')}
             className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors duration-200"
           >
             Tizimga kirish
@@ -226,7 +228,7 @@ const SavedListingsPage: React.FC<SavedListingsPageProps> = ({ onListingSelect }
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => onNavigate('home')}
+              onClick={() => navigate('/')}
               className="bg-gradient-to-r from-teal-600 to-green-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
             >
               Elonlarni Ko'rish

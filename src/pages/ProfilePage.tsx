@@ -1,14 +1,13 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, GraduationCap, MapPin, Edit3, Save, X, Camera, Shield, Lock, FileText, Clock, CheckCircle, XCircle, Eye } from 'lucide-react';
 
 import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
-interface ProfilePageProps {
-  onNavigate: (page: PageType) => void;
-}
+
 
 interface ProfileData {
   username: string;
@@ -90,9 +89,10 @@ interface Application {
   direction: string | null;
 }
 
-const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
+const ProfilePage: React.FC = () => {
   const { updateUserProfile } = useAuth();
   const { theme } = useTheme();
+  const navigate = useNavigate();
 
   // Sahifa yuklanganda yuqoriga scroll qilish
   useEffect(() => {
@@ -119,7 +119,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
       setError('');
       const token = localStorage.getItem('access');
       if (!token) {
-        onNavigate('login');
+        navigate('/login');
         return;
       }
       try {
@@ -129,7 +129,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
           },
         });
         if (res.status === 401) {
-          onNavigate('login');
+          navigate('/login');
           return;
         }
         if (!res.ok) {
@@ -157,7 +157,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
     setApplicationsError('');
     const token = localStorage.getItem('access');
     if (!token) {
-      onNavigate('login');
+      navigate('/login');
       return;
     }
     try {
@@ -167,7 +167,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
         },
       });
       if (res.status === 401) {
-        onNavigate('login');
+        navigate('/login');
         return;
       }
       if (!res.ok) {
@@ -198,7 +198,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
     setFieldErrors({});
     const token = localStorage.getItem('access');
     if (!token || !editedProfile) {
-      onNavigate('login');
+      navigate('/login');
       return;
     }
     try {
@@ -222,7 +222,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
         body: formData,
       });
       if (res.status === 401) {
-        onNavigate('login');
+        navigate('/login');
         return;
       }
       const data = await res.json();

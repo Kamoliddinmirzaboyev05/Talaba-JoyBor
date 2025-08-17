@@ -135,7 +135,7 @@ const ApplicationPage: React.FC = () => {
             Ariza yuborish uchun avval tizimga kirishingiz kerak
           </p>
           <button
-            onClick={() => onNavigate('login')}
+            onClick={() => navigate('/login')}
             className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors duration-200"
           >
             Tizimga kirish
@@ -417,7 +417,7 @@ const ApplicationPage: React.FC = () => {
           transition={{ duration: 0.5 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => onNavigate('dormitories')}
+                      onClick={() => navigate('/dormitories')}
           className="flex items-center gap-2 text-teal-600 hover:text-teal-700 mb-6 transition-colors duration-200"
         >
           <ArrowLeft className="w-5 h-5" />
