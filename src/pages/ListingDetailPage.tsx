@@ -22,6 +22,7 @@ import {
 import { Listing } from "../types";
 import { useAuth } from "../contexts/AuthContext";
 import Header from "../components/Header";
+import YandexMap from "../components/YandexMap";
 import { getGlobalSelectedListing, setGlobalSelectedListing } from "../App";
 import { authAPI } from "../services/api";
 
@@ -647,7 +648,7 @@ const ListingDetailPage: React.FC = () => {
               </div>
             </motion.div>
 
-            {/* Location Map Placeholder */}
+            {/* Location Map */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -657,13 +658,12 @@ const ListingDetailPage: React.FC = () => {
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Joylashuv
               </h3>
-              <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center justify-center">
-                <div className="text-center">
-                  <MapPin className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">
-                    Xarita tez orada qo'shiladi
-                  </p>
-                </div>
+              <div className="rounded-xl overflow-hidden">
+                <YandexMap
+                  center={{ lat: listing.coordinates?.lat || 0, lng: listing.coordinates?.lng || 0 }}
+                  balloonContent={listing.title}
+                  height="220px"
+                />
               </div>
               <p className="text-gray-600 dark:text-gray-300 mt-3 text-sm">
                 {listing.location} • {listing.university}

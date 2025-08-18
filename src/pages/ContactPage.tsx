@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Phone, MapPin, Clock, Send, MessageCircle, Facebook, Instagram, Instagram as Telegram } from 'lucide-react';
 import Header from '../components/Header';
+import YandexMap from '../components/YandexMap';
 
 const ContactPage: React.FC = () => {
   const navigate = useNavigate();
@@ -364,18 +365,16 @@ const ContactPage: React.FC = () => {
               </p>
             </div>
 
-            {/* Map Placeholder */}
+            {/* Map */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                 Bizning Joylashuvimiz
               </h3>
-              <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center justify-center">
-                <div className="text-center">
-                  <MapPin className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500 dark:text-gray-400">
-                    Xarita tez orada qo'shiladi
-                  </p>
-                </div>
+              <div className="rounded-xl overflow-hidden">
+                <YandexMap
+                  height="240px"
+                  balloonContent="Codial Academy"
+                />
               </div>
               <p className="text-gray-600 dark:text-gray-300 mt-4 text-sm">
                 Toshkent sh., Chilonzor t., Bunyodkor ko'chasi, 12-uy
