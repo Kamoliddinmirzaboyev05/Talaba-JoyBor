@@ -20,6 +20,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Listing } from "../types";
+import { formatCapacityBucket } from "../utils/format";
 import { useAuth } from "../contexts/AuthContext";
 import Header from "../components/Header";
 import YandexMap from "../components/YandexMap";
@@ -78,6 +79,11 @@ const ListingDetailPage: React.FC = () => {
               available: dorm.available_capacity > 0,
               rating: 4.5,
               reviews: 12,
+              admin: {
+                name: dorm.admin?.username || dorm.university?.name || "Admin",
+                phone: dorm.university?.contact || undefined,
+                email: dorm.admin?.email || undefined,
+              },
               features: {
                 furnished: true,
                 wifi:
@@ -424,7 +430,7 @@ const ListingDetailPage: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-1">
                   <Users className="w-5 h-5" />
-                  <span>{listing.capacity} kishi</span>
+                  <span>{formatCapacityBucket(listing.capacity)} kishi</span>
                 </div>
               </div>
 

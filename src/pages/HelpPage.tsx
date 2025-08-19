@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { HelpCircle, Search, ChevronRight, MessageCircle, Phone, Mail, Book, Video, FileText } from 'lucide-react';
 import Header from '../components/Header';
+import ContactForm from '../components/ContactForm';
 
 const HelpPage: React.FC = () => {
   const navigate = useNavigate();
@@ -134,21 +135,21 @@ const HelpPage: React.FC = () => {
       title: 'Jonli chat',
       description: 'Tezkor yordam olish uchun',
       icon: MessageCircle,
-      action: () => console.log('Opening chat'),
+      action: () => window.open('https://t.me/Joyboronlinebot', '_blank'),
       color: 'from-blue-500 to-blue-600'
     },
     {
       title: 'Telefon qo\'ng\'irog\'i',
-      description: '+998 71 123 45 67',
+      description: '+998 88 956 38 48',
       icon: Phone,
-      action: () => window.open('tel:+998711234567'),
+      action: () => window.open('tel:+998889563848'),
       color: 'from-green-500 to-green-600'
     },
     {
       title: 'Email yuborish',
-      description: 'help@joybor',
+      description: 'support@joybor.uz',
       icon: Mail,
-      action: () => window.open('mailto:help@joybor'),
+      action: () => window.open('mailto:support@joybor.uz'),
       color: 'from-purple-500 to-purple-600'
     }
   ];
@@ -322,36 +323,14 @@ const HelpPage: React.FC = () => {
               )}
             </motion.div>
 
-            {/* Contact Section */}
+            {/* Contact Section with embedded form */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.5 }}
-              className="mt-8 bg-gradient-to-r from-teal-600 to-green-600 rounded-2xl p-8 text-white text-center"
+              className="mt-8"
             >
-              <h3 className="text-2xl font-semibold mb-4">
-                Javobingizni topa olmadingizmi?
-              </h3>
-              <p className="text-teal-100 mb-6">
-                Bizning yordam jamoamiz sizga yordam berishga tayyor
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => navigate('/contact')}
-                  className="bg-white text-teal-600 px-6 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-colors duration-300"
-                >
-                  Bog'lanish
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="border-2 border-white text-white px-6 py-3 rounded-xl font-semibold hover:bg-white hover:text-teal-600 transition-all duration-300"
-                >
-                  Jonli Chat
-                </motion.button>
-              </div>
+              <ContactForm />
             </motion.div>
           </div>
         </div>

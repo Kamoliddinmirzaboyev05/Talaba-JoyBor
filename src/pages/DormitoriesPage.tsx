@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import { Search, SlidersHorizontal, MapPin, Users, Building2, Clock, CheckCircle, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
 import { User, Listing, Dormitory } from '../types';
+import { formatCapacityBucket } from '../utils/format';
 import Header from '../components/Header';
 import { authAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -520,7 +521,7 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
                     <div className="flex items-center gap-2">
                       <Users className="w-4 h-4 text-gray-400" />
                       <span className="text-sm text-gray-600 dark:text-gray-300">
-                        {dormitory.available_capacity}/{dormitory.total_capacity} joy
+                        {formatCapacityBucket(dormitory.available_capacity)}/{formatCapacityBucket(dormitory.total_capacity)} joy
                       </span>
                     </div>
                     <div className="flex items-center gap-2">

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, Star, MapPin, Users, Wifi, Car, Shield, Eye, MessageCircle, Share2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Listing, User } from '../types';
+import { formatCapacityBucket } from '../utils/format';
 
 interface ListingCardProps {
   listing: Listing;
@@ -225,7 +226,7 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user, onAp
           </div>
           <div className="flex items-center gap-1 text-gray-600 dark:text-gray-300">
             <Users className="w-4 h-4" />
-            <span className="text-sm">{listing.capacity} kishi</span>
+            <span className="text-sm">{formatCapacityBucket(listing.capacity)} kishi</span>
           </div>
         </div>
 

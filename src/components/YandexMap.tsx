@@ -45,3 +45,5 @@ const YandexMap: React.FC<YandexMapProps> = ({
 export default YandexMap;
 
 
+
+

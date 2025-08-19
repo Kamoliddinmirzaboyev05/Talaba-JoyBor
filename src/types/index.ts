@@ -38,6 +38,11 @@ export interface Listing {
     verified: boolean;
     rating: number;
   };
+  admin?: {
+    name: string;
+    phone?: string;
+    email?: string;
+  };
   features: {
     furnished: boolean;
     wifi: boolean;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Phone, GraduationCap, MapPin, Edit3, Save, X, Camera, Shield, Lock, FileText, Clock, CheckCircle, XCircle, Eye } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Edit3, Save, X, Camera, Lock, FileText, Clock, CheckCircle, XCircle, Eye } from 'lucide-react';
 
 import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
@@ -340,9 +340,7 @@ const ProfilePage: React.FC = () => {
 
   const tabs = [
     { id: 'profile', label: 'Profil', icon: User },
-    { id: 'preferences', label: 'Afzalliklar', icon: MapPin },
-    { id: 'applications', label: 'Arizalar', icon: FileText },
-    { id: 'security', label: 'Xavfsizlik', icon: Shield }
+    { id: 'applications', label: 'Arizalar', icon: FileText }
   ];
 
   if (loading) {
