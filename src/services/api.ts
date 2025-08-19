@@ -235,27 +235,37 @@ export const authAPI = {
     applications_count: number;
   }> => {
     try {
-      // Server da /statistics/ endpoint yo'q, shuning uchun mavjud endpoint lardan foydalanib hisoblaymiz
-      const [dormitories, apartments] = await Promise.all([
-        api.get('/dormitories/'),
-        api.get('/apartments/')
-      ]);
-
+      // Real statistikalar: students_count, dormitories_count, apartments_count
+      const response = await api.get('/statistics/');
+      const data = response.data || {};
       return {
-        dormitories_count: dormitories.data.length || 0,
-        apartments_count: apartments.data.length || 0,
-        users_count: 0, // Bu ma'lumot hozircha mavjud emas
-        applications_count: 0 // Bu ma'lumot hozircha mavjud emas
+        dormitories_count: Number(data.dormitories_count) || 0,
+        apartments_count: Number(data.apartments_count) || 0,
+        users_count: Number(data.students_count) || 0,
+        applications_count: 0,
       };
     } catch (error: any) {
       console.error('Statistics fetch error:', error);
-      // Return default values if API fails
-      return {
-        dormitories_count: 0,
-        apartments_count: 0,
-        users_count: 0,
-        applications_count: 0
-      };
+      // Fallback: eski usul orqali taxminiy qiymatlar
+      try {
+        const [dormitories, apartments] = await Promise.all([
+          api.get('/dormitories/'),
+          api.get('/apartments/')
+        ]);
+        return {
+          dormitories_count: dormitories.data.length || 0,
+          apartments_count: apartments.data.length || 0,
+          users_count: 0,
+          applications_count: 0,
+        };
+      } catch {
+        return {
+          dormitories_count: 0,
+          apartments_count: 0,
+          users_count: 0,
+          applications_count: 0,
+        };
+      }
     }
   },
 

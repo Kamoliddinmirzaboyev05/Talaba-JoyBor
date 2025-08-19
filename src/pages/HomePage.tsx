@@ -211,8 +211,8 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
     },
     { 
       icon: Users, 
-      label: 'Faol Foydalanuvchilar', 
-      value: 'Yangi', 
+      label: 'Talabalar', 
+      value: `${statistics.users_count}`, 
       color: 'text-indigo-600' 
     },
     { 
