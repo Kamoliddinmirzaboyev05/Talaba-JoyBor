@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Pagination, Autoplay, Navigation } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
 import {
   ArrowLeft,
   Star,
@@ -11,13 +16,10 @@ import {
   Shield,
   Heart,
   Share2,
-  MessageCircle,
   Calendar,
   Phone,
   Mail,
   CheckCircle,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import { Listing } from "../types";
 import { formatCapacityBucket } from "../utils/format";
@@ -46,9 +48,6 @@ const ListingDetailPage: React.FC = () => {
     navigate("/application");
   };
   const [isLiked, setIsLiked] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   // Load listing data if not available
   useEffect(() => {
@@ -81,7 +80,7 @@ const ListingDetailPage: React.FC = () => {
               reviews: 12,
               admin: {
                 name: dorm.admin?.username || dorm.university?.name || "Admin",
-                phone: dorm.university?.contact || undefined,
+                phone: dorm.admin_phone_number || dorm.university?.contact || dorm.admin?.phone || undefined,
                 email: dorm.admin?.email || undefined,
               },
               features: {
@@ -170,25 +169,8 @@ const ListingDetailPage: React.FC = () => {
   useEffect(() => {
     if (listing) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      setCurrentImageIndex(0);
     }
   }, [listing?.id]);
-
-  // Keyboard navigation for image slider
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (!listing?.images || listing.images.length <= 1) return;
-
-      if (e.key === "ArrowLeft") {
-        prevImage();
-      } else if (e.key === "ArrowRight") {
-        nextImage();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyPress);
-    return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [listing]);
 
 
 
@@ -225,47 +207,6 @@ const ListingDetailPage: React.FC = () => {
     return new Intl.NumberFormat("uz-UZ").format(price) + " so'm";
   };
 
-  const nextImage = () => {
-    if (listing?.images && listing.images.length > 0) {
-      setCurrentImageIndex((prev) =>
-        prev === listing.images.length - 1 ? 0 : prev + 1
-      );
-    }
-  };
-
-  const prevImage = () => {
-    if (listing?.images && listing.images.length > 0) {
-      setCurrentImageIndex((prev) =>
-        prev === 0 ? listing.images.length - 1 : prev - 1
-      );
-    }
-  };
-
-  // Touch handlers for mobile swipe
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe && listing?.images && listing.images.length > 1) {
-      nextImage();
-    }
-    if (isRightSwipe && listing?.images && listing.images.length > 1) {
-      prevImage();
-    }
-  };
-
 
 
   return (
@@ -291,78 +232,51 @@ const ListingDetailPage: React.FC = () => {
           {/* Main Content */}
           <div className="flex-1 lg:max-w-4xl space-y-6">
                          {/* Image Gallery */}
-             {/* Image Gallery */}
+             {/* Image Gallery with Swiper */}
              <motion.div
                initial={{ opacity: 0, y: 20 }}
                animate={{ opacity: 1, y: 0 }}
                transition={{ duration: 0.6 }}
                className="relative h-96 rounded-2xl overflow-hidden mb-6 group"
              >
-               <motion.img
-                 key={`${listing.id}-${currentImageIndex}`}
-                 initial={{ opacity: 0, scale: 1.05 }}
-                 animate={{ opacity: 1, scale: 1 }}
-                 exit={{ opacity: 0, scale: 0.95 }}
-                 transition={{ duration: 0.4, ease: "easeInOut" }}
-                 src={
-                   listing.images && listing.images.length > 0
-                     ? listing.images[currentImageIndex]
-                     : "/placeholder-room.svg"
-                 }
-                 alt={listing.title}
-                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                 onError={(e) => {
-                   const target = e.target as HTMLImageElement;
-                   target.src = "/placeholder-room.svg";
-                 }}
-                 onTouchStart={handleTouchStart}
-                 onTouchMove={handleTouchMove}
-                 onTouchEnd={handleTouchEnd}
-               />
-
-               {/* Navigation Buttons */}
-               {listing.images && listing.images.length > 1 && (
-                 <>
-                   <motion.button
-                     whileHover={{ scale: 1.1 }}
-                     whileTap={{ scale: 0.9 }}
-                     onClick={prevImage}
-                     className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-all duration-200 backdrop-blur-sm shadow-lg opacity-0 group-hover:opacity-100"
-                   >
-                     <ChevronLeft className="w-6 h-6" />
-                   </motion.button>
-                   <motion.button
-                     whileHover={{ scale: 1.1 }}
-                     whileTap={{ scale: 0.9 }}
-                     onClick={nextImage}
-                     className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-all duration-200 backdrop-blur-sm shadow-lg opacity-0 group-hover:opacity-100"
-                   >
-                     <ChevronRight className="w-6 h-6" />
-                   </motion.button>
-
-                   {/* Image Indicators */}
-                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2 bg-black/40 px-3 py-2 rounded-full backdrop-blur-sm shadow-lg">
-                     {listing.images.map((_, index) => (
-                       <motion.button
-                         key={index}
-                         whileHover={{ scale: 1.2 }}
-                         whileTap={{ scale: 0.9 }}
-                         onClick={() => setCurrentImageIndex(index)}
-                         className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                           index === currentImageIndex
-                             ? "bg-white shadow-sm"
-                             : "bg-white/50 hover:bg-white/70"
-                         }`}
-                       />
-                     ))}
-                   </div>
-
-                   {/* Image Counter */}
-                   <div className="absolute top-4 right-4 z-10 px-3 py-1 bg-black/60 text-white text-sm rounded-full backdrop-blur-sm shadow-lg">
-                     {currentImageIndex + 1} / {listing.images.length}
-                   </div>
-                 </>
+               {listing.images && listing.images.length > 0 ? (
+                                 <Swiper
+                  modules={[Pagination, Autoplay, Navigation]}
+                 spaceBetween={0}
+                 slidesPerView={1}
+                 pagination={{ clickable: true, dynamicBullets: true }}
+                 navigation
+                 autoplay={{ delay: 5000, disableOnInteraction: false }}
+                 loop={listing.images.length > 1}
+                 className="h-full"
+                >
+                  {listing.images.map((image, index) => (
+                    <SwiperSlide key={index}>
+                      <img
+                        src={image}
+                        alt={`${listing.title} - ${index + 1}`}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "/placeholder-room.svg";
+                        }}
+                      />
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+               ) : (
+                 <img
+                   src="/placeholder-room.svg"
+                   alt={listing.title}
+                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                   loading="lazy"
+                   decoding="async"
+                 />
                )}
+
+               
 
                {/* Action Buttons */}
                <div className="absolute top-4 left-4 z-10 flex gap-2">
@@ -392,7 +306,7 @@ const ListingDetailPage: React.FC = () => {
                  <span
                    className={`px-3 py-1 rounded-full text-sm font-semibold shadow-lg backdrop-blur-sm ${
                      listing.type === "dormitory"
-                       ? "bg-teal-100/90 text-teal-800 dark:bg-teal-900/60 dark:text-teal-300"
+                       ? "bg-teal-100/90 text-teal-800 dark:bg-green-900/60 dark:text-teal-300"
                        : "bg-green-100/90 text-green-800 dark:bg-green-900/60 dark:text-green-300"
                    }`}
                  >
@@ -608,14 +522,14 @@ const ListingDetailPage: React.FC = () => {
                   <div className="space-y-3 mb-6">
                     <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                       <Phone className="w-4 h-4" />
-                      <span className="text-sm">+998 71 123 45 67</span>
+                      <span className="text-sm">998889563848</span>
                     </div>
-                    <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                      <Mail className="w-4 h-4" />
-                      <span className="text-sm">
-                        info@{listing.university.toLowerCase()}.uz
-                      </span>
-                    </div>
+                    {listing.admin?.email && (
+                      <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+                        <Mail className="w-4 h-4" />
+                        <span className="text-sm">{listing.admin.email}</span>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
@@ -631,14 +545,6 @@ const ListingDetailPage: React.FC = () => {
                     >
                       <Calendar className="w-5 h-5" />
                       Ariza Yuborish
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full border-2 border-teal-600 text-teal-600 py-3 rounded-xl font-semibold hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all duration-300 flex items-center justify-center gap-2"
-                    >
-                      <MessageCircle className="w-5 h-5" />
-                      Xabar Yuborish
                     </motion.button>
                   </>
                 ) : (

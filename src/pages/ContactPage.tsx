@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Phone, MapPin, Clock, MessageCircle, Facebook, Instagram } from 'lucide-react';
+import { Phone, MapPin, Clock, MessageCircle, Facebook, Instagram } from 'lucide-react';
 import Header from '../components/Header';
 import YandexMap from '../components/YandexMap';
 import ContactForm from '../components/ContactForm';

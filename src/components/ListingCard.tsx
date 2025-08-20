@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Star, MapPin, Users, Wifi, Car, Shield, Eye, MessageCircle, Share2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, Star, MapPin, Users, Wifi, Car, Shield, Eye, MessageCircle, Share2 } from 'lucide-react';
+
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Pagination, Autoplay, Navigation } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
+
 import { Listing, User } from '../types';
 import { formatCapacityBucket } from '../utils/format';
 
@@ -8,12 +15,10 @@ interface ListingCardProps {
   listing: Listing;
   onSelect: () => void;
   user: User | null;
-  onApplicationStart?: (listing: Listing) => void;
 }
 
-const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user, onApplicationStart }) => {
+const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user }) => {
   const [isLiked, setIsLiked] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('uz-UZ').format(price) + ' so\'m';
@@ -27,24 +32,6 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user, onAp
     return type === 'dormitory' 
       ? 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300'
       : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
-  };
-
-  const nextImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (listing.images && listing.images.length > 0) {
-      setCurrentImageIndex((prev) => 
-        prev === listing.images.length - 1 ? 0 : prev + 1
-      );
-    }
-  };
-
-  const prevImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (listing.images && listing.images.length > 0) {
-      setCurrentImageIndex((prev) => 
-        prev === 0 ? listing.images.length - 1 : prev - 1
-      );
-    }
   };
 
   const handleLike = (e: React.MouseEvent) => {
@@ -96,55 +83,39 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user, onAp
     >
       {/* Image Section */}
       <div className="relative h-48 overflow-hidden">
-        <img
-          src={listing.images && listing.images.length > 0 ? listing.images[currentImageIndex] : '/placeholder-room.svg'}
-          alt={listing.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = '/placeholder-room.svg';
-          }}
-        />
-        
-        {/* Simple Image Navigation */}
-        {listing.images && listing.images.length > 1 && (
-          <>
-            <button
-              onClick={prevImage}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={nextImage}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-            
-            {/* Simple Image Indicators */}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex gap-1">
-              {listing.images.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentImageIndex(index);
+        {listing.images && listing.images.length > 0 ? (
+          <Swiper
+            modules={[Pagination, Autoplay, Navigation]}
+            spaceBetween={0}
+            slidesPerView={1}
+            pagination={{ clickable: true, dynamicBullets: true }}
+            navigation
+            autoplay={{ delay: 4000, disableOnInteraction: false }}
+            loop={listing.images.length > 1}
+            className="h-full"
+          >
+            {listing.images.map((image, index) => (
+              <SwiperSlide key={index}>
+                <img
+                  src={image}
+                  alt={`${listing.title} - ${index + 1}`}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder-room.svg';
                   }}
-                  className={`w-2 h-2 rounded-full transition-colors duration-200 ${
-                    index === currentImageIndex ? 'bg-white' : 'bg-white/50'
-                  }`}
                 />
-              ))}
-            </div>
-
-            {/* Simple Image Counter */}
-            {listing.images.length > 3 && (
-              <div className="absolute top-2 right-2 z-20 px-2 py-1 bg-black/50 text-white text-xs rounded backdrop-blur-sm">
-                {currentImageIndex + 1}/{listing.images.length}
-              </div>
-            )}
-          </>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        ) : (
+          <img
+            src="/placeholder-room.svg"
+            alt={listing.title}
+            className="w-full h-full object-cover"
+          />
         )}
 
         {/* Overlay Actions */}

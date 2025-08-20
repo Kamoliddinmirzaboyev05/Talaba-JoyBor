@@ -111,11 +111,11 @@ const Header: React.FC = () => {
                 >
                   <Bell className="w-6 h-6" />
                   {/* Only show when there are notifications */}
-                  {false && (
+                  {/* {false && (
                     <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
                       3
                     </span>
-                  )}
+                  )} */}
                 </motion.button>
 
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Phone, GraduationCap, CheckCircle, AlertCircle, MapPin, FileText, MessageSquare, Building, Upload, X } from 'lucide-react';
+import { ArrowLeft, User, Phone, CheckCircle, AlertCircle, MapPin, FileText, MessageSquare, Building, Upload, X } from 'lucide-react';
 import Header from '../components/Header';
 import { authAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,7 +14,6 @@ interface ApplicationFormData {
   familiya: string;
   city: string;
   village: string;
-  university: string;
   phone: string;
   passport: string;
   comment: string;
@@ -39,7 +38,6 @@ const ApplicationPage: React.FC = () => {
     familiya: user?.last_name || '',
     city: '',
     village: '',
-    university: '',
     phone: user?.phone || '',
     passport: '',
     comment: '',
@@ -244,14 +242,15 @@ const ApplicationPage: React.FC = () => {
     if (!formData.name.trim()) newErrors.name = 'Ism kiritilishi shart';
     if (!formData.city.trim()) newErrors.city = 'Viloyat tanlanishi shart';
     if (!formData.village.trim()) newErrors.village = 'Tuman tanlanishi shart';
-    if (!formData.university.trim()) newErrors.university = 'Universitet kiritilishi shart';
     if (!formData.phone.trim()) newErrors.phone = 'Telefon raqam kiritilishi shart';
     if (!formData.passport.trim()) newErrors.passport = 'Pasport raqami kiritilishi shart';
 
     // Phone validation
     const phoneNumbers = formData.phone.replace(/\D/g, '');
-    if (formData.phone && (phoneNumbers.length < 9 || phoneNumbers.length > 12)) {
-      newErrors.phone = 'Telefon raqam 9-12 raqamdan iborat bo\'lishi kerak';
+    if (formData.phone && phoneNumbers.length !== 12) {
+      newErrors.phone = 'Telefon raqam 12 ta raqamdan iborat bo\'lishi kerak (998901234567)';
+    } else if (formData.phone && !phoneNumbers.startsWith('998')) {
+      newErrors.phone = 'Telefon raqam 998 bilan boshlanishi kerak';
     }
 
     // Passport validation
@@ -275,8 +274,8 @@ const ApplicationPage: React.FC = () => {
     try {
       const phoneNumber = formData.phone.replace(/\D/g, '');
       
-      if (!phoneNumber || phoneNumber.length < 9) {
-        setErrors({ phone: 'Telefon raqam noto\'g\'ri formatda' });
+      if (!phoneNumber || phoneNumber.length !== 12 || !phoneNumber.startsWith('998')) {
+        setErrors({ phone: 'Telefon raqam noto\'g\'ri formatda. To\'g\'ri format: 998901234567' });
         setIsSubmitting(false);
         return;
       }
@@ -307,7 +306,6 @@ const ApplicationPage: React.FC = () => {
       formDataToSend.append('fio', formData.familiya.trim());
       formDataToSend.append('city', formData.city.trim());
       formDataToSend.append('village', formData.village.trim());
-      formDataToSend.append('university', formData.university.trim());
       formDataToSend.append('phone', phoneNumber);
       formDataToSend.append('passport', formData.passport.trim());
 
@@ -508,11 +506,11 @@ const ApplicationPage: React.FC = () => {
                           Tanlangan Yotoqxona
                         </h3>
                         <p className="text-teal-700 dark:text-teal-300">
-                          {selectedListing.name || selectedListing.title}
+                          {selectedListing.title}
                         </p>
                         {selectedListing.university && (
                           <p className="text-sm text-teal-600 dark:text-teal-400">
-                            {selectedListing.university.name || selectedListing.university}
+                            {selectedListing.university}
                           </p>
                         )}
                       </div>
@@ -652,32 +650,7 @@ const ApplicationPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* University */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Universitet <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      value={formData.university}
-                      onChange={(e) => handleInputChange('university', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${
-                        theme === 'dark' 
-                          ? 'bg-gray-700 border-gray-600 text-white' 
-                          : 'bg-white border-gray-300 text-gray-900'
-                      } ${errors.university ? 'border-red-500' : ''}`}
-                      placeholder="TATU"
-                    />
-                  </div>
-                  {errors.university && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.university}
-                    </p>
-                  )}
-                </div>
+                {/* University - Removed as requested */}
 
                 {/* Contact Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -691,7 +664,28 @@ const ApplicationPage: React.FC = () => {
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '');
+                          let value = e.target.value.replace(/\D/g, '');
+                          
+                          // O'zbekiston telefon raqami formatini to'g'rilash
+                          if (value.startsWith('998') && value.length > 3) {
+                            // 998 dan keyin 9 ta raqam bo'lishi kerak
+                            if (value.length > 12) {
+                              value = value.substring(0, 12);
+                            }
+                          } else if (value.startsWith('8') && value.length > 1) {
+                            // 8 dan boshlansa, uni 998 ga o'zgartirish
+                            value = '998' + value.substring(1);
+                            if (value.length > 12) {
+                              value = value.substring(0, 12);
+                            }
+                          } else if (value.startsWith('+') && value.length > 1) {
+                            // + dan boshlansa, uni olib tashlash
+                            value = value.substring(1);
+                            if (value.length > 12) {
+                              value = value.substring(0, 12);
+                            }
+                          }
+                          
                           handleInputChange('phone', value);
                         }}
                         className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${
@@ -702,6 +696,9 @@ const ApplicationPage: React.FC = () => {
                         placeholder="998901234567"
                         maxLength={12}
                       />
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Format: 998901234567 yoki 8901234567
                     </div>
                     {errors.phone && (
                       <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
@@ -933,11 +930,11 @@ const ApplicationPage: React.FC = () => {
                       </div>
                       <div>
                         <h4 className="font-bold text-teal-900 dark:text-teal-100">
-                          {selectedListing.name || selectedListing.title}
+                          {selectedListing.title}
                         </h4>
                         {selectedListing.university && (
                           <p className="text-sm text-teal-700 dark:text-teal-300">
-                            {selectedListing.university.name || selectedListing.university}
+                            {selectedListing.university}
                           </p>
                         )}
                       </div>

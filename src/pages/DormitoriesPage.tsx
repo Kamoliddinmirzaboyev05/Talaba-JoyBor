@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-import { Search, SlidersHorizontal, MapPin, Users, Building2, Clock, CheckCircle, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
-import { User, Listing, Dormitory } from '../types';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Pagination, Autoplay, Navigation } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
+
+import { Search, SlidersHorizontal, MapPin, Users, Building2, Clock, CheckCircle, Share2 } from 'lucide-react';
+import { Listing, Dormitory } from '../types';
 import { formatCapacityBucket } from '../utils/format';
 import Header from '../components/Header';
 import { authAPI } from '../services/api';
@@ -29,7 +35,7 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
   });
   const [sortBy, setSortBy] = useState('name');
   const [showFilters, setShowFilters] = useState(false);
-  const [imageIndexes, setImageIndexes] = useState<{ [key: number]: number }>({});
+
 
   // Sahifa yuklanganda yuqoriga scroll qilish
   useEffect(() => {
@@ -203,27 +209,7 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
     return new Intl.NumberFormat('uz-UZ').format(price) + ' so\'m';
   };
 
-  const nextImage = (dormitoryId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const dormitory = dormitories.find(d => d.id === dormitoryId);
-    if (dormitory && dormitory.images.length > 1) {
-      setImageIndexes(prev => ({
-        ...prev,
-        [dormitoryId]: ((prev[dormitoryId] || 0) + 1) % dormitory.images.length
-      }));
-    }
-  };
 
-  const prevImage = (dormitoryId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const dormitory = dormitories.find(d => d.id === dormitoryId);
-    if (dormitory && dormitory.images.length > 1) {
-      setImageIndexes(prev => ({
-        ...prev,
-        [dormitoryId]: ((prev[dormitoryId] || 0) - 1 + dormitory.images.length) % dormitory.images.length
-      }));
-    }
-  };
 
   if (loading) {
     return (
@@ -418,67 +404,43 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col h-full"
               >
-                {/* Image */}
+                {/* Image Display */}
                 <div className="relative h-48 overflow-hidden">
-                  <motion.img
-                    key={`dorm-${dormitory.id}-${imageIndexes[dormitory.id] || 0}`}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                    src={dormitory.images[imageIndexes[dormitory.id] || 0]?.image || '/placeholder-dormitory.svg'}
-                    alt={dormitory.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    loading="lazy"
-                    decoding="async"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = '/placeholder-dormitory.svg';
-                    }}
-                  />
-                  
-                  {/* Image Navigation */}
-                  {dormitory.images && dormitory.images.length > 1 && (
-                    <>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={(e) => prevImage(dormitory.id, e)}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-black/60 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-black/80 backdrop-blur-sm shadow-lg"
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={(e) => nextImage(dormitory.id, e)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-black/60 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-black/80 backdrop-blur-sm shadow-lg"
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </motion.button>
-                      
-                      {/* Image Indicators */}
-                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex gap-1 bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
-                        {dormitory.images.map((_, index) => (
-                          <motion.button
-                            key={index}
-                            whileHover={{ scale: 1.2 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setImageIndexes(prev => ({...prev, [dormitory.id]: index}));
+                  {dormitory.images && dormitory.images.length > 0 ? (
+                    <Swiper
+                      modules={[Pagination, Autoplay, Navigation]}
+                      spaceBetween={0}
+                      slidesPerView={1}
+                      pagination={{ clickable: true, dynamicBullets: true }}
+                      navigation
+                      autoplay={{ delay: 4000, disableOnInteraction: false }}
+                      loop={dormitory.images.length > 1}
+                      className="h-full"
+                    >
+                      {dormitory.images.map((img, index) => (
+                        <SwiperSlide key={index}>
+                          <img
+                            src={img.image}
+                            alt={`${dormitory.name} - ${index + 1}`}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
+                            decoding="async"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/placeholder-dormitory.svg';
                             }}
-                            className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                              index === (imageIndexes[dormitory.id] || 0) ? 'bg-white' : 'bg-white/50 hover:bg-white/70'
-                            }`}
                           />
-                        ))}
-                      </div>
-
-                      {/* Image Counter */}
-                      <div className="absolute top-2 right-2 z-10 px-2 py-1 bg-black/60 text-white text-xs rounded-full backdrop-blur-sm">
-                        {(imageIndexes[dormitory.id] || 0) + 1}/{dormitory.images.length}
-                      </div>
-                    </>
+                        </SwiperSlide>
+                      ))}
+                    </Swiper>
+                  ) : (
+                    <img
+                      src="/placeholder-dormitory.svg"
+                      alt={dormitory.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                      decoding="async"
+                    />
                   )}
 
                   {/* Share Button */}

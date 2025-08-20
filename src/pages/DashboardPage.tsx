@@ -4,8 +4,6 @@ import { useNavigate } from "react-router-dom";
 import {
   Home,
   MessageCircle,
-  Bell,
-  Heart,
   Calendar,
   Users,
   MapPin,

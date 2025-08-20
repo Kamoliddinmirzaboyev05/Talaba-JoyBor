@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+
 import { HelpCircle, Search, ChevronRight, MessageCircle, Phone, Mail, Book, Video, FileText } from 'lucide-react';
 import Header from '../components/Header';
 import ContactForm from '../components/ContactForm';
 
 const HelpPage: React.FC = () => {
-  const navigate = useNavigate();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
 
