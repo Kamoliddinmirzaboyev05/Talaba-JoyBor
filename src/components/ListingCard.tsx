@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Star, MapPin, Users, Wifi, Car, Shield, Eye, MessageCircle, Share2 } from 'lucide-react';
+import { Heart, MapPin, Users, Wifi, Car, Shield, Eye, MessageCircle, Share2, CheckCircle, Coffee, BookOpen, Utensils, Dumbbell, Tv, Snowflake, Sun, Moon, GraduationCap, Bed, Home, Building2, Bus, Bike, Trees, Leaf, Zap, Droplets, Flame } from 'lucide-react';
 
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay, Navigation } from 'swiper/modules';
@@ -9,7 +9,7 @@ import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
 import { Listing, User } from '../types';
-import { formatCapacityBucket } from '../utils/format';
+import { formatCapacityBucket, formatCapacity, formatAvailableCapacity } from '../utils/format';
 
 interface ListingCardProps {
   listing: Listing;
@@ -72,6 +72,61 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user }) =>
   const handleMessage = (e: React.MouseEvent) => {
     e.stopPropagation();
     // Message functionality
+  };
+
+  const getAmenityIcon = (amenityName: string) => {
+    const name = amenityName.toLowerCase();
+    
+    // Internet va texnologiya
+    if (name.includes('wifi') || name.includes('internet')) return <Wifi className="w-4 h-4 text-teal-600" />;
+    if (name.includes('tv') || name.includes('televizor')) return <Tv className="w-4 h-4 text-pink-600" />;
+    if (name.includes('ac') || name.includes('konditsioner')) return <Snowflake className="w-4 h-4 text-cyan-600" />;
+    if (name.includes('zap') || name.includes('elektr')) return <Zap className="w-4 h-4 text-yellow-600" />;
+    
+    // Transport va parking
+    if (name.includes('parking') || name.includes('avto')) return <Car className="w-4 h-4 text-green-600" />;
+    if (name.includes('bus') || name.includes('avtobus')) return <Bus className="w-4 h-4 text-blue-600" />;
+    if (name.includes('bike') || name.includes('velosiped')) return <Bike className="w-4 h-4 text-green-600" />;
+    
+    // Xavfsizlik va monitoring
+    if (name.includes('security') || name.includes('xavfsizlik')) return <Shield className="w-4 h-4 text-purple-600" />;
+    if (name.includes('camera') || name.includes('kamera')) return <Eye className="w-4 h-4 text-indigo-600" />;
+    
+    // Oshxona va ovqat
+    if (name.includes('coffee') || name.includes('kofe')) return <Coffee className="w-4 h-4 text-orange-600" />;
+    if (name.includes('kitchen') || name.includes('oshxona')) return <Utensils className="w-4 h-4 text-red-600" />;
+    if (name.includes('restaurant') || name.includes('restoran')) return <Utensils className="w-4 h-4 text-red-600" />;
+    
+    // O'qish va ish
+    if (name.includes('library') || name.includes('kutubxona')) return <BookOpen className="w-4 h-4 text-blue-600" />;
+    if (name.includes('darsxona') || name.includes('study') || name.includes('classroom')) return <GraduationCap className="w-4 h-4 text-blue-600" />;
+    if (name.includes('computer') || name.includes('kompyuter')) return <Tv className="w-4 h-4 text-indigo-600" />;
+    
+    // Sport va mashg'ulot
+    if (name.includes('gym') || name.includes('mashq') || name.includes('sport')) return <Dumbbell className="w-4 h-4 text-indigo-600" />;
+    if (name.includes('pool') || name.includes('basseyn')) return <Droplets className="w-4 h-4 text-blue-600" />;
+    if (name.includes('tennis') || name.includes('basketball')) return <Dumbbell className="w-4 h-4 text-green-600" />;
+    
+    // Turar joy va mebel
+    if (name.includes('bed') || name.includes('krovat')) return <Bed className="w-4 h-4 text-purple-600" />;
+    if (name.includes('furniture') || name.includes('mebel')) return <Home className="w-4 h-4 text-brown-600" />;
+    if (name.includes('balcony') || name.includes('balkon')) return <Home className="w-4 h-4 text-green-600" />;
+    
+    // Xizmatlar
+    if (name.includes('kir yuvish') || name.includes('washing') || name.includes('laundry')) return <Droplets className="w-4 h-4 text-cyan-600" />;
+    if (name.includes('mashina') || name.includes('machine')) return <Droplets className="w-4 h-4 text-cyan-600" />;
+    if (name.includes('cleaning') || name.includes('tozalash')) return <Droplets className="w-4 h-4 text-blue-600" />;
+    
+    // Iqlim va muhit
+    if (name.includes('heating') || name.includes('isitish')) return <Sun className="w-4 h-4 text-yellow-600" />;
+    if (name.includes('fan') || name.includes('ventilyator')) return <Moon className="w-4 h-4 text-gray-600" />;
+    if (name.includes('garden') || name.includes('bog')) return <Trees className="w-4 h-4 text-green-600" />;
+    if (name.includes('nature') || name.includes('tabiat')) return <Leaf className="w-4 h-4 text-green-600" />;
+    
+    // Boshqa
+    if (name.includes('building') || name.includes('binolar')) return <Building2 className="w-4 h-4 text-gray-600" />;
+    
+    return <CheckCircle className="w-4 h-4 text-gray-600" />;
   };
 
   return (
@@ -161,20 +216,11 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user }) =>
 
       {/* Content Section */}
       <div className="p-5">
-        {/* Title and Rating */}
-        <div className="flex items-start justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1">
+        {/* Title */}
+        <div className="mb-3">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2">
             {listing.title}
           </h3>
-          <div className="flex items-center gap-1 ml-2">
-            <Star className="w-4 h-4 text-yellow-400 fill-current" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {listing.rating}
-            </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              ({listing.reviews})
-            </span>
-          </div>
         </div>
 
         {/* Location and University */}
@@ -197,29 +243,50 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user }) =>
           </div>
           <div className="flex items-center gap-1 text-gray-600 dark:text-gray-300">
             <Users className="w-4 h-4" />
-            <span className="text-sm">{formatCapacityBucket(listing.capacity)} kishi</span>
+            <span className="text-sm">
+              {listing.available_capacity !== undefined 
+                ? `Bo'sh joylar: ${formatCapacityBucket(listing.capacity - listing.available_capacity)}`
+                : formatCapacity(listing.capacity)
+              }
+            </span>
           </div>
         </div>
 
         {/* Amenities */}
-        <div className="flex items-center gap-3 mb-4">
-          {listing.features.wifi && (
-            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-300">
-              <Wifi className="w-4 h-4" />
-              <span className="text-xs">WiFi</span>
-            </div>
-          )}
-          {listing.features.parking && (
-            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-300">
-              <Car className="w-4 h-4" />
-              <span className="text-xs">Parking</span>
-            </div>
-          )}
-          {listing.features.security && (
-            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-300">
-              <Shield className="w-4 h-4" />
-              <span className="text-xs">Xavfsizlik</span>
-            </div>
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          {listing.amenities && listing.amenities.length > 0 ? (
+            listing.amenities.map((amenity, index) => {
+              const amenityName = typeof amenity === 'string' ? amenity : (amenity as any)?.name || 'Qulaylik';
+              const icon = getAmenityIcon(amenityName);
+              return (
+                <div key={index} className="flex items-center gap-2 text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 px-3 py-2 rounded-lg">
+                  {icon}
+                  <span className="text-xs font-medium">{amenityName}</span>
+                </div>
+              );
+            })
+          ) : (
+            // Fallback to features if no amenities
+            <>
+              {listing.features.wifi && (
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 px-3 py-2 rounded-lg">
+                  <Wifi className="w-4 h-4 text-teal-600" />
+                  <span className="text-xs font-medium">WiFi</span>
+                </div>
+              )}
+              {listing.features.parking && (
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 px-3 py-2 rounded-lg">
+                  <Car className="w-4 h-4 text-green-600" />
+                  <span className="text-xs font-medium">Parking</span>
+                </div>
+              )}
+              {listing.features.security && (
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 px-3 py-2 rounded-lg">
+                  <Shield className="w-4 h-4 text-purple-600" />
+                  <span className="text-xs font-medium">Xavfsizlik</span>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -264,12 +331,7 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user }) =>
                   <span className="text-white text-xs">✓</span>
                 </div>
               )}
-              <div className="flex items-center gap-1 ml-auto">
-                <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                <span className="text-xs text-gray-600 dark:text-gray-300">
-                  {listing.landlord.rating}
-                </span>
-              </div>
+
             </div>
           </div>
         )}

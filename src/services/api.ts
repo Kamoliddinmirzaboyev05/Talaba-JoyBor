@@ -14,7 +14,7 @@ const api: AxiosInstance = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const accessToken = localStorage.getItem('access') || localStorage.getItem('access_token');
+    const accessToken = sessionStorage.getItem('access') || sessionStorage.getItem('access_token');
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
@@ -38,14 +38,14 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem('refresh_token');
+        const refreshToken = sessionStorage.getItem('refresh') || sessionStorage.getItem('refresh_token');
         if (refreshToken) {
           const response = await axios.post(`${API_BASE_URL}/token/refresh/`, {
             refresh: refreshToken,
           });
 
           const { access } = response.data;
-          localStorage.setItem('access_token', access);
+          sessionStorage.setItem('access', access);
 
           // Retry the original request with new token
           originalRequest.headers.Authorization = `Bearer ${access}`;
@@ -53,9 +53,9 @@ api.interceptors.response.use(
         }
       } catch {
         // Refresh token failed, logout user
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
+        sessionStorage.removeItem('access');
+        sessionStorage.removeItem('refresh');
+        sessionStorage.removeItem('user');
         window.location.reload();
       }
     }
@@ -266,6 +266,30 @@ export const authAPI = {
           applications_count: 0,
         };
       }
+    }
+  },
+
+  // Get notifications
+  getNotifications: async (): Promise<any[]> => {
+    try {
+      const response = await api.get('/notifications/my/');
+      return response.data;
+    } catch (error: any) {
+      console.error('Notifications fetch error:', error);
+      throw error;
+    }
+  },
+
+  // Mark notification as read
+  markNotificationAsRead: async (notificationId: number): Promise<any> => {
+    try {
+      const response = await api.post('/notifications/mark-read/', {
+        notification_id: notificationId
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Mark notification as read error:', error);
+      throw error;
     }
   },
 

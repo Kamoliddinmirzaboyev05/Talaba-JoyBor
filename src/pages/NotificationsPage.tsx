@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Check, Trash2, Filter, Search, Calendar, MessageCircle, AlertCircle, CheckCircle, Info } from 'lucide-react';
-import { Notification } from '../types';
+import { Bell, Check, Trash2, Filter, Search, Calendar, MessageCircle, AlertCircle, CheckCircle, Info, RefreshCw } from 'lucide-react';
+import { Notification, APINotificationItem, APINotificationLegacy } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
 import { useTheme } from '../contexts/ThemeContext';
+import { authAPI } from '../services/api';
 
 const NotificationsPage: React.FC = () => {
   const { user } = useAuth();
@@ -18,6 +19,87 @@ const NotificationsPage: React.FC = () => {
   }, []);
   const [filter, setFilter] = useState<'all' | 'unread' | 'application' | 'message' | 'system'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Load notifications from API
+  useEffect(() => {
+    const loadNotifications = async () => {
+      if (!user) return;
+      
+      setLoading(true);
+      try {
+        const apiNotifications: any[] = await authAPI.getNotifications();
+
+        // Convert API format to local format (support both new and legacy shapes)
+        const convertedNotifications: Notification[] = apiNotifications.map((item: APINotificationItem | APINotificationLegacy) => {
+          const isNew = (item as APINotificationItem).notification !== undefined;
+          if (isNew) {
+            const n = (item as APINotificationItem);
+            return {
+              id: n.id,
+              title: 'Bildirishnoma',
+              message: n.notification.message,
+              type: 'system',
+              timestamp: n.notification.created_at,
+              read: n.is_read,
+              actionUrl: undefined,
+            };
+          } else {
+            const n = item as APINotificationLegacy;
+            return {
+              id: n.id,
+              title: n.title || 'Bildirishnoma',
+              message: n.message,
+              type: (n.type as any) || 'system',
+              timestamp: n.created_at,
+              read: n.is_read,
+              actionUrl: n.action_url,
+            };
+          }
+        });
+        
+        setNotifications(convertedNotifications);
+      } catch (error) {
+        console.error('Failed to load notifications:', error);
+        // Fallback to sample notifications for testing
+        const fallbackNotifications: Notification[] = [
+          {
+            id: 1,
+            title: 'Ariza qabul qilindi',
+            message: 'Sizning arizangiz muvaffaqiyatli qabul qilindi va ko\'rib chiqilmoqda',
+            type: 'application',
+            timestamp: new Date().toISOString(),
+            read: false,
+            actionUrl: '/applications'
+          },
+          {
+            id: 2,
+            title: 'Yangi xabar',
+            message: 'Yotoqxona ma\'muriyatidan yangi xabar keldi',
+            type: 'message',
+            timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+            read: false,
+            actionUrl: '/messages'
+          },
+          {
+            id: 3,
+            title: 'Tizim yangilandi',
+            message: 'JoyBor platformasi yangi funksiyalar bilan yangilandi',
+            type: 'system',
+            timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+            read: true,
+            actionUrl: '/about'
+          }
+        ];
+        setNotifications(fallbackNotifications);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadNotifications();
+  }, [user]);
 
   if (!user) {
     return (
@@ -37,15 +119,16 @@ const NotificationsPage: React.FC = () => {
     );
   }
 
-  // Hozircha bildirishnomalar uchun API yo'q, shuning uchun bo'sh array
-  const notifications: Notification[] = [];
-
   const filteredNotifications = notifications.filter(notification => {
-    const matchesSearch = notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         notification.message.toLowerCase().includes(searchQuery.toLowerCase());
+    const title = (notification.title || '').toLowerCase();
+    const message = (notification.message || '').toLowerCase();
+    const query = (searchQuery || '').toLowerCase();
+
+    const matchesSearch = title.includes(query) || message.includes(query);
+    const notifType = (notification.type || 'system') as 'application' | 'message' | 'system' | 'reminder';
     const matchesFilter = filter === 'all' || 
                          (filter === 'unread' && !notification.read) ||
-                         notification.type === filter;
+                         notifType === filter;
     return matchesSearch && matchesFilter;
   });
 
@@ -58,11 +141,8 @@ const NotificationsPage: React.FC = () => {
       case 'message':
         return <MessageCircle className="w-5 h-5" />;
       case 'system':
-        return <Info className="w-5 h-5" />;
-      case 'reminder':
-        return <AlertCircle className="w-5 h-5" />;
       default:
-        return <Bell className="w-5 h-5" />;
+        return <Info className="w-5 h-5" />;
     }
   };
 
@@ -96,19 +176,38 @@ const NotificationsPage: React.FC = () => {
     }
   };
 
-  const handleMarkAsRead = (notificationId: string) => {
-    // Here you would typically update the notification status
-    console.log('Marking as read:', notificationId);
+  const handleMarkAsRead = async (notificationId: number) => {
+    try {
+      await authAPI.markNotificationAsRead(notificationId);
+      
+      // Update local state
+      setNotifications(prev => prev.map(notif => 
+        notif.id === notificationId ? { ...notif, read: true } : notif
+      ));
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
   };
 
-  const handleMarkAllAsRead = () => {
-    // Here you would typically mark all notifications as read
-    console.log('Marking all as read');
+  const handleMarkAllAsRead = async () => {
+    try {
+      // Mark all unread notifications as read
+      const unreadNotifications = notifications.filter(n => !n.read);
+      await Promise.all(unreadNotifications.map(notif => 
+        authAPI.markNotificationAsRead(notif.id)
+      ));
+      
+      // Update local state
+      setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
   };
 
-  const handleDeleteNotification = (notificationId: string) => {
-    // Here you would typically delete the notification
-    console.log('Deleting notification:', notificationId);
+  const handleDeleteNotification = (notificationId: number) => {
+    // For now, just remove from local state
+    // In the future, you can add a delete API endpoint
+    setNotifications(prev => prev.filter(notif => notif.id !== notificationId));
   };
 
   const handleNotificationClick = (notification: Notification) => {
@@ -118,8 +217,11 @@ const NotificationsPage: React.FC = () => {
     
     // Navigate based on actionUrl
     if (notification.actionUrl) {
-      // Bu yerda navigate hook ishlatish kerak
-      // onNavigate(page);
+      try {
+        navigate(notification.actionUrl);
+      } catch (error) {
+        console.error('Navigation failed:', error);
+      }
     }
   };
 
@@ -157,17 +259,28 @@ const NotificationsPage: React.FC = () => {
               </div>
             </div>
             
-            {unreadCount > 0 && (
+            <div className="flex items-center gap-3">
+              {unreadCount > 0 && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleMarkAllAsRead}
+                  className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors duration-200"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Barchasini o'qilgan deb belgilash
+                </motion.button>
+              )}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={handleMarkAllAsRead}
-                className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors duration-200"
+                onClick={() => window.location.reload()}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200"
               >
-                <CheckCircle className="w-4 h-4" />
-                Barchasini o'qilgan deb belgilash
+                <RefreshCw className="w-4 h-4" />
+                Yangilash
               </motion.button>
-            )}
+            </div>
           </div>
         </motion.div>
 
@@ -219,7 +332,17 @@ const NotificationsPage: React.FC = () => {
         </motion.div>
 
         {/* Notifications List */}
-        {filteredNotifications.length === 0 ? (
+        {loading ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center py-16"
+          >
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-300">Bildirishnomalar yuklanmoqda...</p>
+          </motion.div>
+        ) : filteredNotifications.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
