@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
 import SearchBar from '../components/SearchBar';
 import ListingCard from '../components/ListingCard';
+import DormitoryCard from '../components/DormitoryCard';
 import { authAPI } from '../services/api';
 
 interface Statistics {
@@ -97,6 +98,7 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
           amenities: dormitory.amenities?.map((amenity: any) => amenity.name) || [],
           description: dormitory.description || 'Tavsif mavjud emas',
           capacity: dormitory.total_capacity || 1,
+          available_capacity: dormitory.available_capacity,
           available: dormitory.available_capacity > 0,
           rating: 4.5,
           reviews: 12,
@@ -395,11 +397,28 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                 >
-                  <ListingCard
-                    listing={listing}
-                    onSelect={() => onListingSelect(listing)}
-                    user={user}
-                  />
+                  {listing.type === 'dormitory' ? (
+                    <DormitoryCard
+                      id={listing.id}
+                      name={listing.title}
+                      month_price={listing.price}
+                      address={listing.location}
+                      universityName={listing.university}
+                      images={listing.images}
+                      amenities={listing.amenities}
+                      available_capacity={(listing as any).available_capacity ?? 0}
+                      total_capacity={listing.capacity}
+                      description={listing.description}
+                      onSelect={() => onListingSelect(listing)}
+                      canApply={!!user}
+                    />
+                  ) : (
+                    <ListingCard
+                      listing={listing}
+                      onSelect={() => onListingSelect(listing)}
+                      user={null}
+                    />
+                  )}
                 </motion.div>
               ))}
             </div>

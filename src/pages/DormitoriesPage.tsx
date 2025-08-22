@@ -7,9 +7,10 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
-import { Search, SlidersHorizontal, MapPin, Users, Building2, Clock, CheckCircle, Share2 } from 'lucide-react';
+import { Search, SlidersHorizontal, Building2 } from 'lucide-react';
 import { Listing, Dormitory } from '../types';
 import { formatCapacityBucket } from '../utils/format';
+import DormitoryCard from '../components/DormitoryCard';
 import Header from '../components/Header';
 import { authAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -397,149 +398,23 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredDormitories.map((dormitory, index) => (
-              <motion.div
+              <DormitoryCard
                 key={dormitory.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col h-full"
-              >
-                {/* Image Display */}
-                <div className="relative h-48 overflow-hidden">
-                  {dormitory.images && dormitory.images.length > 0 ? (
-                    <Swiper
-                      modules={[Pagination, Autoplay, Navigation]}
-                      spaceBetween={0}
-                      slidesPerView={1}
-                      pagination={{ clickable: true, dynamicBullets: true }}
-                      navigation
-                      autoplay={{ delay: 4000, disableOnInteraction: false }}
-                      loop={dormitory.images.length > 1}
-                      className="h-full"
-                    >
-                      {dormitory.images.map((img, index) => (
-                        <SwiperSlide key={index}>
-                          <img
-                            src={img.image}
-                            alt={`${dormitory.name} - ${index + 1}`}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            loading="lazy"
-                            decoding="async"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = '/placeholder-dormitory.svg';
-                            }}
-                          />
-                        </SwiperSlide>
-                      ))}
-                    </Swiper>
-                  ) : (
-                    <img
-                      src="/placeholder-dormitory.svg"
-                      alt={dormitory.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  )}
-
-                  {/* Share Button */}
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={(e) => handleShare(dormitory, e)}
-                    className="absolute top-2 left-2 z-10 w-8 h-8 bg-white/90 text-gray-600 rounded-full flex items-center justify-center hover:bg-white transition-colors duration-200 backdrop-blur-sm shadow-lg"
-                  >
-                    <Share2 className="w-4 h-4" />
-                  </motion.button>
-
-                  {/* Price Badge */}
-                  <div className="absolute bottom-2 right-2 z-10 bg-gradient-to-r from-teal-600 to-green-600 text-white px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm">
-                    {formatPrice(dormitory.month_price)}/oy
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6 flex flex-col flex-1">
-                  {/* Header */}
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white line-clamp-1">
-                        {dormitory.name}
-                      </h3>
-                    </div>
-                    <div className="flex items-center gap-2 text-teal-600 mb-2">
-                      <Building2 className="w-4 h-4" />
-                      <span className="text-sm font-medium line-clamp-1">{dormitory.university.name}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-                      <MapPin className="w-4 h-4" />
-                      <span className="text-sm line-clamp-1">{dormitory.address}</span>
-                    </div>
-                  </div>
-
-                  {/* Stats */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-600 dark:text-gray-300">
-                        {formatCapacityBucket(dormitory.available_capacity)}/{formatCapacityBucket(dormitory.total_capacity)} joy
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-600 dark:text-gray-300">
-                        {dormitory.distance_to_university} km
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Amenities */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {dormitory.amenities.slice(0, 3).map((amenity) => (
-                      <div key={amenity.id} className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
-                        <CheckCircle className="w-3 h-3 text-green-500" />
-                        <span className="text-xs text-gray-700 dark:text-gray-300">{amenity.name}</span>
-                      </div>
-                    ))}
-                    {dormitory.amenities.length > 3 && (
-                      <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
-                        +{dormitory.amenities.length - 3}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Description - flex-1 to take remaining space */}
-                  <div className="flex-1 mb-4">
-                    <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-3">
-                      {dormitory.description || "Bu yotoqxona haqida qo'shimcha ma'lumot mavjud emas."}
-                    </p>
-                  </div>
-
-                  {/* Action Buttons - always at bottom */}
-                  <div className="flex gap-2 mt-auto">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => onListingSelect(convertDormitoryToListing(dormitory))}
-                      className="flex-1 bg-gradient-to-r from-teal-600 to-green-600 text-white py-2.5 px-4 rounded-lg font-medium hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
-                    >
-                      Ko'rish
-                    </motion.button>
-                    
-                    {user && dormitory.available_capacity > 0 && (
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => onApplicationStart(convertDormitoryToListing(dormitory))}
-                        className="px-4 py-2.5 border-2 border-teal-600 text-teal-600 rounded-lg font-medium hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all duration-300 whitespace-nowrap"
-                      >
-                        Ariza
-                      </motion.button>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
+                id={dormitory.id}
+                name={dormitory.name}
+                month_price={dormitory.month_price}
+                address={dormitory.address}
+                universityName={dormitory.university.name}
+                images={dormitory.images.map(img => img.image)}
+                amenities={dormitory.amenities.map(a => a.name)}
+                available_capacity={dormitory.available_capacity}
+                total_capacity={dormitory.total_capacity}
+                distance_to_university={dormitory.distance_to_university}
+                description={dormitory.description}
+                onSelect={() => onListingSelect(convertDormitoryToListing(dormitory))}
+                onApplicationStart={() => onApplicationStart(convertDormitoryToListing(dormitory))}
+                canApply={!!user}
+              />
             ))}
           </div>
         )}

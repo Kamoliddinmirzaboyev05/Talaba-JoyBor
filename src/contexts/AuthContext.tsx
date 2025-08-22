@@ -45,8 +45,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Migrate tokens from localStorage -> sessionStorage; keep only theme in localStorage
+    try {
+      const theme = localStorage.getItem('theme');
+      const accessLocal = localStorage.getItem('access') || localStorage.getItem('access_token');
+      const refreshLocal = localStorage.getItem('refresh') || localStorage.getItem('refresh_token');
+      if (accessLocal) sessionStorage.setItem('access', accessLocal);
+      if (refreshLocal) sessionStorage.setItem('refresh', refreshLocal);
+      // Clear everything except theme
+      Object.keys(localStorage).forEach((key) => {
+        if (key !== 'theme') localStorage.removeItem(key);
+      });
+      if (theme) localStorage.setItem('theme', theme);
+    } catch {}
+
     const initializeAuth = async () => {
-      const token = localStorage.getItem('access');
+      const token = sessionStorage.getItem('access');
       if (token) {
         try {
           const decoded: { user_id: number; exp: number } = jwtDecode(token);
@@ -65,10 +79,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // API dan ma'lumot olishda xatolik bo'lsa, JWT dan asosiy ma'lumotlarni ishlatamiz
             setUser({
               id: decoded.user_id,
-              username: decoded.username || '',
-              first_name: decoded.first_name || '',
-              last_name: decoded.last_name || '',
-              email: decoded.email || '',
+              username: (decoded as any).username || '',
+              first_name: (decoded as any).first_name || '',
+              last_name: (decoded as any).last_name || '',
+              email: (decoded as any).email || '',
             });
             setIsAuthenticated(true);
           }
@@ -87,8 +101,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = async (access: string, refresh: string) => {
-    localStorage.setItem('access', access);
-    localStorage.setItem('refresh', refresh);
+    sessionStorage.setItem('access', access);
+    sessionStorage.setItem('refresh', refresh);
     try {
       // JWT dan asosiy ma'lumotlarni olish
       const decoded: { user_id: number; exp: number } = jwtDecode(access);
@@ -104,10 +118,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } else {
         setUser({
           id: decoded.user_id,
-          username: decoded.username || '',
-          first_name: decoded.first_name || '',
-          last_name: decoded.last_name || '',
-          email: decoded.email || '',
+          username: (decoded as any).username || '',
+          first_name: (decoded as any).first_name || '',
+          last_name: (decoded as any).last_name || '',
+          email: (decoded as any).email || '',
         });
       }
     } catch {
@@ -117,8 +131,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('access');
-    localStorage.removeItem('refresh');
+    sessionStorage.removeItem('access');
+    sessionStorage.removeItem('refresh');
     setUser(null);
     setIsAuthenticated(false);
   };

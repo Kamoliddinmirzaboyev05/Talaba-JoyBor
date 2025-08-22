@@ -28,6 +28,7 @@ export interface Listing {
   amenities: string[];
   description: string;
   capacity: number;
+  available_capacity?: number;
   available: boolean;
   rating: number;
   reviews: number;
@@ -190,11 +191,37 @@ export interface Conversation {
 }
 
 export interface Notification {
-  id: string;
+  id: number;
   title: string;
   message: string;
   type: 'application' | 'message' | 'system' | 'reminder';
   timestamp: string;
   read: boolean;
   actionUrl?: string;
+}
+
+export interface APINotificationItem {
+  id: number; // user-notification id
+  notification: {
+    id: number;
+    message: string;
+    image: string | null;
+    image_url: string | null;
+    target_type: string; // e.g., all_students
+    target_user: number | null;
+    created_at: string;
+    is_active: boolean;
+  };
+  is_read: boolean;
+  received_at: string;
+}
+
+export interface APINotificationLegacy { // keep legacy for compatibility if backend changes
+  id: number;
+  title?: string;
+  message: string;
+  type?: string;
+  created_at: string;
+  is_read: boolean;
+  action_url?: string;
 }
