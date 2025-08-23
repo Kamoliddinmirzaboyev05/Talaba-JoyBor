@@ -1,11 +1,16 @@
 export interface User {
   id: number;
-  name: string;
+  username?: string;
+  first_name?: string;
+  last_name?: string;
+  name?: string;
   email: string;
   phone: string;
-  university: string;
+  university?: string;
+  student_id?: string;
   studentId?: string;
   avatar?: string;
+  is_verified?: boolean;
   isVerified?: boolean;
   preferences?: {
     maxPrice: number;
@@ -101,56 +106,14 @@ export interface Dormitory {
   rules: string[];
 }
 
-export interface Dormitory {
-  id: number;
-  university: {
-    id: number;
-    name: string;
-    address: string;
-    description: string;
-    contact: string;
-    logo: string | null;
-  };
-  admin: {
-    id: number;
-    username: string;
-    role: string;
-    email: string;
-  };
-  name: string;
-  address: string;
-  description: string;
-  images: {
-    id: number;
-    dormitory: {
-      id: number;
-      name: string;
-    };
-    image: string;
-  }[];
-  month_price: number;
-  year_price: number;
-  latitude: number;
-  longitude: number;
-  amenities: {
-    id: number;
-    name: string;
-    is_active: boolean;
-    type: string;
-  }[];
-  total_capacity: number;
-  available_capacity: number;
-  total_rooms: number;
-  distance_to_university: number;
-  rules: string[];
-}
-
 export interface Application {
   id: number;
   user: number;
   dormitory: {
     id: number;
     name: string;
+    address?: string;
+    description?: string;
     university: {
       name: string;
     };
@@ -159,10 +122,15 @@ export interface Application {
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'INTERVIEW' | 'COMPLETED';
   comment: string;
   name: string;
+  middle_name?: string;
   fio: string;
   city: string;
   village: string;
   university: string;
+  faculty?: string;
+  direction?: string;
+  course?: string;
+  group?: string;
   phone: number;
   passport: number;
   created_at?: string;

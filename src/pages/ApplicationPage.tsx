@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Phone, CheckCircle, AlertCircle, MapPin, FileText, MessageSquare, Building, Upload, X } from 'lucide-react';
+import { ArrowLeft, User, Phone, CheckCircle, AlertCircle, MapPin, FileText, MessageSquare, Building, Upload, X, Users, Clock } from 'lucide-react';
 import Header from '../components/Header';
 import { authAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,11 +11,17 @@ import { Dormitory } from '../types';
 
 interface ApplicationFormData {
   name: string;
+  middle_name: string;
   familiya: string;
   city: string;
   village: string;
   phone: string;
   passport: string;
+  faculty: string;
+  direction: string;
+  course: string;
+  group: string;
+  user_image?: File | null;
   comment: string;
   document?: File | null;
   passport_image_first?: File | null;
@@ -35,11 +41,17 @@ const ApplicationPage: React.FC = () => {
 
   const [formData, setFormData] = useState<ApplicationFormData>({
     name: user?.first_name || '',
+    middle_name: '',
     familiya: user?.last_name || '',
     city: '',
     village: '',
     phone: user?.phone || '',
     passport: '',
+    faculty: '',
+    direction: '',
+    course: '',
+    group: '',
+    user_image: null,
     comment: '',
     document: null,
     passport_image_first: null,
@@ -153,7 +165,7 @@ const ApplicationPage: React.FC = () => {
   const handlePassportChange = (value: string) => {
     // Faqat lotin harflari va raqamlarni qabul qilish
     const cleanValue = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    
+
     // Format bo'yicha tekshirish va to'g'rilash
     let formattedValue = '';
     for (let i = 0; i < cleanValue.length && i < 9; i++) {
@@ -170,7 +182,7 @@ const ApplicationPage: React.FC = () => {
         }
       }
     }
-    
+
     setFormData(prev => ({
       ...prev,
       passport: formattedValue
@@ -184,7 +196,7 @@ const ApplicationPage: React.FC = () => {
         const remainingChars = 9 - formattedValue.length;
         const needLetters = Math.max(0, 2 - formattedValue.replace(/[0-9]/g, '').length);
         const needNumbers = Math.max(0, 7 - formattedValue.replace(/[A-Z]/g, '').length);
-        
+
         if (needLetters > 0) {
           setErrors(prev => ({ ...prev, passport: `Yana ${needLetters} ta harf kerak` }));
         } else if (needNumbers > 0) {
@@ -237,13 +249,18 @@ const ApplicationPage: React.FC = () => {
     const newErrors: Record<string, string> = {};
 
     // Required fields validation
-    if (!selectedDormitoryId) newErrors.dormitory = 'Yotoqxona tanlanishi shart';
+    if (!selectedListing) newErrors.general = 'Yotoqxona tanlanmagan. Iltimos, yotoqxona sahifasiga qayting va ariza yuborish tugmasini bosing.';
     if (!formData.familiya.trim()) newErrors.familiya = 'Familiya kiritilishi shart';
     if (!formData.name.trim()) newErrors.name = 'Ism kiritilishi shart';
     if (!formData.city.trim()) newErrors.city = 'Viloyat tanlanishi shart';
     if (!formData.village.trim()) newErrors.village = 'Tuman tanlanishi shart';
     if (!formData.phone.trim()) newErrors.phone = 'Telefon raqam kiritilishi shart';
     if (!formData.passport.trim()) newErrors.passport = 'Pasport raqami kiritilishi shart';
+    if (!formData.faculty.trim()) newErrors.faculty = 'Fakultet nomi kiritilishi shart';
+    if (!formData.direction.trim()) newErrors.direction = 'Yo\'nalish kiritilishi shart';
+    if (!formData.course.trim()) newErrors.course = 'Kurs tanlanishi shart';
+    if (!formData.group.trim()) newErrors.group = 'Guruh nomi kiritilishi shart';
+    if (!formData.user_image) newErrors.user_image = 'O\'zingizning rasmingizni yuklashingiz shart';
 
     // Phone validation
     const phoneNumbers = formData.phone.replace(/\D/g, '');
@@ -273,7 +290,7 @@ const ApplicationPage: React.FC = () => {
 
     try {
       const phoneNumber = formData.phone.replace(/\D/g, '');
-      
+
       if (!phoneNumber || phoneNumber.length !== 12 || !phoneNumber.startsWith('998')) {
         setErrors({ phone: 'Telefon raqam noto\'g\'ri formatda. To\'g\'ri format: 998901234567' });
         setIsSubmitting(false);
@@ -287,53 +304,42 @@ const ApplicationPage: React.FC = () => {
         return;
       }
 
-      if (!selectedDormitoryId) {
-        setErrors({ general: 'Yotoqxona tanlanishi shart.' });
+      if (!selectedListing) {
+        setErrors({ general: 'Yotoqxona tanlanmagan. Iltimos, yotoqxona sahifasiga qayting va ariza yuborish tugmasini bosing.' });
         setIsSubmitting(false);
         return;
       }
 
-      // Create FormData for file upload
-      const formDataToSend = new FormData();
+      // API endpoint orqali ariza yuborish
+      const applicationData = {
+        user: user.id!,
+        dormitory: parseInt(selectedListing.id.toString()),
+        room: 0,
+        status: 'PENDING',
+        comment: formData.comment.trim() || '',
+        name: formData.name.trim(),
+        middle_name: formData.middle_name.trim() || '',
+        fio: formData.familiya.trim(),
+        city: formData.city.trim(),
+        village: formData.village.trim(),
+        faculty: formData.faculty.trim(),
+        direction: formData.direction.trim(),
+        course: formData.course.trim(),
+        group: formData.group.trim(),
+        phone: parseInt(phoneNumber),
+        passport: parseInt(formData.passport.replace(/[A-Z]/g, '')),
+        user_image: formData.user_image,
+        document: formData.document,
+        passport_image_first: formData.passport_image_first,
+        passport_image_second: formData.passport_image_second,
+      };
 
-      // Add required fields
-      formDataToSend.append('user', user.id!.toString());
-      formDataToSend.append('dormitory', selectedDormitoryId.toString());
-      formDataToSend.append('room', '0');
-      formDataToSend.append('status', 'PENDING');
-      formDataToSend.append('comment', formData.comment.trim() || '');
-      formDataToSend.append('name', formData.name.trim());
-      formDataToSend.append('fio', formData.familiya.trim());
-      formDataToSend.append('city', formData.city.trim());
-      formDataToSend.append('village', formData.village.trim());
-      formDataToSend.append('phone', phoneNumber);
-      formDataToSend.append('passport', formData.passport.trim());
+      console.log('Yuborilayotgan ariza ma\'lumotlari:', applicationData);
 
-      // Add files if they exist
-      if (formData.document) {
-        formDataToSend.append('document', formData.document);
-      }
-      if (formData.passport_image_first) {
-        formDataToSend.append('passport_image_first', formData.passport_image_first);
-      }
-      if (formData.passport_image_second) {
-        formDataToSend.append('passport_image_second', formData.passport_image_second);
-      }
+      // API orqali ariza yuborish
+      const response = await authAPI.submitApplication(applicationData);
 
-      // Submit with FormData
-      const response = await fetch('https://joyboryangi.pythonanywhere.com/application/create/', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access') || localStorage.getItem('access_token')}`,
-        },
-        body: formDataToSend
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('API Error:', errorData);
-        throw new Error(JSON.stringify(errorData));
-      }
+      console.log('Ariza muvaffaqiyatli yuborildi:', response);
 
       setSubmitSuccess(true);
       setTimeout(() => {
@@ -345,16 +351,20 @@ const ApplicationPage: React.FC = () => {
       let errorMessage = 'Ariza yuborishda xatolik yuz berdi. Qaytadan urinib ko\'ring.';
 
       try {
-        const errorData = JSON.parse(error.message);
-        if (errorData.detail) {
-          errorMessage = errorData.detail;
-        } else if (typeof errorData === 'object') {
-          const firstError = Object.values(errorData)[0];
-          if (Array.isArray(firstError)) {
-            errorMessage = firstError[0];
-          } else {
-            errorMessage = firstError as string;
+        if (error.response?.data) {
+          const errorData = error.response.data;
+          if (errorData.detail) {
+            errorMessage = errorData.detail;
+          } else if (typeof errorData === 'object') {
+            const firstError = Object.values(errorData)[0];
+            if (Array.isArray(firstError)) {
+              errorMessage = firstError[0];
+            } else {
+              errorMessage = firstError as string;
+            }
           }
+        } else if (error.message) {
+          errorMessage = error.message;
         }
       } catch {
         errorMessage = error.message || errorMessage;
@@ -415,7 +425,7 @@ const ApplicationPage: React.FC = () => {
           transition={{ duration: 0.5 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-                      onClick={() => navigate('/dormitories')}
+          onClick={() => navigate('/dormitories')}
           className="flex items-center gap-2 text-teal-600 hover:text-teal-700 mb-6 transition-colors duration-200"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -465,61 +475,47 @@ const ApplicationPage: React.FC = () => {
               )}
 
               <div className="space-y-6">
-                {/* Dormitory Selection - only show if no selectedListing */}
-                {!selectedListing ? (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Yotoqxona <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <select
-                        value={selectedDormitoryId}
-                        onChange={(e) => setSelectedDormitoryId(e.target.value)}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${
-                          theme === 'dark' 
-                            ? 'bg-gray-700 border-gray-600 text-white' 
-                            : 'bg-white border-gray-300 text-gray-900'
-                        } ${errors.dormitory ? 'border-red-500' : ''}`}
-                      >
-                        <option value="">Yotoqxonani tanlang</option>
-                        {dormitories.map((dormitory) => (
-                          <option key={dormitory.id} value={dormitory.id}>
-                            {dormitory.name} - {dormitory.university.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    {errors.dormitory && (
-                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" />
-                        {errors.dormitory}
-                      </p>
-                    )}
-                  </div>
-                ) : (
+                {/* Selected Dormitory Display */}
+                {selectedListing ? (
                   <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-xl p-4">
                     <div className="flex items-center gap-3">
                       <Building className="w-6 h-6 text-teal-600" />
                       <div>
                         <h3 className="font-semibold text-teal-900 dark:text-teal-100">
-                          Tanlangan Yotoqxona
+                          Ariza Yuborilayotgan Yotoqxona
                         </h3>
                         <p className="text-teal-700 dark:text-teal-300">
                           {selectedListing.title}
                         </p>
                         {selectedListing.university && (
-                          <p className="text-sm text-teal-600 dark:text-teal-400">
+                          <p className="text-sm text-teal-700 dark:text-teal-400">
                             {selectedListing.university}
                           </p>
                         )}
+                        <p className="text-xs text-teal-600 dark:text-teal-400 mt-1">
+                          ✨ Bu yotoqxona uchun ariza yubormoqdasiz
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                      <AlertCircle className="w-6 h-6 text-red-600" />
+                      <div>
+                        <h3 className="font-semibold text-red-900 dark:text-red-100">
+                          Xatolik
+                        </h3>
+                        <p className="text-red-700 dark:text-red-300">
+                          Yotoqxona tanlanmagan. Iltimos, yotoqxona sahifasiga qayting va ariza yuborish tugmasini bosing.
+                        </p>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Familiya and Name */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Familiya, Name and Middle Name */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                       Familiya <span className="text-red-500">*</span>
@@ -530,11 +526,10 @@ const ApplicationPage: React.FC = () => {
                         type="text"
                         value={formData.familiya}
                         onChange={(e) => handleInputChange('familiya', e.target.value)}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${
-                          theme === 'dark' 
-                            ? 'bg-gray-700 border-gray-600 text-white' 
-                            : 'bg-white border-gray-300 text-gray-900'
-                        } ${errors.familiya ? 'border-red-500' : ''}`}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
+                          ? 'bg-gray-700 border-gray-600 text-white'
+                          : 'bg-white border-gray-300 text-gray-900'
+                          } ${errors.familiya ? 'border-red-500' : ''}`}
                         placeholder="Karimov"
                       />
                     </div>
@@ -556,11 +551,10 @@ const ApplicationPage: React.FC = () => {
                         type="text"
                         value={formData.name}
                         onChange={(e) => handleInputChange('name', e.target.value)}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${
-                          theme === 'dark' 
-                            ? 'bg-gray-700 border-gray-600 text-white' 
-                            : 'bg-white border-gray-300 text-gray-900'
-                        } ${errors.name ? 'border-red-500' : ''}`}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
+                          ? 'bg-gray-700 border-gray-600 text-white'
+                          : 'bg-white border-gray-300 text-gray-900'
+                          } ${errors.name ? 'border-red-500' : ''}`}
                         placeholder="Aziz"
                       />
                     </div>
@@ -568,6 +562,31 @@ const ApplicationPage: React.FC = () => {
                       <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
                         <AlertCircle className="w-4 h-4" />
                         {errors.name}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Otasining ismi
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        value={formData.middle_name}
+                        onChange={(e) => handleInputChange('middle_name', e.target.value)}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
+                          ? 'bg-gray-700 border-gray-600 text-white'
+                          : 'bg-white border-gray-300 text-gray-900'
+                          } ${errors.middle_name ? 'border-red-500' : ''}`}
+                        placeholder="Akramovich"
+                      />
+                    </div>
+                    {errors.middle_name && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.middle_name}
                       </p>
                     )}
                   </div>
@@ -589,11 +608,10 @@ const ApplicationPage: React.FC = () => {
                           setSelectedProvinceId(selectedProvince ? selectedProvince.id : null);
                           handleInputChange('village', '');
                         }}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${
-                          theme === 'dark' 
-                            ? 'bg-gray-700 border-gray-600 text-white' 
-                            : 'bg-white border-gray-300 text-gray-900'
-                        } ${errors.city ? 'border-red-500' : ''}`}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
+                          ? 'bg-gray-700 border-gray-600 text-white'
+                          : 'bg-white border-gray-300 text-gray-900'
+                          } ${errors.city ? 'border-red-500' : ''}`}
                       >
                         <option value="">Viloyatni tanlang</option>
                         {provinces.map((province) => (
@@ -621,11 +639,10 @@ const ApplicationPage: React.FC = () => {
                         value={formData.village}
                         onChange={(e) => handleInputChange('village', e.target.value)}
                         disabled={!selectedProvinceId || districts.length === 0}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${
-                          theme === 'dark' 
-                            ? 'bg-gray-700 border-gray-600 text-white' 
-                            : 'bg-white border-gray-300 text-gray-900'
-                        } ${errors.village ? 'border-red-500' : ''} ${(!selectedProvinceId || districts.length === 0) ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
+                          ? 'bg-gray-700 border-gray-600 text-white'
+                          : 'bg-white border-gray-300 text-gray-900'
+                          } ${errors.village ? 'border-red-500' : ''} ${(!selectedProvinceId || districts.length === 0) ? 'opacity-60 cursor-not-allowed' : ''}`}
                       >
                         <option value="">
                           {!selectedProvinceId
@@ -650,7 +667,124 @@ const ApplicationPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* University - Removed as requested */}
+                {/* Academic Information */}
+                <div className="space-y-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Building className="w-5 h-5 text-teal-600" />
+                    O'quv Ma'lumotlari
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Faculty */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        Fakultet <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                          type="text"
+                          value={formData.faculty}
+                          onChange={(e) => handleInputChange('faculty', e.target.value)}
+                          className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
+                            ? 'bg-gray-700 border-gray-600 text-white'
+                            : 'bg-white border-gray-300 text-gray-900'
+                            } ${errors.faculty ? 'border-red-500' : ''}`}
+                          placeholder="Kompyuter injiniringi"
+                        />
+                      </div>
+                      {errors.faculty && (
+                        <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.faculty}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Direction */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        Yo'nalish <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                          type="text"
+                          value={formData.direction}
+                          onChange={(e) => handleInputChange('direction', e.target.value)}
+                          className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
+                            ? 'bg-gray-700 border-gray-600 text-white'
+                            : 'bg-white border-gray-300 text-gray-900'
+                            } ${errors.direction ? 'border-red-500' : ''}`}
+                          placeholder="Dasturiy injiniring"
+                        />
+                      </div>
+                      {errors.direction && (
+                        <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.direction}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Course */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        Kurs <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <select
+                          value={formData.course}
+                          onChange={(e) => handleInputChange('course', e.target.value)}
+                          className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
+                            ? 'bg-gray-700 border-gray-600 text-white'
+                            : 'bg-white border-gray-300 text-gray-900'
+                            } ${errors.course ? 'border-red-500' : ''}`}
+                        >
+                          <option value="">Kursni tanlang</option>
+                          <option value="1">1-kurs</option>
+                          <option value="2">2-kurs</option>
+                          <option value="3">3-kurs</option>
+                          <option value="4">4-kurs</option>
+                          <option value="5">5-kurs</option>
+                        </select>
+                      </div>
+                      {errors.course && (
+                        <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.course}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Group */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        Guruh <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                          type="text"
+                          value={formData.group}
+                          onChange={(e) => handleInputChange('group', e.target.value)}
+                          className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
+                            ? 'bg-gray-700 border-gray-600 text-white'
+                            : 'bg-white border-gray-300 text-gray-900'
+                            } ${errors.group ? 'border-red-500' : ''}`}
+                          placeholder="KI-21-01"
+                        />
+                      </div>
+                      {errors.group && (
+                        <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.group}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
                 {/* Contact Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -665,7 +799,7 @@ const ApplicationPage: React.FC = () => {
                         value={formData.phone}
                         onChange={(e) => {
                           let value = e.target.value.replace(/\D/g, '');
-                          
+
                           // O'zbekiston telefon raqami formatini to'g'rilash
                           if (value.startsWith('998') && value.length > 3) {
                             // 998 dan keyin 9 ta raqam bo'lishi kerak
@@ -685,14 +819,13 @@ const ApplicationPage: React.FC = () => {
                               value = value.substring(0, 12);
                             }
                           }
-                          
+
                           handleInputChange('phone', value);
                         }}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${
-                          theme === 'dark' 
-                            ? 'bg-gray-700 border-gray-600 text-white' 
-                            : 'bg-white border-gray-300 text-gray-900'
-                        } ${errors.phone ? 'border-red-500' : ''}`}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
+                          ? 'bg-gray-700 border-gray-600 text-white'
+                          : 'bg-white border-gray-300 text-gray-900'
+                          } ${errors.phone ? 'border-red-500' : ''}`}
                         placeholder="998901234567"
                         maxLength={12}
                       />
@@ -712,20 +845,16 @@ const ApplicationPage: React.FC = () => {
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                       Pasport Raqami <span className="text-red-500">*</span>
                     </label>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                      Format: 2 ta harf + 7 ta raqam (masalan: AA1234567)
-                    </p>
                     <div className="relative">
                       <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="text"
                         value={formData.passport}
                         onChange={(e) => handlePassportChange(e.target.value)}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${
-                          theme === 'dark' 
-                            ? 'bg-gray-700 border-gray-600 text-white' 
-                            : 'bg-white border-gray-300 text-gray-900'
-                        } ${errors.passport ? 'border-red-500' : ''}`}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
+                          ? 'bg-gray-700 border-gray-600 text-white'
+                          : 'bg-white border-gray-300 text-gray-900'
+                          } ${errors.passport ? 'border-red-500' : ''}`}
                         placeholder="AA1234567"
                         maxLength={9}
                       />
@@ -754,11 +883,53 @@ const ApplicationPage: React.FC = () => {
                   </div>
                 </div>
 
+                {/* User Image Upload */}
+                <div className="space-y-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <User className="w-5 h-5 text-teal-600" />
+                    O'zingizning Rasmingiz
+                  </h3>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      O'zingizning Rasmingiz <span className="text-red-500">*</span>
+                    </label>
+                    <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center hover:border-teal-500 transition-colors duration-200">
+                      <input
+                        type="file"
+                        accept=".jpg,.jpeg,.png"
+                        onChange={(e) => handleFileUpload('user_image', e.target.files?.[0] || null)}
+                        className="hidden"
+                        id="user-image-upload"
+                      />
+                      <label htmlFor="user-image-upload" className="cursor-pointer">
+                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-600 dark:text-gray-300">
+                          {formData.user_image ? formData.user_image.name : 'O\'zingizning rasmingizni yuklang'}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">JPG, PNG (Max: 5MB)</p>
+                      </label>
+                      {formData.user_image && (
+                        <button
+                          onClick={() => handleFileUpload('user_image', null)}
+                          className="mt-2 text-red-500 hover:text-red-700 flex items-center gap-1 mx-auto"
+                        >
+                          <X className="w-4 h-4" />
+                          O'chirish
+                        </button>
+                      )}
+                    </div>
+                    {errors.user_image && (
+                      <p className="text-red-500 text-sm mt-1">{errors.user_image}</p>
+                    )}
+                  </div>
+                </div>
+
                 {/* File Uploads */}
                 <div className="space-y-6">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                     <Upload className="w-5 h-5 text-teal-600" />
-                    Hujjatlar (Ixtiyoriy)
+                    Qo'shimcha Hujjatlar (Ixtiyoriy)
                   </h3>
 
                   {/* Document Upload */}
@@ -871,11 +1042,10 @@ const ApplicationPage: React.FC = () => {
                       value={formData.comment}
                       onChange={(e) => handleInputChange('comment', e.target.value)}
                       rows={4}
-                      className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 resize-none ${
-                        theme === 'dark' 
-                          ? 'bg-gray-700 border-gray-600 text-white' 
-                          : 'bg-white border-gray-300 text-gray-900'
-                      }`}
+                      className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 resize-none ${theme === 'dark'
+                        ? 'bg-gray-700 border-gray-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-900'
+                        }`}
                       placeholder="Maxsus talablar yoki qo'shimcha ma'lumotlar..."
                     />
                   </div>
@@ -974,6 +1144,8 @@ const ApplicationPage: React.FC = () => {
                       </h4>
                       <ul className="text-sm text-amber-800 dark:text-amber-200 space-y-1">
                         <li>• Haqiqiy ma'lumotlarni kiriting</li>
+                        <li>• Fakultet va yo'nalish ma'lumotlarini to'g'ri kiriting</li>
+                        <li>• O'zingizning rasmingizni aniq tortib yuklang</li>
                         <li>• Telefon raqamingiz doim faol bo'lsin</li>
                         <li>• Hujjat rasmlarini aniq tortib yuklang</li>
                         <li>• Qo'shimcha izohda o'zingiz haqida yozing</li>
