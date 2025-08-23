@@ -1,19 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { jwtDecode } from 'jwt-decode';
-
-interface User {
-  id?: number;
-  username: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  image?: string;
-  bio?: string;
-  phone?: string;
-  birth_date?: string;
-  address?: string;
-  telegram?: string;
-}
+import { User } from '../types';
 
 interface AuthContextType {
   user: User | null;

@@ -9,6 +9,8 @@ import DormitoriesPage from './pages/DormitoriesPage';
 import RentalsPage from './pages/RentalsPage';
 import ListingDetailPage from './pages/ListingDetailPage';
 import ApplicationPage from './pages/ApplicationPage';
+import ApplicationsPage from './pages/ApplicationsPage';
+import ApplicationDetailPage from './pages/ApplicationDetailPage';
 import ProfilePage from './pages/ProfilePage';
 import DashboardPage from './pages/DashboardPage';
 import MessagesPage from './pages/MessagesPage';
@@ -121,6 +123,8 @@ function AppContent() {
         <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
         <Route path="/application" element={<ProtectedRoute><ApplicationPage /></ProtectedRoute>} />
+        <Route path="/applications" element={<ProtectedRoute><ApplicationsPage /></ProtectedRoute>} />
+        <Route path="/application/:id" element={<ProtectedRoute><ApplicationDetailPage /></ProtectedRoute>} />
         
         {/* Listing detail can be accessed by anyone */}
         <Route path="/listing/:id" element={<ListingDetailPage />} />

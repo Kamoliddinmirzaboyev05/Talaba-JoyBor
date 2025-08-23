@@ -172,16 +172,69 @@ export const authAPI = {
     status: string;
     comment: string;
     name: string;
+    middle_name?: string;
     fio: string;
     city: string;
     village: string;
-    university: string;
+    faculty: string;
+    direction: string;
+    course: string;
+    group: string;
     phone: number;
     passport: number;
+    user_image?: File | null;
+    document?: File | null;
+    passport_image_first?: File | null;
+    passport_image_second?: File | null;
   }): Promise<any> => {
     try {
-      console.log('Sending application data:', applicationData);
-      const response = await api.post('/application/create/', applicationData);
+      // Create FormData for file uploads
+      const formData = new FormData();
+      
+      // Add all text fields
+      formData.append('user', applicationData.user.toString());
+      formData.append('dormitory', applicationData.dormitory.toString());
+      formData.append('room', applicationData.room.toString());
+      formData.append('status', applicationData.status);
+      formData.append('comment', applicationData.comment);
+      formData.append('name', applicationData.name);
+      if (applicationData.middle_name) {
+        formData.append('middle_name', applicationData.middle_name);
+      }
+      formData.append('fio', applicationData.fio);
+      formData.append('city', applicationData.city);
+      formData.append('village', applicationData.village);
+      formData.append('faculty', applicationData.faculty);
+      formData.append('direction', applicationData.direction);
+      formData.append('course', applicationData.course);
+      formData.append('group', applicationData.group);
+      formData.append('phone', applicationData.phone.toString());
+      formData.append('passport', applicationData.passport.toString());
+      
+      // Add files if they exist
+      if (applicationData.user_image) {
+        formData.append('user_image', applicationData.user_image);
+      }
+      if (applicationData.document) {
+        formData.append('document', applicationData.document);
+      }
+      if (applicationData.passport_image_first) {
+        formData.append('passport_image_first', applicationData.passport_image_first);
+      }
+      if (applicationData.passport_image_second) {
+        formData.append('passport_image_second', applicationData.passport_image_second);
+      }
+      
+      console.log('Sending application data as FormData');
+      
+      // Send with multipart/form-data content type
+      const response = await axios.post(`${API_BASE_URL}/application/create/`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${sessionStorage.getItem('access') || sessionStorage.getItem('access_token')}`
+        }
+      });
+      
       return response.data;
     } catch (error: any) {
       console.error('API Error Details:', {
