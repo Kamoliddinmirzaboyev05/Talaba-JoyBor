@@ -67,12 +67,11 @@ const ApplicationPage: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  // Debug logging
-  console.log('ApplicationPage - isAuthenticated:', isAuthenticated);
-  console.log('ApplicationPage - user:', user);
-  console.log('ApplicationPage - isLoading:', isLoading);
-  console.log('ApplicationPage - selectedListing:', selectedListing);
-  console.log('ApplicationPage - selectedDormitoryId:', selectedDormitoryId);
+  // Debug logging (development only)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('ApplicationPage - isAuthenticated:', isAuthenticated);
+    console.log('ApplicationPage - selectedListing:', selectedListing);
+  }
 
   // Update form data when user changes
   useEffect(() => {
@@ -248,26 +247,34 @@ const ApplicationPage: React.FC = () => {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    // Required fields validation
-    if (!selectedListing) newErrors.general = 'Yotoqxona tanlanmagan. Iltimos, yotoqxona sahifasiga qayting va ariza yuborish tugmasini bosing.';
-    if (!formData.familiya.trim()) newErrors.familiya = 'Familiya kiritilishi shart';
-    if (!formData.name.trim()) newErrors.name = 'Ism kiritilishi shart';
-    if (!formData.city.trim()) newErrors.city = 'Viloyat tanlanishi shart';
-    if (!formData.village.trim()) newErrors.village = 'Tuman tanlanishi shart';
-    if (!formData.phone.trim()) newErrors.phone = 'Telefon raqam kiritilishi shart';
-    if (!formData.passport.trim()) newErrors.passport = 'Pasport raqami kiritilishi shart';
-    if (!formData.faculty.trim()) newErrors.faculty = 'Fakultet nomi kiritilishi shart';
-    if (!formData.direction.trim()) newErrors.direction = 'Yo\'nalish kiritilishi shart';
-    if (!formData.course.trim()) newErrors.course = 'Kurs tanlanishi shart';
-    if (!formData.group.trim()) newErrors.group = 'Guruh nomi kiritilishi shart';
-    if (!formData.user_image) newErrors.user_image = 'O\'zingizning rasmingizni yuklashingiz shart';
+    // Required fields validation (schema bo'yicha faqat name, dormitory, province, district, course majburiy)
+    if (!selectedListing) {
+      newErrors.general = 'Yotoqxona tanlanmagan. Iltimos, yotoqxona sahifasiga qayting va ariza yuborish tugmasini bosing.';
+    }
+    if (!formData.name?.trim()) {
+      newErrors.name = 'Ism kiritilishi shart';
+    }
+    if (!formData.city?.trim()) {
+      newErrors.city = 'Viloyat tanlanishi shart';
+    }
+    if (!formData.village?.trim()) {
+      newErrors.village = 'Tuman tanlanishi shart';
+    }
+    if (!formData.course?.trim()) {
+      newErrors.course = 'Kurs tanlanishi shart';
+    }
+    // user_image ixtiyoriy
+    
+    // Optional fields - faqat format tekshiruvi
 
     // Phone validation
-    const phoneNumbers = formData.phone.replace(/\D/g, '');
-    if (formData.phone && phoneNumbers.length !== 12) {
-      newErrors.phone = 'Telefon raqam 12 ta raqamdan iborat bo\'lishi kerak (998901234567)';
-    } else if (formData.phone && !phoneNumbers.startsWith('998')) {
-      newErrors.phone = 'Telefon raqam 998 bilan boshlanishi kerak';
+    if (formData.phone) {
+      const phoneNumbers = formData.phone.replace(/\D/g, '');
+      if (phoneNumbers.length !== 12) {
+        newErrors.phone = 'Telefon raqam 12 ta raqamdan iborat bo\'lishi kerak (998901234567)';
+      } else if (!phoneNumbers.startsWith('998')) {
+        newErrors.phone = 'Telefon raqam 998 bilan boshlanishi kerak';
+      }
     }
 
     // Passport validation
@@ -286,19 +293,34 @@ const ApplicationPage: React.FC = () => {
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
+    // User authentication tekshiruvi
+    if (!user || !user.id) {
+      setErrors({ general: 'Foydalanuvchi ma\'lumotlari topilmadi. Iltimos, qaytadan tizimga kiring.' });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const phoneNumber = formData.phone.replace(/\D/g, '');
-
-      if (!phoneNumber || phoneNumber.length !== 12 || !phoneNumber.startsWith('998')) {
-        setErrors({ phone: 'Telefon raqam noto\'g\'ri formatda. To\'g\'ri format: 998901234567' });
-        setIsSubmitting(false);
-        return;
+      // Telefon raqam validatsiyasi (agar kiritilgan bo'lsa)
+      let phoneInt: number | undefined;
+      if (formData.phone && formData.phone.trim()) {
+        const phoneNumber = formData.phone.replace(/\D/g, '');
+        if (phoneNumber.length !== 12 || !phoneNumber.startsWith('998')) {
+          setErrors({ phone: 'Telefon raqam noto\'g\'ri formatda. To\'g\'ri format: 998901234567' });
+          setIsSubmitting(false);
+          return;
+        }
+        phoneInt = parseInt(phoneNumber);
+        if (isNaN(phoneInt)) {
+          setErrors({ phone: 'Telefon raqam noto\'g\'ri formatda' });
+          setIsSubmitting(false);
+          return;
+        }
       }
 
-      // Pasport validatsiyasi - to'liq format bilan
-      if (!formData.passport || !validatePassportFormat(formData.passport)) {
+      // Pasport validatsiyasi (agar kiritilgan bo'lsa)
+      if (formData.passport && formData.passport.trim() && !validatePassportFormat(formData.passport)) {
         setErrors({ passport: 'Pasport raqami noto\'g\'ri formatda. To\'g\'ri format: AA1234567' });
         setIsSubmitting(false);
         return;
@@ -310,36 +332,70 @@ const ApplicationPage: React.FC = () => {
         return;
       }
 
+      // Viloyat va tuman ID larini topish
+      const selectedProvince = provinces.find(p => p.name === formData.city);
+      const selectedDistrict = districts.find(d => d.name === formData.village);
+
+      if (!selectedProvince) {
+        setErrors({ city: 'Viloyat tanlanmagan yoki noto\'g\'ri' });
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!selectedDistrict) {
+        setErrors({ village: 'Tuman tanlanmagan yoki noto\'g\'ri' });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Yotoqxona ID sini to'g'ri formatga o'tkazish
+      let dormitoryId: number;
+      if (typeof selectedListing.id === 'string') {
+        if (selectedListing.id.startsWith('dorm-')) {
+          dormitoryId = parseInt(selectedListing.id.replace('dorm-', ''));
+        } else {
+          dormitoryId = parseInt(selectedListing.id);
+        }
+      } else {
+        dormitoryId = selectedListing.id;
+      }
+
       // API endpoint orqali ariza yuborish
       const applicationData = {
         user: user?.id!,
-        dormitory: parseInt(selectedListing.id.toString()),
-        room: 0,
-        status: 'PENDING',
-        comment: formData.comment.trim() || '',
+        dormitory: dormitoryId,
         name: formData.name.trim(),
-        middle_name: formData.middle_name.trim() || '',
-        fio: formData.familiya.trim(),
-        city: formData.city.trim(),
-        village: formData.village.trim(),
-        faculty: formData.faculty.trim(),
-        direction: formData.direction.trim(),
+        last_name: formData.familiya?.trim() || undefined,
+        middle_name: formData.middle_name?.trim() || undefined,
+        province: selectedProvince.id,
+        district: selectedDistrict.id,
+        faculty: formData.faculty?.trim() || undefined,
+        direction: formData.direction?.trim() || undefined,
         course: formData.course.trim(),
-        group: formData.group.trim(),
-        phone: parseInt(phoneNumber),
-        passport: parseInt(formData.passport.replace(/[A-Z]/g, '')),
+        group: formData.group?.trim() || undefined,
+        phone: phoneInt,
+        passport: formData.passport?.trim() || undefined,
+        comment: formData.comment?.trim() || undefined,
         user_image: formData.user_image,
         document: formData.document,
         passport_image_first: formData.passport_image_first,
         passport_image_second: formData.passport_image_second,
       };
 
-      console.log('Yuborilayotgan ariza ma\'lumotlari:', applicationData);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Yuborilayotgan ariza ma\'lumotlari:', applicationData);
+        console.log('Selected Province:', selectedProvince);
+        console.log('Selected District:', selectedDistrict);
+        console.log('Dormitory ID:', dormitoryId);
+        console.log('User ID:', user?.id);
+      }
 
       // API orqali ariza yuborish
       const response = await authAPI.submitApplication(applicationData);
 
-      console.log('Ariza muvaffaqiyatli yuborildi:', response);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Ariza muvaffaqiyatli yuborildi:', response);
+      }
 
       setSubmitSuccess(true);
       setTimeout(() => {
@@ -349,24 +405,51 @@ const ApplicationPage: React.FC = () => {
     } catch (error: any) {
       console.error('Ariza yuborishda xatolik:', error);
       let errorMessage = 'Ariza yuborishda xatolik yuz berdi. Qaytadan urinib ko\'ring.';
+      let fieldErrors: Record<string, string> = {};
 
       try {
         if (error.response?.data) {
           const errorData = error.response.data;
+          
+          // Agar server field-specific xatolarni qaytarsa
+          if (typeof errorData === 'object' && !errorData.detail) {
+            Object.keys(errorData).forEach(field => {
+              const fieldError = errorData[field];
+              if (Array.isArray(fieldError)) {
+                fieldErrors[field] = fieldError[0];
+              } else if (typeof fieldError === 'string') {
+                fieldErrors[field] = fieldError;
+              }
+            });
+            
+            // Agar field xatolari bo'lsa, ularni ko'rsatish
+            if (Object.keys(fieldErrors).length > 0) {
+              setErrors(fieldErrors);
+              setIsSubmitting(false);
+              return;
+            }
+          }
+          
+          // Umumiy xato xabari
           if (errorData.detail) {
             errorMessage = errorData.detail;
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (typeof errorData === 'string') {
+            errorMessage = errorData;
           } else if (typeof errorData === 'object') {
             const firstError = Object.values(errorData)[0];
             if (Array.isArray(firstError)) {
               errorMessage = firstError[0];
-            } else {
-              errorMessage = firstError as string;
+            } else if (typeof firstError === 'string') {
+              errorMessage = firstError;
             }
           }
         } else if (error.message) {
           errorMessage = error.message;
         }
-      } catch {
+      } catch (parseError) {
+        console.error('Error parsing error response:', parseError);
         errorMessage = error.message || errorMessage;
       }
 
@@ -518,7 +601,7 @@ const ApplicationPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Familiya <span className="text-red-500">*</span>
+                      Familiya
                     </label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -678,7 +761,7 @@ const ApplicationPage: React.FC = () => {
                     {/* Faculty */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        Fakultet <span className="text-red-500">*</span>
+                        Fakultet
                       </label>
                       <div className="relative">
                         <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -704,7 +787,7 @@ const ApplicationPage: React.FC = () => {
                     {/* Direction */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        Yo'nalish <span className="text-red-500">*</span>
+                        Yo'nalish
                       </label>
                       <div className="relative">
                         <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -743,11 +826,11 @@ const ApplicationPage: React.FC = () => {
                             } ${errors.course ? 'border-red-500' : ''}`}
                         >
                           <option value="">Kursni tanlang</option>
-                          <option value="1">1-kurs</option>
-                          <option value="2">2-kurs</option>
-                          <option value="3">3-kurs</option>
-                          <option value="4">4-kurs</option>
-                          <option value="5">5-kurs</option>
+                          <option value="1-kurs">1-kurs</option>
+                          <option value="2-kurs">2-kurs</option>
+                          <option value="3-kurs">3-kurs</option>
+                          <option value="4-kurs">4-kurs</option>
+                          <option value="5-kurs">5-kurs</option>
                         </select>
                       </div>
                       {errors.course && (
@@ -761,7 +844,7 @@ const ApplicationPage: React.FC = () => {
                     {/* Group */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        Guruh <span className="text-red-500">*</span>
+                        Guruh
                       </label>
                       <div className="relative">
                         <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -790,7 +873,7 @@ const ApplicationPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Telefon Raqam <span className="text-red-500">*</span>
+                      Telefon Raqam
                     </label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -843,7 +926,7 @@ const ApplicationPage: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Pasport Raqami <span className="text-red-500">*</span>
+                      Pasport Raqami
                     </label>
                     <div className="relative">
                       <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -892,7 +975,7 @@ const ApplicationPage: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      O'zingizning Rasmingiz <span className="text-red-500">*</span>
+                      O'zingizning Rasmingiz
                     </label>
                     <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center hover:border-teal-500 transition-colors duration-200">
                       <input

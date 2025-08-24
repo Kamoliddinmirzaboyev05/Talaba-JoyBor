@@ -168,20 +168,18 @@ export const authAPI = {
   submitApplication: async (applicationData: {
     user: number;
     dormitory: number;
-    room: number;
-    status: string;
-    comment: string;
     name: string;
+    last_name?: string;
     middle_name?: string;
-    fio: string;
-    city: string;
-    village: string;
-    faculty: string;
-    direction: string;
+    province: number;
+    district: number;
+    faculty?: string;
+    direction?: string;
     course: string;
-    group: string;
-    phone: number;
-    passport: number;
+    group?: string;
+    phone?: number;
+    passport?: string;
+    comment?: string;
     user_image?: File | null;
     document?: File | null;
     passport_image_first?: File | null;
@@ -191,25 +189,41 @@ export const authAPI = {
       // Create FormData for file uploads
       const formData = new FormData();
       
-      // Add all text fields
+      // Add all required fields first
       formData.append('user', applicationData.user.toString());
       formData.append('dormitory', applicationData.dormitory.toString());
-      formData.append('room', applicationData.room.toString());
-      formData.append('status', applicationData.status);
-      formData.append('comment', applicationData.comment);
-      formData.append('name', applicationData.name);
-      if (applicationData.middle_name) {
-        formData.append('middle_name', applicationData.middle_name);
+      formData.append('name', applicationData.name.trim());
+      formData.append('province', applicationData.province.toString());
+      formData.append('district', applicationData.district.toString());
+      formData.append('course', applicationData.course.trim());
+      
+      // Add nullable fields only if they have values
+      if (applicationData.last_name && typeof applicationData.last_name === 'string' && applicationData.last_name.trim()) {
+        formData.append('last_name', applicationData.last_name.trim());
       }
-      formData.append('fio', applicationData.fio);
-      formData.append('city', applicationData.city);
-      formData.append('village', applicationData.village);
-      formData.append('faculty', applicationData.faculty);
-      formData.append('direction', applicationData.direction);
-      formData.append('course', applicationData.course);
-      formData.append('group', applicationData.group);
-      formData.append('phone', applicationData.phone.toString());
-      formData.append('passport', applicationData.passport.toString());
+      if (applicationData.faculty && typeof applicationData.faculty === 'string' && applicationData.faculty.trim()) {
+        formData.append('faculty', applicationData.faculty.trim());
+      }
+      if (applicationData.phone && typeof applicationData.phone === 'number') {
+        formData.append('phone', applicationData.phone.toString());
+      }
+      if (applicationData.passport && typeof applicationData.passport === 'string' && applicationData.passport.trim()) {
+        formData.append('passport', applicationData.passport.trim());
+      }
+      
+      // Add optional fields only if they have values
+      if (applicationData.middle_name && applicationData.middle_name.trim()) {
+        formData.append('middle_name', applicationData.middle_name.trim());
+      }
+      if (applicationData.direction && applicationData.direction.trim()) {
+        formData.append('direction', applicationData.direction.trim());
+      }
+      if (applicationData.group && applicationData.group.trim()) {
+        formData.append('group', applicationData.group.trim());
+      }
+      if (applicationData.comment && applicationData.comment.trim()) {
+        formData.append('comment', applicationData.comment.trim());
+      }
       
       // Add files if they exist
       if (applicationData.user_image) {
@@ -225,14 +239,32 @@ export const authAPI = {
         formData.append('passport_image_second', applicationData.passport_image_second);
       }
       
-      console.log('Sending application data as FormData');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Sending application data as FormData');
+        console.log('Original data:', applicationData);
+        // FormData ni debug qilish uchun
+        for (let [key, value] of formData.entries()) {
+          if (value instanceof File) {
+            console.log(`${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+          } else {
+            console.log(`${key}:`, value);
+          }
+        }
+      }
+      
+      // Get current token
+      const token = sessionStorage.getItem('access') || sessionStorage.getItem('access_token');
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
       
       // Send with multipart/form-data content type
       const response = await axios.post(`${API_BASE_URL}/application/create/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${sessionStorage.getItem('access') || sessionStorage.getItem('access_token')}`
-        }
+          'Authorization': `Bearer ${token}`
+        },
+        timeout: 30000 // 30 seconds timeout
       });
       
       return response.data;
@@ -240,8 +272,15 @@ export const authAPI = {
       console.error('API Error Details:', {
         status: error.response?.status,
         data: error.response?.data,
-        message: error.message
+        message: error.message,
+        config: error.config
       });
+      
+      // Xato ma'lumotlarini batafsil ko'rsatish
+      if (error.response?.data) {
+        console.error('Server response data:', error.response.data);
+      }
+      
       throw error;
     }
   },

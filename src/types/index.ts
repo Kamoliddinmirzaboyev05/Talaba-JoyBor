@@ -108,32 +108,52 @@ export interface Dormitory {
 
 export interface Application {
   id: number;
-  user: number;
+  user: {
+    id: number;
+    username: string;
+  };
   dormitory: {
     id: number;
     name: string;
     address?: string;
     description?: string;
-    university: {
+    university?: {
       name: string;
     };
+    month_price?: number;
+    total_capacity?: number;
+    available_capacity?: number;
+    images?: Array<{
+      id: number;
+      image: string;
+    }>;
   };
-  room: number;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'INTERVIEW' | 'COMPLETED';
-  comment: string;
   name: string;
+  last_name: string;
   middle_name?: string;
-  fio: string;
-  city: string;
-  village: string;
-  university: string;
-  faculty?: string;
+  province: {
+    id: number;
+    name: string;
+  };
+  district: {
+    id: number;
+    name: string;
+    province: number;
+  };
+  faculty: string;
   direction?: string;
-  course?: string;
+  course: string;
   group?: string;
   phone: number;
-  passport: number;
-  created_at?: string;
+  passport?: number;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'INTERVIEW' | 'COMPLETED';
+  comment: string;
+  admin_comment?: string;
+  document?: string;
+  user_image?: string;
+  passport_image_first?: string;
+  passport_image_second?: string;
+  created_at: string;
   updated_at?: string;
 }
 

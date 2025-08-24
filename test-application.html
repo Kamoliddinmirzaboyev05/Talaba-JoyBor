@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Application</title>
+</head>
+<body>
+    <h1>Test Application Form</h1>
+    <form id="testForm">
+        <input type="text" id="name" placeholder="Name" value="Test User" required><br><br>
+        <input type="number" id="dormitory" placeholder="Dormitory ID" value="1" required><br><br>
+        <input type="number" id="province" placeholder="Province ID" value="1" required><br><br>
+        <input type="number" id="district" placeholder="District ID" value="1" required><br><br>
+        <select id="course" required>
+            <option value="">Select Course</option>
+            <option value="1-kurs">1-kurs</option>
+            <option value="2-kurs">2-kurs</option>
+            <option value="3-kurs">3-kurs</option>
+            <option value="4-kurs">4-kurs</option>
+            <option value="5-kurs">5-kurs</option>
+        </select><br><br>
+        <button type="button" onclick="submitTest()">Test Submit</button>
+    </form>
+
+    <script>
+        async function submitTest() {
+            const formData = new FormData();
+            formData.append('user', '1');
+            formData.append('dormitory', document.getElementById('dormitory').value);
+            formData.append('name', document.getElementById('name').value);
+            formData.append('province', document.getElementById('province').value);
+            formData.append('district', document.getElementById('district').value);
+            formData.append('course', document.getElementById('course').value);
+
+            try {
+                const response = await fetch('https://joyboryangi.pythonanywhere.com/application/create/', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Authorization': 'Bearer YOUR_TOKEN_HERE'
+                    }
+                });
+                
+                const result = await response.text();
+                console.log('Response:', result);
+                alert('Response: ' + result);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

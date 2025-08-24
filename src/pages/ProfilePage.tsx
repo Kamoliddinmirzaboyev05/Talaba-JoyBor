@@ -858,27 +858,32 @@ const ProfilePage: React.FC = () => {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                               <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                                <strong>F.I.O:</strong> {application.fio}
+                                <strong>F.I.O:</strong> {application.name} {application.middle_name || ''} {application.last_name}
                               </p>
                               <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                                 <strong>Telefon:</strong> +{application.phone}
                               </p>
                               <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                                <strong>Shahar:</strong> {application.city}
+                                <strong>Viloyat:</strong> {application.province?.name || 'Noma\'lum'}
                               </p>
                               <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                                <strong>Qishloq:</strong> {application.village}
+                                <strong>Tuman:</strong> {application.district?.name || 'Noma\'lum'}
                               </p>
                             </div>
                             <div>
                               <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                                <strong>Universitet:</strong> {application.university}
+                                <strong>Fakultet:</strong> {application.faculty || 'Noma\'lum'}
                               </p>
+                              <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                                <strong>Kurs:</strong> {application.course || 'Noma\'lum'}
+                              </p>
+                              {application.direction && (
+                                <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                                  <strong>Yo'nalish:</strong> {application.direction}
+                                </p>
+                              )}
                               <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                                 <strong>Ariza sanasi:</strong> {formatDate(application.created_at)}
-                              </p>
-                              <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                                <strong>Sig'im:</strong> {application.dormitory.available_capacity || 0}/{application.dormitory.total_capacity || 0} joy
                               </p>
                             </div>
                           </div>
@@ -886,7 +891,7 @@ const ProfilePage: React.FC = () => {
                           {application.comment && (
                             <div className="mb-4">
                               <p className={`text-sm mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                                <strong>Izoh:</strong>
+                                <strong>Sizning izohingiz:</strong>
                               </p>
                               <p className={`text-sm p-3 rounded-lg ${
                                 theme === 'dark' 
@@ -897,6 +902,93 @@ const ProfilePage: React.FC = () => {
                               </p>
                             </div>
                           )}
+
+                          {application.admin_comment && (
+                            <div className="mb-4">
+                              <p className={`text-sm mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                                <strong>Admin izohi:</strong>
+                              </p>
+                              <p className={`text-sm p-3 rounded-lg ${
+                                theme === 'dark' 
+                                  ? 'text-blue-200 bg-blue-900/30 border border-blue-800' 
+                                  : 'text-blue-700 bg-blue-50 border border-blue-200'
+                              }`}>
+                                {application.admin_comment}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Hujjatlar bo'limi */}
+                          <div className="mb-4">
+                            <p className={`text-sm mb-3 font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                              <strong>Yuklangan hujjatlar:</strong>
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                              {application.document && (
+                                <a
+                                  href={application.document}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`flex items-center gap-2 p-3 rounded-lg border transition-colors duration-200 ${
+                                    theme === 'dark' 
+                                      ? 'bg-gray-600 border-gray-500 hover:bg-gray-500 text-teal-400' 
+                                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-teal-600'
+                                  }`}
+                                >
+                                  <FileText className="w-4 h-4" />
+                                  <span className="text-sm">Asosiy hujjat</span>
+                                </a>
+                              )}
+                              
+                              {application.passport_image_first && (
+                                <a
+                                  href={application.passport_image_first}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`flex items-center gap-2 p-3 rounded-lg border transition-colors duration-200 ${
+                                    theme === 'dark' 
+                                      ? 'bg-gray-600 border-gray-500 hover:bg-gray-500 text-green-400' 
+                                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-green-600'
+                                  }`}
+                                >
+                                  <Eye className="w-4 h-4" />
+                                  <span className="text-sm">Pasport (1-bet)</span>
+                                </a>
+                              )}
+                              
+                              {application.passport_image_second && (
+                                <a
+                                  href={application.passport_image_second}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`flex items-center gap-2 p-3 rounded-lg border transition-colors duration-200 ${
+                                    theme === 'dark' 
+                                      ? 'bg-gray-600 border-gray-500 hover:bg-gray-500 text-green-400' 
+                                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-green-600'
+                                  }`}
+                                >
+                                  <Eye className="w-4 h-4" />
+                                  <span className="text-sm">Pasport (2-bet)</span>
+                                </a>
+                              )}
+                              
+                              {application.user_image && (
+                                <a
+                                  href={application.user_image}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`flex items-center gap-2 p-3 rounded-lg border transition-colors duration-200 ${
+                                    theme === 'dark' 
+                                      ? 'bg-gray-600 border-gray-500 hover:bg-gray-500 text-purple-400' 
+                                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-purple-600'
+                                  }`}
+                                >
+                                  <User className="w-4 h-4" />
+                                  <span className="text-sm">Foydalanuvchi rasmi</span>
+                                </a>
+                              )}
+                            </div>
+                          </div>
 
                           <div className={`flex items-center justify-between pt-4 border-t ${theme === 'dark' ? 'border-gray-600' : 'border-gray-200'}`}>
                             <div className="flex items-center gap-4">
