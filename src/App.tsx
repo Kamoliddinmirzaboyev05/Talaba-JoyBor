@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -16,6 +17,7 @@ import DashboardPage from './pages/DashboardPage';
 import MessagesPage from './pages/MessagesPage';
 import SavedListingsPage from './pages/SavedListingsPage';
 import NotificationsPage from './pages/NotificationsPage';
+import NotificationDetailPage from './pages/NotificationDetailPage';
 import SettingsPage from './pages/SettingsPage';
 import HelpPage from './pages/HelpPage';
 import AboutPage from './pages/AboutPage';
@@ -121,6 +123,7 @@ function AppContent() {
         <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
         <Route path="/saved" element={<ProtectedRoute><SavedListingsPage onListingSelect={handleListingSelect} /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+        <Route path="/notification/:id" element={<ProtectedRoute><NotificationDetailPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
         <Route path="/application" element={<ProtectedRoute><ApplicationPage /></ProtectedRoute>} />
         <Route path="/applications" element={<ProtectedRoute><ApplicationsPage /></ProtectedRoute>} />
@@ -140,9 +143,11 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <AppContent />
-        </Router>
+        <NotificationProvider>
+          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <AppContent />
+          </Router>
+        </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>
   );

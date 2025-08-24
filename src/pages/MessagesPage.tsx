@@ -47,8 +47,8 @@ const MessagesPage: React.FC = () => {
       '1': [
         {
           id: 'msg1-1',
-          senderId: user.id,
-          senderName: user.name,
+          senderId: user?.id?.toString() || 'current-user',
+          senderName: user?.first_name || user?.username || 'Siz',
           content: 'Assalomu alaykum! Kvartira haqida ma\'lumot olsam bo\'ladimi?',
           timestamp: '2024-01-15T13:00:00Z',
           read: true,
@@ -65,8 +65,8 @@ const MessagesPage: React.FC = () => {
         },
         {
           id: 'msg1-3',
-          senderId: user.id,
-          senderName: user.name,
+          senderId: user?.id?.toString() || 'current-user',
+          senderName: user?.first_name || user?.username || 'Siz',
           content: 'Kvartira qachondan boshlab bo\'sh? Va oylik ijara narxi qancha?',
           timestamp: '2024-01-15T13:30:00Z',
           read: true,
@@ -94,8 +94,8 @@ const MessagesPage: React.FC = () => {
       '2': [
         {
           id: 'msg2-1',
-          senderId: user.id,
-          senderName: user.name,
+          senderId: user?.id?.toString() || 'current-user',
+          senderName: user?.first_name || user?.username || 'Siz',
           content: 'Yotoqxonaga ariza yubordim. Holati qanday?',
           timestamp: '2024-01-15T09:00:00Z',
           read: true,
@@ -245,7 +245,7 @@ const MessagesPage: React.FC = () => {
                                 ? 'text-gray-900 dark:text-white font-medium' 
                                 : 'text-gray-600 dark:text-gray-300'
                             }`}>
-                              {conversation.lastMessage.senderId === user.id ? 'Siz: ' : ''}
+                              {conversation.lastMessage.senderId === (user?.id?.toString() || 'current-user') ? 'Siz: ' : ''}
                               {conversation.lastMessage.content}
                             </p>
                           </div>
@@ -324,10 +324,10 @@ const MessagesPage: React.FC = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.1 }}
-                        className={`flex ${message.senderId === user.id ? 'justify-end' : 'justify-start'}`}
+                        className={`flex ${message.senderId === (user?.id?.toString() || 'current-user') ? 'justify-end' : 'justify-start'}`}
                       >
                         <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
-                          message.senderId === user.id
+                          message.senderId === (user?.id?.toString() || 'current-user')
                             ? 'bg-gradient-to-r from-teal-600 to-green-600 text-white'
                             : theme === 'dark' 
                               ? 'bg-gray-700 text-white' 
@@ -335,7 +335,7 @@ const MessagesPage: React.FC = () => {
                         }`}>
                           <p className="text-sm">{message.content}</p>
                           <p className={`text-xs mt-1 ${
-                            message.senderId === user.id 
+                            message.senderId === (user?.id?.toString() || 'current-user') 
                               ? 'text-teal-100' 
                               : 'text-gray-500 dark:text-gray-400'
                           }`}>

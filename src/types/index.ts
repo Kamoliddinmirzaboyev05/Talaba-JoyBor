@@ -166,6 +166,8 @@ export interface Notification {
   timestamp: string;
   read: boolean;
   actionUrl?: string;
+  image?: string;
+  priority?: 'low' | 'medium' | 'high';
 }
 
 export interface APINotificationItem {

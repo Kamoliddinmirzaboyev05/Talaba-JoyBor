@@ -79,9 +79,9 @@ const ApplicationPage: React.FC = () => {
     if (user) {
       setFormData(prev => ({
         ...prev,
-        name: user.first_name || '',
-        familiya: user.last_name || '',
-        phone: user.phone || '',
+        name: user?.first_name || '',
+        familiya: user?.last_name || '',
+        phone: user?.phone || '',
       }));
     }
   }, [user]);
@@ -134,7 +134,7 @@ const ApplicationPage: React.FC = () => {
   }
 
   // Authentication check
-  if (!isAuthenticated || !user || !user.id) {
+  if (!isAuthenticated || !user || !user?.id) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
@@ -312,7 +312,7 @@ const ApplicationPage: React.FC = () => {
 
       // API endpoint orqali ariza yuborish
       const applicationData = {
-        user: user.id!,
+        user: user?.id!,
         dormitory: parseInt(selectedListing.id.toString()),
         room: 0,
         status: 'PENDING',

@@ -73,7 +73,7 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
   // Share functionality
   const handleShare = async (dormitory: Dormitory, e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     const shareData = {
       title: `${dormitory.name} - JoyBor`,
       text: `${dormitory.description || 'Yotoqxona haqida ma\'lumot'} - ${formatPrice(dormitory.month_price)}/oy`,
@@ -81,7 +81,7 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
     };
 
     try {
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      if (navigator.share) {
         await navigator.share(shareData);
       } else {
         // Fallback: copy to clipboard
@@ -105,7 +105,7 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
       try {
         setLoading(true);
         const dormitoriesData = await authAPI.getDormitories();
-        
+
         setDormitories(dormitoriesData);
         setFilteredDormitories(dormitoriesData);
       } catch (error) {

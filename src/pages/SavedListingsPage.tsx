@@ -67,7 +67,7 @@ const SavedListingsPage: React.FC<SavedListingsPageProps> = ({ onListingSelect }
     };
 
     try {
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      if (navigator.share) {
         await navigator.share(shareData);
       } else {
         // Fallback: copy to clipboard
