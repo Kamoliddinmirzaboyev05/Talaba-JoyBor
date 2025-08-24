@@ -60,6 +60,17 @@ export interface Listing {
     lat: number;
     lng: number;
   };
+  // Apartment uchun qo'shimcha maydonlar
+  rooms?: number;
+  available_rooms?: number;
+  room_type?: string;
+  gender?: string;
+  owner?: string;
+  phone_number?: string;
+  user_phone_number?: string;
+  province?: number;
+  created_at?: string;
+  is_active?: boolean;
 }
 
 export interface Dormitory {

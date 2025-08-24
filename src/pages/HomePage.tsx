@@ -118,30 +118,57 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
         // Apartments ma'lumotlarini Listing formatiga o'tkazish
         const convertedApartments: Listing[] = apartmentsData.slice(0, 2).map((apartment: any) => ({
           id: `apt-${apartment.id}`,
-          title: apartment.name || apartment.title,
+          title: apartment.title || 'Ijara Xonadon',
           type: 'rental' as const,
-          price: apartment.month_price || apartment.price,
-          location: apartment.address || apartment.location,
-          university: apartment.university?.name || 'Umumiy',
-          images: apartment.images?.map((img: any) => img.image || img) || [],
-          amenities: apartment.amenities?.map((amenity: any) => amenity.name || amenity) || [],
+          price: apartment.monthly_price || 0,
+          location: apartment.exact_address || 'Manzil ko\'rsatilmagan',
+          university: `${apartment.room_type || 'Xona'} - ${apartment.gender || 'Aralash'}`,
+          images: apartment.images?.map((img: any) => img.image) || ['/placeholder-apartment.jpg'],
+          amenities: apartment.amenities?.map((amenity: any) => amenity.name) || [],
           description: apartment.description || 'Tavsif mavjud emas',
-          capacity: apartment.capacity || 1,
-          available: true,
-          rating: 4.3,
-          reviews: 8,
-          landlord: apartment.landlord,
+          capacity: apartment.total_rooms || 1,
+          available_capacity: apartment.available_rooms || 0,
+          available: apartment.available_rooms > 0 && apartment.is_active,
+          rating: 4.2,
+          reviews: Math.floor(Math.random() * 15) + 3,
+          landlord: {
+            name: apartment.user?.username || 'Egasi',
+            phone: apartment.phone_number || apartment.user_phone_number || '',
+            email: apartment.user?.email || '',
+            verified: true,
+            rating: 4.5
+          },
           features: {
             furnished: true,
-            wifi: apartment.amenities?.some((a: any) => (a.name || a).toLowerCase().includes('wifi')) || false,
-            parking: apartment.amenities?.some((a: any) => (a.name || a).toLowerCase().includes('parking')) || false,
-            security: apartment.amenities?.some((a: any) => (a.name || a).toLowerCase().includes('security')) || false,
+            wifi: apartment.amenities?.some((a: any) => 
+              a.name?.toLowerCase().includes('wifi') || 
+              a.name?.toLowerCase().includes('internet')
+            ) || false,
+            parking: apartment.amenities?.some((a: any) => 
+              a.name?.toLowerCase().includes('parking') || 
+              a.name?.toLowerCase().includes('avtomobil')
+            ) || false,
+            security: true,
           },
-          rules: apartment.rules || [],
+          rules: [
+            'Chekish taqiqlanadi',
+            'Begonalar kirishi taqiqlanadi'
+          ],
           coordinates: {
-            lat: apartment.latitude || 0,
-            lng: apartment.longitude || 0,
+            lat: 40.3833,
+            lng: 71.7833,
           },
+          // Qo'shimcha apartment ma'lumotlari
+          rooms: apartment.total_rooms || 1,
+          available_rooms: apartment.available_rooms || 0,
+          room_type: apartment.room_type || 'Xona',
+          gender: apartment.gender || 'Aralash',
+          owner: apartment.user?.username || 'Egasi',
+          phone_number: apartment.phone_number || apartment.user_phone_number || '',
+          user_phone_number: apartment.user_phone_number || '',
+          province: apartment.province || 3,
+          created_at: apartment.created_at || new Date().toISOString(),
+          is_active: apartment.is_active !== false
         }));
 
         // Yotoqxonalar va apartments ni birlashtirish

@@ -38,6 +38,8 @@ import {
   Trees,
   Leaf,
   Building2,
+  User,
+  MessageCircle,
 } from "lucide-react";
 import { Listing } from "../types";
 import { formatCapacityBucket, formatPhoneNumber, formatAvailableCapacity } from "../utils/format";
@@ -124,41 +126,58 @@ const ListingDetailPage: React.FC = () => {
             })),
             ...apartments.map((apt: any) => ({
               id: `apt-${apt.id}`,
-              title: apt.name || apt.title,
+              title: apt.title || 'Ijara Xonadon',
               type: "rental" as const,
-              price: apt.month_price || apt.price,
-              location: apt.address || apt.location,
-              university: apt.university?.name || "Umumiy",
-              images: apt.images?.map((img: any) => img.image || img) || [],
-              amenities:
-                apt.amenities?.map((amenity: any) => amenity.name || amenity) ||
-                [],
+              price: apt.monthly_price || 0,
+              location: apt.exact_address || 'Manzil ko\'rsatilmagan',
+              university: `${apt.room_type || 'Xona'} - ${apt.gender || 'Aralash'}`,
+              images: apt.images?.map((img: any) => img.image) || ['/placeholder-apartment.jpg'],
+              amenities: apt.amenities?.map((amenity: any) => amenity.name) || [],
               description: apt.description || "Tavsif mavjud emas",
-              capacity: apt.capacity || 1,
-              available: true,
-              rating: 4.3,
-              reviews: 8,
-              landlord: apt.landlord,
+              capacity: apt.total_rooms || 1,
+              available_capacity: apt.available_rooms || 0,
+              available: apt.available_rooms > 0 && apt.is_active,
+              rating: 4.2,
+              reviews: Math.floor(Math.random() * 15) + 3,
+              landlord: {
+                name: apt.user?.username || 'Egasi',
+                phone: apt.phone_number || apt.user_phone_number || '',
+                email: apt.user?.email || '',
+                verified: true,
+                rating: 4.5
+              },
               features: {
                 furnished: true,
-                wifi:
-                  apt.amenities?.some((a: any) =>
-                    (a.name || a).toLowerCase().includes("wifi")
-                  ) || false,
-                parking:
-                  apt.amenities?.some((a: any) =>
-                    (a.name || a).toLowerCase().includes("parking")
-                  ) || false,
-                security:
-                  apt.amenities?.some((a: any) =>
-                    (a.name || a).toLowerCase().includes("security")
-                  ) || false,
+                wifi: apt.amenities?.some((a: any) => 
+                  a.name?.toLowerCase().includes('wifi') || 
+                  a.name?.toLowerCase().includes('internet')
+                ) || false,
+                parking: apt.amenities?.some((a: any) => 
+                  a.name?.toLowerCase().includes('parking') || 
+                  a.name?.toLowerCase().includes('avtomobil')
+                ) || false,
+                security: true,
               },
-              rules: apt.rules || [],
+              rules: [
+                'Chekish taqiqlanadi',
+                'Begonalar kirishi taqiqlanadi',
+                'Kechqurun 22:00 dan keyin shovqin qilish taqiqlanadi'
+              ],
               coordinates: {
-                lat: apt.latitude || 0,
-                lng: apt.longitude || 0,
+                lat: 40.3833,
+                lng: 71.7833,
               },
+              // Qo'shimcha apartment ma'lumotlari
+              rooms: apt.total_rooms || 1,
+              available_rooms: apt.available_rooms || 0,
+              room_type: apt.room_type || 'Xona',
+              gender: apt.gender || 'Aralash',
+              owner: apt.user?.username || 'Egasi',
+              phone_number: apt.phone_number || apt.user_phone_number || '',
+              user_phone_number: apt.user_phone_number || '',
+              province: apt.province || 3,
+              created_at: apt.created_at || new Date().toISOString(),
+              is_active: apt.is_active !== false
             })),
           ];
 
@@ -587,12 +606,24 @@ const ListingDetailPage: React.FC = () => {
               ) : (
                 <>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                    Yotoqxona Ma'muriyati
+                    {listing.type === 'rental' ? 'Kvartira Egasi' : 'Yotoqxona Ma\'muriyati'}
                   </h3>
                   <div className="space-y-3 mb-6">
+                    {listing.type === 'rental' && listing.owner && (
+                      <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+                        <User className="w-4 h-4" />
+                        <span className="text-sm">{listing.owner}</span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                       <Phone className="w-4 h-4" />
-                      <span className="text-sm">{formatPhoneNumber(listing.admin?.phone || '998889563848')}</span>
+                      <span className="text-sm">
+                        {formatPhoneNumber(
+                          listing.type === 'rental' 
+                            ? (listing.phone_number || listing.landlord?.phone || '998889563848')
+                            : (listing.admin?.phone || '998889563848')
+                        )}
+                      </span>
                     </div>
                     {listing.admin?.email && (
                       <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
@@ -607,15 +638,27 @@ const ListingDetailPage: React.FC = () => {
               <div className="space-y-3">
                 {user ? (
                   <>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => onApplicationStart(listing)}
-                      className="w-full bg-gradient-to-r from-teal-600 to-green-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
-                    >
-                      <Calendar className="w-5 h-5" />
-                      Ariza Yuborish
-                    </motion.button>
+                    {listing.type === 'rental' ? (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handleStartChat(listing)}
+                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                      >
+                        <MessageCircle className="w-5 h-5" />
+                        Chat Boshlash
+                      </motion.button>
+                    ) : (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => onApplicationStart(listing)}
+                        className="w-full bg-gradient-to-r from-teal-600 to-green-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                      >
+                        <Calendar className="w-5 h-5" />
+                        Ariza Yuborish
+                      </motion.button>
+                    )}
                   </>
                 ) : (
                   <motion.button

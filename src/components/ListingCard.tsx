@@ -228,7 +228,12 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user }) =>
           <MapPin className="w-4 h-4" />
           <span className="text-sm">{listing.location}</span>
           <span className="text-xs">•</span>
-          <span className="text-sm">{listing.university}</span>
+          <span className="text-sm">
+            {listing.type === 'rental' 
+              ? `${listing.room_type || 'Xona'} - ${listing.gender || 'Aralash'}`
+              : listing.university
+            }
+          </span>
         </div>
 
         {/* Price and Capacity */}
@@ -244,9 +249,11 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user }) =>
           <div className="flex items-center gap-1 text-gray-600 dark:text-gray-300">
             <Users className="w-4 h-4" />
             <span className="text-sm">
-              {listing.available_capacity !== undefined 
-                ? `Bo'sh joylar: ${formatCapacityBucket(listing.available_capacity)}`
-                : formatCapacity(listing.capacity)
+              {listing.type === 'rental' 
+                ? `${listing.available_rooms || 0}/${listing.rooms || 1} xona bo'sh`
+                : listing.available_capacity !== undefined 
+                  ? `Bo'sh joylar: ${formatCapacityBucket(listing.available_capacity)}`
+                  : formatCapacity(listing.capacity)
               }
             </span>
           </div>
