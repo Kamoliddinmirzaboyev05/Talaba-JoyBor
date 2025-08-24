@@ -101,8 +101,8 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onListingSelect, onApplicatio
           },
           rules: [],
           coordinates: {
-            lat: 41.2995, // Default Tashkent coordinates
-            lng: 69.2401
+            lat: apartment.latitude || 41.2995, // Default Tashkent coordinates
+            lng: apartment.longitude || 69.2401
           },
           // Qo'shimcha apartment ma'lumotlari
           rooms: apartment.total_rooms || 1,

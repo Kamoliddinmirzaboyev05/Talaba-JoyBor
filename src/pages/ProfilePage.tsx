@@ -115,10 +115,13 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
+      console.log('ProfilePage: fetchProfile boshlandi');
       setLoading(true);
       setError('');
-      const token = localStorage.getItem('access');
+      const token = sessionStorage.getItem('access') || localStorage.getItem('access');
+      console.log('ProfilePage: Token mavjudmi?', !!token);
       if (!token) {
+        console.log('Token topilmadi, login sahifasiga yo\'naltirilmoqda');
         navigate('/login');
         return;
       }
@@ -138,11 +141,13 @@ const ProfilePage: React.FC = () => {
           return;
         }
         const data = await res.json();
+        console.log('ProfilePage: Profile ma\'lumotlari yuklandi', data);
         setProfile(data);
         setEditedProfile(data);
         setImageFile(null);
         setPassword('');
-      } catch {
+      } catch (error) {
+        console.error('ProfilePage: Xatolik yuz berdi', error);
         setError('Tarmoq xatosi yoki server ishlamayapti.');
       } finally {
         setLoading(false);
@@ -155,7 +160,7 @@ const ProfilePage: React.FC = () => {
   const fetchApplications = async () => {
     setApplicationsLoading(true);
     setApplicationsError('');
-    const token = localStorage.getItem('access');
+    const token = sessionStorage.getItem('access') || localStorage.getItem('access');
     if (!token) {
       navigate('/login');
       return;
@@ -196,7 +201,7 @@ const ProfilePage: React.FC = () => {
     setError('');
     setSuccess('');
     setFieldErrors({});
-    const token = localStorage.getItem('access');
+    const token = sessionStorage.getItem('access') || localStorage.getItem('access');
     if (!token || !editedProfile) {
       navigate('/login');
       return;
@@ -345,10 +350,13 @@ const ProfilePage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-teal-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Profil yuklanmoqda...</p>
+      <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-teal-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className={`text-lg ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Profil yuklanmoqda...</p>
+          </div>
         </div>
       </div>
     );
@@ -356,16 +364,43 @@ const ProfilePage: React.FC = () => {
 
   if (error) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
-        <div className="text-center">
-          <p className={`text-lg ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>{error}</p>
+      <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center max-w-md mx-auto p-6">
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h2 className={`text-xl font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+              Xatolik yuz berdi
+            </h2>
+            <p className={`text-sm mb-4 ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors duration-200"
+            >
+              Qaytadan urinish
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   if (!profile || !editedProfile) {
-    return null;
+    return (
+      <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-teal-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className={`text-lg ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Ma'lumotlar tayyorlanmoqda...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -803,7 +838,7 @@ const ProfilePage: React.FC = () => {
                                 {application.dormitory.name}
                               </h3>
                               <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                                {application.dormitory.university.name} - {application.dormitory.address}
+                                {application.dormitory.university?.name || 'Universitet nomi mavjud emas'} - {application.dormitory.address || 'Manzil mavjud emas'}
                               </p>
                               <div className="flex items-center gap-2 mb-2">
                                 {getStatusIcon(application.status)}
@@ -814,7 +849,7 @@ const ProfilePage: React.FC = () => {
                             </div>
                             <div className="text-right">
                               <p className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                                {formatPrice(application.dormitory.month_price)}
+                                {formatPrice(application.dormitory.month_price || 0)}
                               </p>
                               <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>oyiga</p>
                             </div>
@@ -843,7 +878,7 @@ const ProfilePage: React.FC = () => {
                                 <strong>Ariza sanasi:</strong> {formatDate(application.created_at)}
                               </p>
                               <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                                <strong>Sig'im:</strong> {application.dormitory.available_capacity}/{application.dormitory.total_capacity} joy
+                                <strong>Sig'im:</strong> {application.dormitory.available_capacity || 0}/{application.dormitory.total_capacity || 0} joy
                               </p>
                             </div>
                           </div>
@@ -916,13 +951,13 @@ const ProfilePage: React.FC = () => {
                             </div>
                           </div>
 
-                          {application.dormitory.images.length > 0 && (
+                          {application.dormitory.images?.length > 0 && (
                             <div className={`mt-4 pt-4 border-t ${theme === 'dark' ? 'border-gray-600' : 'border-gray-200'}`}>
                               <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                                 <strong>Yotoqxona rasmlari:</strong>
                               </p>
                               <div className="flex gap-2 overflow-x-auto">
-                                {application.dormitory.images.slice(0, 3).map((image) => (
+                                {application.dormitory.images?.slice(0, 3).map((image) => (
                                   <img
                                     key={image.id}
                                     src={image.image}
@@ -930,13 +965,13 @@ const ProfilePage: React.FC = () => {
                                     className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
                                   />
                                 ))}
-                                {application.dormitory.images.length > 3 && (
+                                {application.dormitory.images?.length > 3 && (
                                   <div className={`w-20 h-20 rounded-lg flex items-center justify-center text-xs flex-shrink-0 ${
                                     theme === 'dark' 
                                       ? 'bg-gray-600 text-gray-300' 
                                       : 'bg-gray-200 text-gray-600'
                                   }`}>
-                                    +{application.dormitory.images.length - 3}
+                                    +{(application.dormitory.images?.length || 0) - 3}
                                   </div>
                                 )}
                               </div>
