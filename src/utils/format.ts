@@ -1,4 +1,21 @@
 export const formatCapacityBucket = (count: number): string => {
+  // Taxminiy diapazonlar ko'rsatish
+  if (count >= 100) return '100+';
+  if (count >= 80) return '80+';
+  if (count >= 60) return '60+';
+  if (count >= 50) return '50+';
+  if (count >= 40) return '40+';
+  if (count >= 30) return '30+';
+  if (count >= 20) return '20+';
+  if (count >= 15) return '15+';
+  if (count >= 10) return '10+';
+  if (count >= 5) return '5+';
+  if (count > 0) return '<5';
+  return '0';
+};
+
+export const formatCapacityBucketRange = (count: number): string => {
+  // Eski diapazon ko'rsatish funksiyasi
   if (count >= 50) return '50+';
   if (count >= 15) return '15+';
   if (count >= 10) return '10+';

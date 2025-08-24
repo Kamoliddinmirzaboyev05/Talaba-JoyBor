@@ -410,7 +410,7 @@ const ListingDetailPage: React.FC = () => {
                   <Users className="w-5 h-5" />
                   <span>
                     {listing.available_capacity !== undefined 
-                      ? `Bo'sh joylar: ${formatCapacityBucket(listing.capacity - listing.available_capacity)}`
+                      ? `Bo'sh joylar: ${formatCapacityBucket(listing.available_capacity)}`
                       : `${listing.capacity} kishi`
                     }
                   </span>

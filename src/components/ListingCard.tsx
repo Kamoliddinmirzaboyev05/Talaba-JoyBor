@@ -245,7 +245,7 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user }) =>
             <Users className="w-4 h-4" />
             <span className="text-sm">
               {listing.available_capacity !== undefined 
-                ? `Bo'sh joylar: ${formatCapacityBucket(listing.capacity - listing.available_capacity)}`
+                ? `Bo'sh joylar: ${formatCapacityBucket(listing.available_capacity)}`
                 : formatCapacity(listing.capacity)
               }
             </span>

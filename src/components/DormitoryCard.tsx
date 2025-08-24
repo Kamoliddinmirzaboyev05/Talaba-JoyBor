@@ -151,7 +151,7 @@ const DormitoryCard: React.FC<DormitoryCardProps> = ({
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-gray-400" />
             <span className="text-sm text-gray-600 dark:text-gray-300">
-              Bo'sh joylar: {formatCapacityBucket(total_capacity - available_capacity)}
+              Bo'sh joylar: {formatCapacityBucket(available_capacity)}
             </span>
           </div>
           {typeof distance_to_university === 'number' && (
