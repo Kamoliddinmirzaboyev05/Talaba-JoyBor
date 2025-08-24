@@ -17,10 +17,12 @@ import {
   Phone,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { useNotifications } from "../contexts/NotificationContext";
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
+  const { unreadCount } = useNotifications();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
@@ -51,7 +53,7 @@ const Header: React.FC = () => {
   // Helper: get display name and avatar
   const displayName =
     user?.first_name && user?.last_name
-      ? `${user.first_name} ${user.last_name}`.trim()
+      ? `${user?.first_name} ${user?.last_name}`.trim()
       : user?.first_name || user?.username || "Foydalanuvchi";
   const avatarUrl = user?.image;
   const avatarLetter = (user?.first_name ||
@@ -110,12 +112,15 @@ const Header: React.FC = () => {
                   className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
                 >
                   <Bell className="w-6 h-6" />
-                  {/* Only show when there are notifications */}
-                  {/* {false && (
-                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
-                      3
-                    </span>
-                  )} */}
+                  {unreadCount > 0 && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1 -right-1 min-w-[20px] h-[20px] bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-lg animate-pulse"
+                    >
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </motion.span>
+                  )}
                 </motion.button>
 
 

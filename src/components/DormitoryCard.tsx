@@ -50,7 +50,7 @@ const DormitoryCard: React.FC<DormitoryCardProps> = ({
       url: window.location.href,
     };
     try {
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      if (navigator.share) {
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(shareData.url);

@@ -82,7 +82,7 @@ const ContactForm: React.FC = () => {
               type="text"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
                 errors.name ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Aziz Karimov"
@@ -99,7 +99,7 @@ const ContactForm: React.FC = () => {
               type="email"
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
-              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
                 errors.email ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="aziz@example.com"
@@ -119,7 +119,7 @@ const ContactForm: React.FC = () => {
               type="tel"
               value={formData.phone}
               onChange={(e) => handleInputChange('phone', e.target.value)}
-              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
                 errors.phone ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="+998901234567"
@@ -135,7 +135,7 @@ const ContactForm: React.FC = () => {
             <select
               value={formData.subject}
               onChange={(e) => handleInputChange('subject', e.target.value)}
-              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
                 errors.subject ? 'border-red-500' : 'border-gray-300'
               }`}
             >
@@ -158,7 +158,7 @@ const ContactForm: React.FC = () => {
             value={formData.message}
             onChange={(e) => handleInputChange('message', e.target.value)}
             rows={6}
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none ${
+            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none ${
               errors.message ? 'border-red-500' : 'border-gray-300'
             }`}
             placeholder="Xabaringizni bu yerga yozing..."

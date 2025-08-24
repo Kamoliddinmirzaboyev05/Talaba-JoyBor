@@ -35,14 +35,8 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
     applications_count: 0
   });
   const [loading, setLoading] = useState(true);
-  const [searchFilters, setSearchFilters] = useState({
-    query: '',
-    location: '',
-    university: '',
-    roomType: '',
-    amenities: '',
-    distance: ''
-  });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
 
   // Sahifa yuklanganda yuqoriga scroll qilish
   useEffect(() => {
@@ -51,15 +45,21 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
 
   // Qidiruv funksiyasi
   const handleSearch = (searchData: any) => {
-    setSearchFilters(searchData);
+    const query = searchData.query.toLowerCase().trim();
+    setSearchQuery(query);
     
-    // Agar qidiruv bo'lsa, yotoqxonalar sahifasiga o'tish
-    if (searchData.query || searchData.location || searchData.university) {
-      navigate('/dormitories', { 
-        state: { 
-          searchFilters: searchData 
-        } 
-      });
+    if (query) {
+      // Mashhur elonlar ichidan qidirish
+      const filtered = featuredListings.filter(listing => 
+        listing.title.toLowerCase().includes(query) ||
+        listing.location.toLowerCase().includes(query) ||
+        listing.university.toLowerCase().includes(query) ||
+        listing.description.toLowerCase().includes(query) ||
+        listing.amenities.some(amenity => amenity.toLowerCase().includes(query))
+      );
+      setFilteredListings(filtered);
+    } else {
+      setFilteredListings([]);
     }
   };
 
@@ -299,7 +299,7 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
               Tez, oson va ishonchli.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -319,8 +319,6 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
                 Ijara Topish
               </motion.button>
             </div>
-
-            <SearchBar onSearch={handleSearch} />
           </motion.div>
         </div>
       </section>
@@ -352,7 +350,7 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
         </div>
       </section>
 
-      {/* Featured Listings */}
+      {/* Search Section */}
       <section className="py-16 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -362,11 +360,47 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
             className="text-center mb-12"
           >
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-              Mashhur Elonlar
+              Qidiruv
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-8">
+              O'zingizga mos yotoqxona yoki kvartira toping
+            </p>
+            <SearchBar onSearch={handleSearch} />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Featured Listings */}
+      <section className="py-16 bg-white dark:bg-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+              {searchQuery ? `"${searchQuery}" uchun qidiruv natijalari` : 'Mashhur Elonlar'}
             </h2>
             <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Talabalar orasida eng mashhur va yuqori baholangan yashash joylari
+              {searchQuery 
+                ? `${filteredListings.length} ta natija topildi`
+                : 'Talabalar orasida eng mashhur va yuqori baholangan yashash joylari'
+              }
             </p>
+            {searchQuery && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  setSearchQuery('');
+                  setFilteredListings([]);
+                }}
+                className="mt-4 text-teal-600 hover:text-teal-700 font-medium transition-colors duration-200"
+              >
+                Barcha elonlarni ko'rish
+              </motion.button>
+            )}
           </motion.div>
 
           {loading ? (
@@ -378,7 +412,25 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
                 </p>
               </div>
             </div>
-          ) : featuredListings.length === 0 ? (
+          ) : searchQuery && filteredListings.length === 0 ? (
+            <div className="text-center py-12">
+              <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                Qidiruv bo'yicha natija topilmadi
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                "{searchQuery}" uchun hech narsa topilmadi. Boshqa kalit so'zlar bilan qidirib ko'ring.
+              </p>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/dormitories')}
+                className="bg-gradient-to-r from-teal-600 to-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
+              >
+                Barcha yotoqxonalarni ko'rish
+              </motion.button>
+            </div>
+          ) : !searchQuery && featuredListings.length === 0 ? (
             <div className="text-center py-12">
               <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -390,7 +442,7 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredListings.map((listing, index) => (
+              {(searchQuery ? filteredListings : featuredListings).map((listing, index) => (
                 <motion.div
                   key={listing.id}
                   initial={{ opacity: 0, y: 30 }}
@@ -424,27 +476,29 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
             </div>
           )}
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="text-center mt-12"
-          >
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/dormitories')}
-              className="bg-gradient-to-r from-teal-600 to-green-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 inline-flex items-center gap-2"
+          {!searchQuery && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="text-center mt-12"
             >
-              Barcha Elonlarni Ko'rish
-              <ChevronRight className="w-5 h-5" />
-            </motion.button>
-          </motion.div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/dormitories')}
+                className="bg-gradient-to-r from-teal-600 to-green-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 inline-flex items-center gap-2"
+              >
+                Barcha Elonlarni Ko'rish
+                <ChevronRight className="w-5 h-5" />
+              </motion.button>
+            </motion.div>
+          )}
         </div>
       </section>
 
       {/* How It Works */}
-      <section className="py-16 bg-white dark:bg-gray-800">
+      <section className="py-16 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
