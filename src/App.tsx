@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocat
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { LikesProvider } from './contexts/LikesContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -148,17 +149,17 @@ function AppContent() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider>
-        <AuthProvider>
-          <NotificationProvider>
-            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-              <ErrorBoundary>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <ThemeProvider>
+          <AuthProvider>
+            <NotificationProvider>
+              <LikesProvider>
                 <AppContent />
-              </ErrorBoundary>
-            </Router>
-          </NotificationProvider>
-        </AuthProvider>
-      </ThemeProvider>
+              </LikesProvider>
+            </NotificationProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </Router>
     </ErrorBoundary>
   );
 }

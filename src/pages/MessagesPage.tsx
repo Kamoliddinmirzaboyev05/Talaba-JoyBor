@@ -6,6 +6,7 @@ import { Conversation, Message } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
 import { useTheme } from '../contexts/ThemeContext';
+import { formatTime } from "../utils/format";
 
 const MessagesPage: React.FC = () => {
   const { user } = useAuth();
@@ -129,18 +130,6 @@ const MessagesPage: React.FC = () => {
       // Here you would typically send the message to your backend
       console.log('Sending message:', messageText);
       setMessageText('');
-    }
-  };
-
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
-    
-    if (diffInHours < 24) {
-      return date.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' });
-    } else {
-      return date.toLocaleDateString('uz-UZ', { day: '2-digit', month: '2-digit' });
     }
   };
 

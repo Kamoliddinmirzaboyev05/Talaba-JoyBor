@@ -24,6 +24,7 @@ import Header from "../components/Header";
 import { formatPhoneNumber } from "../utils/format";
 import { authAPI } from "../services/api";
 import { useTheme } from "../contexts/ThemeContext";
+import { formatDateTime } from "../utils/format";
 
 const ApplicationDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -493,13 +494,7 @@ const ApplicationDetailPage: React.FC = () => {
                                                 Ariza yuborildi
                                             </p>
                                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                {new Date(application.created_at).toLocaleDateString("uz-UZ", {
-                                                    year: "numeric",
-                                                    month: "long",
-                                                    day: "numeric",
-                                                    hour: "2-digit",
-                                                    minute: "2-digit",
-                                                })}
+                                                {formatDateTime(application.created_at)}
                                             </p>
                                         </div>
                                     </div>

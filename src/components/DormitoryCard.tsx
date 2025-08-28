@@ -5,9 +5,10 @@ import { Pagination, Autoplay, Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
-import { MapPin, Users, Building2, Clock, CheckCircle, Share2 } from 'lucide-react';
+import { MapPin, Users, Building2, Clock, CheckCircle, Share2, Heart } from 'lucide-react';
 import { formatCapacityBucket } from '../utils/format';
 import { shareOrCopy } from '../utils/share';
+import { useLikes } from '../contexts/LikesContext';
 
 interface DormitoryCardProps {
   id: number | string;
@@ -29,6 +30,7 @@ interface DormitoryCardProps {
 const formatPrice = (price: number) => new Intl.NumberFormat('uz-UZ').format(price) + " so'm";
 
 const DormitoryCard: React.FC<DormitoryCardProps> = ({
+  id,
   name,
   month_price,
   address,
@@ -43,6 +45,13 @@ const DormitoryCard: React.FC<DormitoryCardProps> = ({
   onApplicationStart,
   canApply,
 }) => {
+  const { toggleLike, isLiked } = useLikes();
+
+  const handleLike = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleLike(id.toString());
+  };
+
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
     await shareOrCopy({
@@ -107,6 +116,20 @@ const DormitoryCard: React.FC<DormitoryCardProps> = ({
           className="absolute top-2 left-2 z-10 w-8 h-8 bg-white/90 text-gray-600 rounded-full flex items-center justify-center hover:bg-white transition-colors duration-200 backdrop-blur-sm shadow-lg"
         >
           <Share2 className="w-4 h-4" />
+        </motion.button>
+
+        {/* Like Button */}
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={handleLike}
+          className={`absolute top-2 left-12 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-200 backdrop-blur-sm shadow-lg ${
+            isLiked(id.toString()) 
+              ? 'bg-red-500 text-white' 
+              : 'bg-white/90 text-gray-600 hover:bg-white'
+          }`}
+        >
+          <Heart className={`w-4 h-4 ${isLiked(id.toString()) ? 'fill-current' : ''}`} />
         </motion.button>
 
         {/* Price Badge */}

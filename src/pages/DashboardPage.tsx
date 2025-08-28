@@ -16,6 +16,7 @@ import { Application } from "../types";
 import { useAuth } from "../contexts/AuthContext";
 import Header from "../components/Header";
 import { authAPI } from "../services/api";
+import { formatDate } from "../utils/format";
 
 
 const DashboardPage: React.FC = () => {
@@ -186,6 +187,8 @@ const DashboardPage: React.FC = () => {
     }
   };
 
+
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
@@ -342,10 +345,7 @@ const DashboardPage: React.FC = () => {
                           <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
                             <Clock className="w-4 h-4" />
                             <span>
-                              {new Date(application.created_at).toLocaleDateString("uz-UZ", {
-                                month: "short",
-                                day: "numeric",
-                              })}
+                              {formatDate(application.created_at)}
                             </span>
                           </div>
                         )}
@@ -364,10 +364,10 @@ const DashboardPage: React.FC = () => {
                           />
                         </div>
                         <span className="text-xs text-gray-500 dark:text-gray-400 min-w-fit">
-                          {application.status === 'PENDING' ? '33%' :
-                            application.status === 'INTERVIEW' ? '66%' :
-                              application.status === 'APPROVED' ? '100%' :
-                                application.status === 'REJECTED' ? '100%' : '25%'}
+                          {application.status === 'PENDING' ? 'Kutilmoqda' :
+                            application.status === 'INTERVIEW' ? 'Suhbat' :
+                              application.status === 'APPROVED' ? 'Tasdiqlangan' :
+                                application.status === 'REJECTED' ? 'Rad etilgan' : 'Jarayon'}
                         </span>
                       </div>
                     </motion.div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Phone, CheckCircle, AlertCircle, MapPin, FileText, MessageSquare, Building, Upload, X, Users, Clock } from 'lucide-react';
@@ -66,6 +66,30 @@ const ApplicationPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  // Field refs for auto-scroll/focus on validation errors
+  const fieldRefs = useRef<Record<string, HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null>>({});
+  const registerFieldRef = (key: string) => (el: any) => {
+    fieldRefs.current[key] = el;
+  };
+
+  // When errors change, scroll to the first errored field
+  useEffect(() => {
+    const order = ['name', 'city', 'village', 'course', 'phone', 'passport', 'faculty', 'direction', 'group'];
+    const firstKey = order.find((k) => !!errors[k]);
+    if (firstKey && fieldRefs.current[firstKey]) {
+      const el = fieldRefs.current[firstKey]!;
+      try {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Defer focus slightly to ensure scroll completes on mobile
+        setTimeout(() => {
+          if (typeof (el as any).focus === 'function') {
+            (el as any).focus();
+          }
+        }, 150);
+      } catch {}
+    }
+  }, [errors]);
 
   // Debug logging (development only)
   if (process.env.NODE_ENV === 'development') {
@@ -609,6 +633,7 @@ const ApplicationPage: React.FC = () => {
                         type="text"
                         value={formData.familiya}
                         onChange={(e) => handleInputChange('familiya', e.target.value)}
+                        ref={registerFieldRef('familiya')}
                         className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
                           ? 'bg-gray-700 border-gray-600 text-white'
                           : 'bg-white border-gray-300 text-gray-900'
@@ -634,6 +659,7 @@ const ApplicationPage: React.FC = () => {
                         type="text"
                         value={formData.name}
                         onChange={(e) => handleInputChange('name', e.target.value)}
+                        ref={registerFieldRef('name')}
                         className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
                           ? 'bg-gray-700 border-gray-600 text-white'
                           : 'bg-white border-gray-300 text-gray-900'
@@ -659,6 +685,7 @@ const ApplicationPage: React.FC = () => {
                         type="text"
                         value={formData.middle_name}
                         onChange={(e) => handleInputChange('middle_name', e.target.value)}
+                        ref={registerFieldRef('middle_name')}
                         className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
                           ? 'bg-gray-700 border-gray-600 text-white'
                           : 'bg-white border-gray-300 text-gray-900'
@@ -691,6 +718,7 @@ const ApplicationPage: React.FC = () => {
                           setSelectedProvinceId(selectedProvince ? selectedProvince.id : null);
                           handleInputChange('village', '');
                         }}
+                        ref={registerFieldRef('city')}
                         className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
                           ? 'bg-gray-700 border-gray-600 text-white'
                           : 'bg-white border-gray-300 text-gray-900'
@@ -722,6 +750,7 @@ const ApplicationPage: React.FC = () => {
                         value={formData.village}
                         onChange={(e) => handleInputChange('village', e.target.value)}
                         disabled={!selectedProvinceId || districts.length === 0}
+                        ref={registerFieldRef('village')}
                         className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
                           ? 'bg-gray-700 border-gray-600 text-white'
                           : 'bg-white border-gray-300 text-gray-900'
@@ -769,6 +798,7 @@ const ApplicationPage: React.FC = () => {
                           type="text"
                           value={formData.faculty}
                           onChange={(e) => handleInputChange('faculty', e.target.value)}
+                          ref={registerFieldRef('faculty')}
                           className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
                             ? 'bg-gray-700 border-gray-600 text-white'
                             : 'bg-white border-gray-300 text-gray-900'
@@ -795,6 +825,7 @@ const ApplicationPage: React.FC = () => {
                           type="text"
                           value={formData.direction}
                           onChange={(e) => handleInputChange('direction', e.target.value)}
+                          ref={registerFieldRef('direction')}
                           className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
                             ? 'bg-gray-700 border-gray-600 text-white'
                             : 'bg-white border-gray-300 text-gray-900'
@@ -820,6 +851,7 @@ const ApplicationPage: React.FC = () => {
                         <select
                           value={formData.course}
                           onChange={(e) => handleInputChange('course', e.target.value)}
+                          ref={registerFieldRef('course')}
                           className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
                             ? 'bg-gray-700 border-gray-600 text-white'
                             : 'bg-white border-gray-300 text-gray-900'
@@ -852,6 +884,7 @@ const ApplicationPage: React.FC = () => {
                           type="text"
                           value={formData.group}
                           onChange={(e) => handleInputChange('group', e.target.value)}
+                          ref={registerFieldRef('group')}
                           className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
                             ? 'bg-gray-700 border-gray-600 text-white'
                             : 'bg-white border-gray-300 text-gray-900'
@@ -905,6 +938,7 @@ const ApplicationPage: React.FC = () => {
 
                           handleInputChange('phone', value);
                         }}
+                        ref={registerFieldRef('phone')}
                         className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
                           ? 'bg-gray-700 border-gray-600 text-white'
                           : 'bg-white border-gray-300 text-gray-900'
@@ -934,6 +968,7 @@ const ApplicationPage: React.FC = () => {
                         type="text"
                         value={formData.passport}
                         onChange={(e) => handlePassportChange(e.target.value)}
+                        ref={registerFieldRef('passport')}
                         className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
                           ? 'bg-gray-700 border-gray-600 text-white'
                           : 'bg-white border-gray-300 text-gray-900'

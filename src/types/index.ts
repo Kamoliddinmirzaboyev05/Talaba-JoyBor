@@ -115,6 +115,16 @@ export interface Dormitory {
   total_rooms: number;
   distance_to_university: number;
   rules: string[];
+  // Add province and district for filtering
+  province?: {
+    id: number;
+    name: string;
+  };
+  district?: {
+    id: number;
+    name: string;
+    province: number;
+  };
 }
 
 export interface Application {

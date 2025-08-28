@@ -8,6 +8,7 @@ import { useNotifications } from '../contexts/NotificationContext';
 import Header from '../components/Header';
 import { useTheme } from '../contexts/ThemeContext';
 import { authAPI } from '../services/api';
+import { formatTime } from "../utils/format";
 
 const NotificationDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -113,16 +114,7 @@ const NotificationDetailPage: React.FC = () => {
     }
   };
 
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleString('uz-UZ', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+
 
   if (!user) {
     return (

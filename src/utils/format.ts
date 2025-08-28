@@ -84,5 +84,83 @@ export const normalizePhoneForApi = (value: string): string => {
   return `+998${nine}`;
 };
 
+// Comprehensive date formatting functions
+export const formatDate = (iso?: string): string => {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    return new Intl.DateTimeFormat('uz-UZ', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(d);
+  } catch {
+    return '';
+  }
+};
+
+export const formatDateTime = (iso?: string): string => {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    return new Intl.DateTimeFormat('uz-UZ', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(d);
+  } catch {
+    return '';
+  }
+};
+
+export const formatTime = (iso?: string): string => {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    const now = new Date();
+    const diffInHours = (now.getTime() - d.getTime()) / (1000 * 60 * 60);
+    
+    if (diffInHours < 24) {
+      return d.toLocaleTimeString('uz-UZ', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    } else {
+      return d.toLocaleDateString('uz-UZ', { 
+        day: '2-digit', 
+        month: '2-digit' 
+      });
+    }
+  } catch {
+    return '';
+  }
+};
+
+export const formatRelativeTime = (iso?: string): string => {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    const now = new Date();
+    const diffInMs = now.getTime() - d.getTime();
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInMinutes < 1) return 'Hozir';
+    if (diffInMinutes < 60) return `${diffInMinutes} daqiqa oldin`;
+    if (diffInHours < 24) return `${diffInHours} soat oldin`;
+    if (diffInDays < 7) return `${diffInDays} kun oldin`;
+    
+    return formatDate(iso);
+  } catch {
+    return '';
+  }
+};
+
+// Legacy function for backward compatibility
+export const formatUiDate = formatDate;
+
 
 

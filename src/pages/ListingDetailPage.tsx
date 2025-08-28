@@ -49,6 +49,7 @@ import YandexMap from "../components/YandexMap";
 import { getGlobalSelectedListing, setGlobalSelectedListing } from "../App";
 import { authAPI } from "../services/api";
 import { shareOrCopy } from "../utils/share";
+import { useLikes } from "../contexts/LikesContext";
 
 const ListingDetailPage: React.FC = () => {
   const navigate = useNavigate();
@@ -59,6 +60,7 @@ const ListingDetailPage: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
   const { user } = useAuth();
+  const { toggleLike, isLiked } = useLikes();
   const [listing, setListing] = useState<Listing | null>(
     getGlobalSelectedListing()
   );
@@ -67,16 +69,6 @@ const ListingDetailPage: React.FC = () => {
   const onApplicationStart = (listing: Listing) => {
     setGlobalSelectedListing(listing);
     navigate("/application");
-  };
-  const [isLiked, setIsLiked] = useState(false);
-  const handleShare = async () => {
-    if (!listing) return;
-    const priceText = new Intl.NumberFormat('uz-UZ').format(listing.price) + " so'm/oy";
-    await shareOrCopy({
-      title: `${listing.title} - JoyBor`,
-      text: `${listing.description || "Yotoqxona haqida ma'lumot"} - ${priceText}`,
-      url: `${window.location.origin}/listing/${listing.id}`,
-    });
   };
 
   // Load listing data if not available
@@ -309,6 +301,20 @@ const ListingDetailPage: React.FC = () => {
     return <CheckCircle className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />;
   };
 
+  const handleShare = async () => {
+    if (!listing) return;
+    const priceText = new Intl.NumberFormat('uz-UZ').format(listing.price) + " so'm/oy";
+    await shareOrCopy({
+      title: `${listing.title} - JoyBor`,
+      text: `${listing.description || "Yotoqxona haqida ma'lumot"} - ${priceText}`,
+      url: `${window.location.origin}/listing/${listing.id}`,
+    });
+  };
+
+  const handleStartChat = (listing: Listing) => {
+    setGlobalSelectedListing(listing);
+    navigate("/chat");
+  };
 
 
   return (
@@ -385,14 +391,14 @@ const ListingDetailPage: React.FC = () => {
                  <motion.button
                    whileHover={{ scale: 1.1 }}
                    whileTap={{ scale: 0.9 }}
-                   onClick={() => setIsLiked(!isLiked)}
-                   className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200 shadow-lg ${
-                     isLiked
+                   onClick={handleLike}
+                                       className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200 shadow-lg ${
+                      listing && isLiked(listing.id)
                        ? "bg-red-500 text-white"
                        : "bg-white/90 text-gray-600 hover:bg-white backdrop-blur-sm"
                    }`}
                  >
-                   <Heart className={`w-5 h-5 ${isLiked ? "fill-current" : ""}`} />
+                                       <Heart className={`w-5 h-5 ${listing && isLiked(listing.id) ? "fill-current" : ""}`} />
                  </motion.button>
                  <motion.button
                    whileHover={{ scale: 1.1 }}

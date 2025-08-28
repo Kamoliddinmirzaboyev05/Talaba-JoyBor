@@ -20,6 +20,7 @@ import { useAuth } from "../contexts/AuthContext";
 import Header from "../components/Header";
 import { authAPI } from "../services/api";
 import { useTheme } from "../contexts/ThemeContext";
+import { formatUiDate } from "../utils/format";
 
 const ApplicationsPage: React.FC = () => {
   const { user } = useAuth();
@@ -313,14 +314,8 @@ const ApplicationsPage: React.FC = () => {
                         </div>
                         {application.created_at && (
                           <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                            <Clock className="w-4 h-4" />
-                            <span>
-                              {new Date(application.created_at).toLocaleDateString("uz-UZ", {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              })}
-                            </span>
+                            <Calendar className="w-4 h-4" />
+                            <span>{formatUiDate(application.created_at)}</span>
                           </div>
                         )}
                       </div>

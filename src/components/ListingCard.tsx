@@ -11,6 +11,7 @@ import 'swiper/css/navigation';
 import { Listing, User } from '../types';
 import { shareOrCopy } from '../utils/share';
 import { formatCapacityBucket, formatCapacity, formatAvailableCapacity } from '../utils/format';
+import { useLikes } from '../contexts/LikesContext';
 
 interface ListingCardProps {
   listing: Listing;
@@ -19,7 +20,7 @@ interface ListingCardProps {
 }
 
 const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user }) => {
-  const [isLiked, setIsLiked] = useState(false);
+  const { toggleLike, isLiked } = useLikes();
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('uz-UZ').format(price) + ' so\'m';
@@ -37,7 +38,7 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user }) =>
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsLiked(!isLiked);
+    toggleLike(listing.id);
   };
 
   const handleShare = async (e: React.MouseEvent) => {
@@ -160,12 +161,12 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user }) =>
             whileTap={{ scale: 0.9 }}
             onClick={handleLike}
             className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-200 ${
-              isLiked 
+              isLiked(listing.id) 
                 ? 'bg-red-500 text-white' 
                 : 'bg-white/90 text-gray-600 hover:bg-white'
             }`}
           >
-            <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+            <Heart className={`w-4 h-4 ${isLiked(listing.id) ? 'fill-current' : ''}`} />
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.1 }}

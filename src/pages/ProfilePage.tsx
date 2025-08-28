@@ -5,7 +5,7 @@ import { User, Mail, Phone, MapPin, Edit3, Save, X, Camera, Lock, FileText, Cloc
 
 import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
-import { formatPhoneInput, formatPhoneNumber } from '../utils/format';
+import { formatPhoneInput, formatPhoneNumber, formatDate } from '../utils/format';
 import { useTheme } from '../contexts/ThemeContext';
 
 
@@ -339,15 +339,7 @@ const ProfilePage: React.FC = () => {
     return new Intl.NumberFormat('uz-UZ').format(price) + ' so\'m';
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('uz-UZ', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+
 
   const tabs = [
     { id: 'profile', label: 'Profil', icon: User },

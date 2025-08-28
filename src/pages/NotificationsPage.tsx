@@ -8,6 +8,7 @@ import { useNotifications } from '../contexts/NotificationContext';
 import Header from '../components/Header';
 import { useTheme } from '../contexts/ThemeContext';
 import { authAPI } from '../services/api';
+import { formatTime } from "../utils/format";
 
 const NotificationsPage: React.FC = () => {
   const { user } = useAuth();
@@ -225,20 +226,7 @@ const NotificationsPage: React.FC = () => {
     }
   };
 
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
 
-    if (diffInHours < 1) {
-      return 'Hozir';
-    } else if (diffInHours < 24) {
-      return `${Math.floor(diffInHours)} soat oldin`;
-    } else {
-      const diffInDays = Math.floor(diffInHours / 24);
-      return `${diffInDays} kun oldin`;
-    }
-  };
 
   const handleMarkAsRead = async (notificationId: number) => {
     try {
