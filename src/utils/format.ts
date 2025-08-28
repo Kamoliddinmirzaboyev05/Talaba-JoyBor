@@ -36,27 +36,52 @@ export const formatAvailableCapacity = (totalCapacity: number, availableCapacity
   return 'Bo\'sh joy yo\'q';
 };
 
-export const formatPhoneNumber = (phone: string): string => {
-  // Remove all non-digit characters
-  const digits = phone.replace(/\D/g, '');
-  
-  // If it starts with 998, format as +998 XX XXX XX XX
-  if (digits.startsWith('998') && digits.length === 12) {
-    return `+998 ${digits.slice(3, 5)} ${digits.slice(5, 8)} ${digits.slice(8, 10)} ${digits.slice(10, 12)}`;
+// Format a phone number for display: +998 XX XXX XX XX (spaces)
+export const formatPhoneNumber = (input: string): string => {
+  const digits = input.replace(/\D/g, '');
+  const rest = digits.startsWith('998') ? digits.slice(3) : digits.startsWith('+998') ? digits.slice(4) : digits.startsWith('8') && digits.length === 9 ? digits : digits;
+  const padded = rest.slice(0, 9);
+  const parts = [] as string[];
+  if (padded.length > 0) {
+    parts.push(padded.slice(0, 2));
   }
-  
-  // If it starts with 88, format as +998 XX XXX XX XX
-  if (digits.startsWith('88') && digits.length === 9) {
-    return `+998 ${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5, 7)} ${digits.slice(7, 9)}`;
+  if (padded.length > 2) {
+    parts.push(padded.slice(2, 5));
   }
-  
-  // If it's already formatted, return as is
-  if (phone.startsWith('+998')) {
-    return phone;
+  if (padded.length > 5) {
+    parts.push(padded.slice(5, 7));
   }
-  
-  // Default fallback
-  return phone;
+  if (padded.length > 7) {
+    parts.push(padded.slice(7, 9));
+  }
+  return `+998${parts.length ? ' ' + parts.join(' ') : ''}`.trim();
+};
+
+// Live input mask: keeps +998 prefix and groups while typing
+export const formatPhoneInput = (value: string): string => {
+  // Ensure +998 prefix
+  const digits = value.replace(/\D/g, '');
+  let rest = digits;
+  if (rest.startsWith('998')) {
+    rest = rest.slice(3);
+  } else if (rest.startsWith('8') && rest.length <= 9) {
+    // e.g., 90... typed without 998
+  }
+  const masked = formatPhoneNumber(`+998${rest}`);
+  return masked;
+};
+
+// Normalize to API format: +998XXXXXXXXX (no spaces)
+export const normalizePhoneForApi = (value: string): string => {
+  const digits = value.replace(/\D/g, '');
+  let body = digits;
+  if (digits.startsWith('998')) {
+    body = digits.slice(3);
+  } else if (digits.startsWith('+998')) {
+    body = digits.slice(4);
+  }
+  const nine = body.slice(0, 9);
+  return `+998${nine}`;
 };
 
 

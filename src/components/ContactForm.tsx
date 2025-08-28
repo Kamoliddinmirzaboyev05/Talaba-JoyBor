@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Send } from 'lucide-react';
+import { formatPhoneInput, normalizePhoneForApi } from '../utils/format';
 
 interface FormState {
   name: string;
@@ -31,6 +32,9 @@ const ContactForm: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleInputChange = (field: keyof FormState, value: string) => {
+    if (field === 'phone') {
+      value = formatPhoneInput(value);
+    }
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
@@ -62,6 +66,8 @@ const ContactForm: React.FC = () => {
     // TODO: Replace with real API when backend endpoint is available
     setTimeout(() => {
       setIsSubmitting(false);
+      // Example of normalized phone ready for API
+      const _normalized = normalizePhoneForApi(formData.phone);
       setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
       alert('Xabaringiz muvaffaqiyatli yuborildi! Tez orada javob beramiz.');
     }, 1500);

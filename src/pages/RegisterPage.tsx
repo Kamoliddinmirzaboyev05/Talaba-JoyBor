@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, UserPlus, Phone } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { formatPhoneInput, normalizePhoneForApi } from '../utils/format';
 import { useAuth } from '../contexts/AuthContext';
 
 const RegisterPage: React.FC = () => {
@@ -68,7 +69,7 @@ const RegisterPage: React.FC = () => {
           last_name: formData.last_name,
           username: formData.username,
           email: formData.email,
-          phone: formData.phone,
+          phone: normalizePhoneForApi(formData.phone),
           password: formData.password,
           password2: formData.password2,
         }),
@@ -109,6 +110,9 @@ const RegisterPage: React.FC = () => {
   };
 
   const handleInputChange = (field: string, value: string) => {
+    if (field === 'phone') {
+      value = formatPhoneInput(value);
+    }
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));

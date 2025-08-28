@@ -5,6 +5,7 @@ import { User, Mail, Phone, MapPin, Edit3, Save, X, Camera, Lock, FileText, Cloc
 
 import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
+import { formatPhoneInput, formatPhoneNumber } from '../utils/format';
 import { useTheme } from '../contexts/ThemeContext';
 
 
@@ -142,8 +143,10 @@ const ProfilePage: React.FC = () => {
         }
         const data = await res.json();
         console.log('ProfilePage: Profile ma\'lumotlari yuklandi', data);
-        setProfile(data);
-        setEditedProfile(data);
+        // Format phone for display
+        const hydrated = { ...data, phone: data.phone ? formatPhoneNumber(data.phone) : '' };
+        setProfile(hydrated);
+        setEditedProfile(hydrated);
         setImageFile(null);
         setPassword('');
       } catch (error) {
@@ -272,6 +275,9 @@ const ProfilePage: React.FC = () => {
   };
 
   const handleInputChange = (field: keyof ProfileData, value: string) => {
+    if (field === 'phone') {
+      value = formatPhoneInput(value);
+    }
     setEditedProfile(prev => prev ? { ...prev, [field]: value } : null);
     setFieldErrors(prev => ({ ...prev, [field]: '' }));
   };
@@ -861,7 +867,7 @@ const ProfilePage: React.FC = () => {
                                 <strong>F.I.O:</strong> {application.name} {application.middle_name || ''} {application.last_name}
                               </p>
                               <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                                <strong>Telefon:</strong> +{application.phone}
+                                <strong>Telefon:</strong> {formatPhoneNumber('+' + String(application.phone))}
                               </p>
                               <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                                 <strong>Viloyat:</strong> {application.province?.name || 'Noma\'lum'}

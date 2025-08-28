@@ -21,6 +21,7 @@ import {
 import { Application } from "../types";
 import { useAuth } from "../contexts/AuthContext";
 import Header from "../components/Header";
+import { formatPhoneNumber } from "../utils/format";
 import { authAPI } from "../services/api";
 import { useTheme } from "../contexts/ThemeContext";
 
@@ -354,7 +355,7 @@ const ApplicationDetailPage: React.FC = () => {
                                     <div className="flex items-center gap-2">
                                         <Phone className="w-4 h-4 text-gray-500" />
                                         <p className="text-gray-900 dark:text-white font-semibold">
-                                            +{application.phone}
+                                            {formatPhoneNumber('+' + String(application.phone))}
                                         </p>
                                     </div>
                                 </div>
