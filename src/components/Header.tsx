@@ -15,6 +15,7 @@ import {
   HelpCircle,
   Users,
   Phone,
+  FileText,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNotifications } from "../contexts/NotificationContext";
@@ -46,6 +47,7 @@ const Header: React.FC = () => {
   const profileMenuItems = [
     { label: "Profil", path: "/profile", icon: User },
     { label: "Dashboard", path: "/dashboard", icon: Home },
+    { label: "Arizalar", path: "/applications", icon: FileText },
     { label: "Xabarlar", path: "/messages", icon: MessageCircle },
     { label: "Saqlangan", path: "/saved", icon: Heart },
     { label: "Bildirishnomalar", path: "/notifications", icon: Bell },

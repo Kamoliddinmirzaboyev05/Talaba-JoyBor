@@ -311,6 +311,11 @@ const ListingDetailPage: React.FC = () => {
     });
   };
 
+  const handleLike = () => {
+    if (!listing) return;
+    toggleLike(listing.id);
+  };
+
   const handleStartChat = (listing: Listing) => {
     setGlobalSelectedListing(listing);
     navigate("/chat");
