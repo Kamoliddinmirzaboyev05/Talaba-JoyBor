@@ -513,7 +513,7 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/dormitories')}
+                onClick={() => navigate('/listings')}
                 className="bg-gradient-to-r from-teal-600 to-green-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 inline-flex items-center gap-2"
               >
                 Barcha Elonlarni Ko'rish

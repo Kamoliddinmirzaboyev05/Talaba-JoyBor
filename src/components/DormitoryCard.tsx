@@ -7,6 +7,7 @@ import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 import { MapPin, Users, Building2, Clock, CheckCircle, Share2 } from 'lucide-react';
 import { formatCapacityBucket } from '../utils/format';
+import { shareOrCopy } from '../utils/share';
 
 interface DormitoryCardProps {
   id: number | string;
@@ -44,24 +45,11 @@ const DormitoryCard: React.FC<DormitoryCardProps> = ({
 }) => {
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const shareData = {
+    await shareOrCopy({
       title: `${name} - JoyBor`,
       text: `${description || "Yotoqxona haqida ma'lumot"} - ${formatPrice(month_price)}/oy`,
       url: window.location.href,
-    };
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(shareData.url);
-        alert('Link nusxalandi!');
-      }
-    } catch {
-      try {
-        await navigator.clipboard.writeText(shareData.url);
-        alert('Link nusxalandi!');
-      } catch {}
-    }
+    });
   };
 
   return (

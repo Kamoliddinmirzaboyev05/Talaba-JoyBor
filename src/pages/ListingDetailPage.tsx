@@ -48,6 +48,7 @@ import Header from "../components/Header";
 import YandexMap from "../components/YandexMap";
 import { getGlobalSelectedListing, setGlobalSelectedListing } from "../App";
 import { authAPI } from "../services/api";
+import { shareOrCopy } from "../utils/share";
 
 const ListingDetailPage: React.FC = () => {
   const navigate = useNavigate();
@@ -68,6 +69,15 @@ const ListingDetailPage: React.FC = () => {
     navigate("/application");
   };
   const [isLiked, setIsLiked] = useState(false);
+  const handleShare = async () => {
+    if (!listing) return;
+    const priceText = new Intl.NumberFormat('uz-UZ').format(listing.price) + " so'm/oy";
+    await shareOrCopy({
+      title: `${listing.title} - JoyBor`,
+      text: `${listing.description || "Yotoqxona haqida ma'lumot"} - ${priceText}`,
+      url: `${window.location.origin}/listing/${listing.id}`,
+    });
+  };
 
   // Load listing data if not available
   useEffect(() => {
@@ -387,6 +397,7 @@ const ListingDetailPage: React.FC = () => {
                  <motion.button
                    whileHover={{ scale: 1.1 }}
                    whileTap={{ scale: 0.9 }}
+                   onClick={handleShare}
                    className="w-10 h-10 bg-white/90 text-gray-600 rounded-full flex items-center justify-center hover:bg-white transition-colors duration-200 backdrop-blur-sm shadow-lg"
                  >
                    <Share2 className="w-5 h-5" />

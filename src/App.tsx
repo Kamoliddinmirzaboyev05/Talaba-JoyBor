@@ -23,6 +23,7 @@ import SettingsPage from './pages/SettingsPage';
 import HelpPage from './pages/HelpPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
+import AllListingsPage from './pages/AllListingsPage';
 import { Listing } from './types';
 
 // Global state for selected listing
@@ -111,6 +112,7 @@ function AppContent() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<HomePage onListingSelect={handleListingSelect} onApplicationStart={handleApplicationStart} />} />
+        <Route path="/listings" element={<AllListingsPage />} />
         <Route path="/dormitories" element={<DormitoriesPage onListingSelect={handleListingSelect} onApplicationStart={handleApplicationStart} />} />
         <Route path="/rentals" element={<RentalsPage onListingSelect={handleListingSelect} onApplicationStart={handleApplicationStart} />} />
         <Route path="/help" element={<HelpPage />} />

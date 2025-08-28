@@ -14,6 +14,7 @@ import DormitoryCard from '../components/DormitoryCard';
 import Header from '../components/Header';
 import { authAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { shareOrCopy } from '../utils/share';
 
 interface DormitoriesPageProps {
   onListingSelect: (listing: Listing) => void;
@@ -73,30 +74,11 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
   // Share functionality
   const handleShare = async (dormitory: Dormitory, e: React.MouseEvent) => {
     e.stopPropagation();
-
-    const shareData = {
+    await shareOrCopy({
       title: `${dormitory.name} - JoyBor`,
       text: `${dormitory.description || 'Yotoqxona haqida ma\'lumot'} - ${formatPrice(dormitory.month_price)}/oy`,
-      url: `${window.location.origin}/dormitory/${dormitory.id}`
-    };
-
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        // Fallback: copy to clipboard
-        await navigator.clipboard.writeText(shareData.url);
-        alert('Link nusxalandi!');
-      }
-    } catch (error) {
-      console.error('Share failed:', error);
-      try {
-        await navigator.clipboard.writeText(shareData.url);
-        alert('Link nusxalandi!');
-      } catch (clipboardError) {
-        console.error('Clipboard failed:', clipboardError);
-      }
-    }
+      url: `${window.location.origin}/dormitory/${dormitory.id}`,
+    });
   };
 
   // API dan yotoqxonalarni yuklash
