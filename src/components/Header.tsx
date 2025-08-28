@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Home,
   User,
@@ -21,12 +21,18 @@ import { useNotifications } from "../contexts/NotificationContext";
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
   const { unreadCount } = useNotifications();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  const isActive = (path: string) => {
+    if (path === "/") return location.pathname === "/";
+    return location.pathname.startsWith(path);
+  };
 
   const menuItems = [
     { label: "Bosh Sahifa", path: "/", icon: Home },
@@ -112,20 +118,20 @@ const Header: React.FC = () => {
           <nav className="hidden md:flex items-center space-x-8">
             <button
               onClick={() => navigate("/dormitories")}
-              className="text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
+              className={`${isActive("/dormitories") ? "text-teal-600 dark:text-teal-400 font-semibold after:w-full" : "text-gray-700 dark:text-gray-300 after:w-0"} relative pb-1 after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-[3px] after:bg-teal-500 after:rounded-full after:transition-all after:duration-300 hover:text-teal-600 dark:hover:text-teal-400 hover:after:w-full`}
             >
               Yotoqxonalar
             </button>
             <button
               onClick={() => navigate("/rentals")}
-              className="text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
+              className={`${isActive("/rentals") ? "text-teal-600 dark:text-teal-400 font-semibold after:w-full" : "text-gray-700 dark:text-gray-300 after:w-0"} relative pb-1 after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-[3px] after:bg-teal-500 after:rounded-full after:transition-all after:duration-300 hover:text-teal-600 dark:hover:text-teal-400 hover:after:w-full`}
             >
               Ijara Xonadonlar
             </button>
 
             <button
               onClick={() => navigate("/help")}
-              className="text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
+              className={`${isActive("/help") ? "text-teal-600 dark:text-teal-400 font-semibold after:w-full" : "text-gray-700 dark:text-gray-300 after:w-0"} relative pb-1 after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-[3px] after:bg-teal-500 after:rounded-full after:transition-all after:duration-300 hover:text-teal-600 dark:hover:text-teal-400 hover:after:w-full`}
             >
               Yordam
             </button>
@@ -272,7 +278,7 @@ const Header: React.FC = () => {
                     navigate(item.path);
                     setIsMenuOpen(false);
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
+                  className={`w-full relative flex items-center gap-3 px-3 py-2 rounded-lg transition-colors duration-200 ${isActive(item.path) ? "bg-gray-100 dark:bg-gray-700 text-teal-600 dark:text-teal-400 font-semibold before:w-1" : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 before:w-0"} before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-6 before:bg-teal-500 before:rounded-full before:transition-all before:duration-300`}
                 >
                   <item.icon className="w-5 h-5" />
                   {item.label}
