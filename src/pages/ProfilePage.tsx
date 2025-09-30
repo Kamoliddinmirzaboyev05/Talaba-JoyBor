@@ -123,7 +123,7 @@ const ProfilePage: React.FC = () => {
         return;
       }
       try {
-        const res = await fetch('https://joyboryangi.pythonanywhere.com/profile/', {
+        const res = await fetch('https://joyborv1.pythonanywhere.com/profile/', {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -161,7 +161,7 @@ const ProfilePage: React.FC = () => {
       return;
     }
     try {
-      const res = await fetch('https://joyboryangi.pythonanywhere.com/applications/', {
+      const res = await fetch('https://joyborv1.pythonanywhere.com/applications/', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -214,7 +214,7 @@ const ProfilePage: React.FC = () => {
       formData.append('address', editedProfile.address || '');
       formData.append('telegram', editedProfile.telegram || '');
 
-      const res = await fetch('https://joyboryangi.pythonanywhere.com/profile/', {
+      const res = await fetch('https://joyborv1.pythonanywhere.com/profile/', {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

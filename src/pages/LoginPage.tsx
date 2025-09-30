@@ -41,7 +41,7 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch('https://joyboryangi.pythonanywhere.com/token/', {
+      const response = await fetch('https://joyborv1.pythonanywhere.com/token/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

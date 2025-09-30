@@ -12,9 +12,9 @@ import { Dormitory } from '../types';
 interface ApplicationFormData {
   name: string;
   middle_name: string;
-  familiya: string;
-  city: string;
-  village: string;
+  last_name: string;
+  province: number | '';
+  district: number | '';
   phone: string;
   passport: string;
   faculty: string;
@@ -42,9 +42,9 @@ const ApplicationPage: React.FC = () => {
   const [formData, setFormData] = useState<ApplicationFormData>({
     name: user?.first_name || '',
     middle_name: '',
-    familiya: user?.last_name || '',
-    city: '',
-    village: '',
+    last_name: user?.last_name || '',
+    province: '',
+    district: '',
     phone: user?.phone || '',
     passport: '',
     faculty: '',
@@ -63,6 +63,7 @@ const ApplicationPage: React.FC = () => {
   const [dormitories, setDormitories] = useState<Dormitory[]>([]);
   const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(null);
   const [selectedDormitoryId, setSelectedDormitoryId] = useState<string>(selectedListing?.id || '');
+  const [selectedDistrictId, setSelectedDistrictId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -80,7 +81,7 @@ const ApplicationPage: React.FC = () => {
       setFormData(prev => ({
         ...prev,
         name: user?.first_name || '',
-        familiya: user?.last_name || '',
+        last_name: user?.last_name || '',
         phone: user?.phone || '',
       }));
     }
@@ -214,15 +215,15 @@ const ApplicationPage: React.FC = () => {
     }
   };
 
-  const handleInputChange = (field: keyof ApplicationFormData, value: string | File | null) => {
+  const handleInputChange = (field: keyof ApplicationFormData, value: string | number | File | null) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: value as any
     }));
 
     // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+    if (errors[field as string]) {
+      setErrors(prev => ({ ...prev, [field as string]: '' }));
     }
   };
 
@@ -250,10 +251,10 @@ const ApplicationPage: React.FC = () => {
 
     // Required fields validation
     if (!selectedListing) newErrors.general = 'Yotoqxona tanlanmagan. Iltimos, yotoqxona sahifasiga qayting va ariza yuborish tugmasini bosing.';
-    if (!formData.familiya.trim()) newErrors.familiya = 'Familiya kiritilishi shart';
+    if (!formData.last_name.trim()) newErrors.last_name = 'Familiya kiritilishi shart';
     if (!formData.name.trim()) newErrors.name = 'Ism kiritilishi shart';
-    if (!formData.city.trim()) newErrors.city = 'Viloyat tanlanishi shart';
-    if (!formData.village.trim()) newErrors.village = 'Tuman tanlanishi shart';
+    if (!selectedProvinceId) newErrors.province = 'Viloyat tanlanishi shart';
+    if (!selectedDistrictId) newErrors.district = 'Tuman tanlanishi shart';
     if (!formData.phone.trim()) newErrors.phone = 'Telefon raqam kiritilishi shart';
     if (!formData.passport.trim()) newErrors.passport = 'Pasport raqami kiritilishi shart';
     if (!formData.faculty.trim()) newErrors.faculty = 'Fakultet nomi kiritilishi shart';
@@ -304,40 +305,56 @@ const ApplicationPage: React.FC = () => {
         return;
       }
 
-      if (!selectedListing) {
-        setErrors({ general: 'Yotoqxona tanlanmagan. Iltimos, yotoqxona sahifasiga qayting va ariza yuborish tugmasini bosing.' });
+      if (!selectedListing || !selectedProvinceId || !selectedDistrictId) {
+        setErrors({ general: 'Majburiy maydonlar tanlanmagan.' });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Resolve numeric dormitory id from selection
+      const resolvedDormitoryId = (() => {
+        if (selectedListing?.id !== undefined && selectedListing?.id !== null) {
+          const n = Number((selectedListing as any).id);
+          if (!Number.isNaN(n)) return n;
+          // Try match by title/name against fetched dormitories
+          const byName = dormitories.find(d => d.name === (selectedListing as any).title || d.id.toString() === String((selectedListing as any).id));
+          if (byName) return byName.id;
+        }
+        const n2 = Number(selectedDormitoryId);
+        return Number.isNaN(n2) ? null : n2;
+      })();
+
+      if (!resolvedDormitoryId) {
+        setErrors({ general: 'Yotoqxona aniqlanmadi. Iltimos, yotoqxonani qayta tanlab ko\'ring.' });
         setIsSubmitting(false);
         return;
       }
 
       // API endpoint orqali ariza yuborish
       const applicationData = {
-        user: user?.id!,
-        dormitory: parseInt(selectedListing.id.toString()),
-        room: 0,
-        status: 'PENDING',
+        dormitory: resolvedDormitoryId,
         comment: formData.comment.trim() || '',
         name: formData.name.trim(),
+        last_name: formData.last_name.trim(),
         middle_name: formData.middle_name.trim() || '',
-        fio: formData.familiya.trim(),
-        city: formData.city.trim(),
-        village: formData.village.trim(),
+        province: selectedProvinceId,
+        district: selectedDistrictId,
         faculty: formData.faculty.trim(),
         direction: formData.direction.trim(),
         course: formData.course.trim(),
         group: formData.group.trim(),
-        phone: parseInt(phoneNumber),
-        passport: parseInt(formData.passport.replace(/[A-Z]/g, '')),
+        phone: phoneNumber,
+        passport: formData.passport,
         user_image: formData.user_image,
         document: formData.document,
         passport_image_first: formData.passport_image_first,
         passport_image_second: formData.passport_image_second,
-      };
+      } as const;
 
       console.log('Yuborilayotgan ariza ma\'lumotlari:', applicationData);
 
       // API orqali ariza yuborish
-      const response = await authAPI.submitApplication(applicationData);
+      const response = await authAPI.submitApplication(applicationData as any);
 
       console.log('Ariza muvaffaqiyatli yuborildi:', response);
 
@@ -350,18 +367,26 @@ const ApplicationPage: React.FC = () => {
       console.error('Ariza yuborishda xatolik:', error);
       let errorMessage = 'Ariza yuborishda xatolik yuz berdi. Qaytadan urinib ko\'ring.';
 
+      // Field-level error extraction from backend
+      const fieldErrors: Record<string, string> = {};
       try {
         if (error.response?.data) {
           const errorData = error.response.data;
-          if (errorData.detail) {
-            errorMessage = errorData.detail;
-          } else if (typeof errorData === 'object') {
-            const firstError = Object.values(errorData)[0];
-            if (Array.isArray(firstError)) {
-              errorMessage = firstError[0];
-            } else {
-              errorMessage = firstError as string;
+          if (typeof errorData === 'object' && !Array.isArray(errorData)) {
+            for (const [key, val] of Object.entries(errorData)) {
+              if (Array.isArray(val) && val.length > 0) {
+                fieldErrors[key] = String(val[0]);
+              } else if (typeof val === 'string') {
+                fieldErrors[key] = val;
+              }
             }
+            if (Object.keys(fieldErrors).length > 0) {
+              setErrors(prev => ({ ...prev, ...fieldErrors }));
+            }
+            // Prefer detail/general messages if present
+            if (errorData.detail) errorMessage = errorData.detail;
+          } else if (error.message) {
+            errorMessage = error.message;
           }
         } else if (error.message) {
           errorMessage = error.message;
@@ -370,7 +395,8 @@ const ApplicationPage: React.FC = () => {
         errorMessage = error.message || errorMessage;
       }
 
-      setErrors({ general: errorMessage });
+      // Always show a general error banner as well
+      setErrors(prev => ({ ...prev, general: errorMessage }));
     } finally {
       setIsSubmitting(false);
     }
@@ -524,19 +550,19 @@ const ApplicationPage: React.FC = () => {
                       <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="text"
-                        value={formData.familiya}
-                        onChange={(e) => handleInputChange('familiya', e.target.value)}
+                        value={formData.last_name}
+                        onChange={(e) => handleInputChange('last_name', e.target.value)}
                         className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
                           ? 'bg-gray-700 border-gray-600 text-white'
                           : 'bg-white border-gray-300 text-gray-900'
-                          } ${errors.familiya ? 'border-red-500' : ''}`}
+                          } ${errors.last_name ? 'border-red-500' : ''}`}
                         placeholder="Karimov"
                       />
                     </div>
-                    {errors.familiya && (
+                    {errors.last_name && (
                       <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
                         <AlertCircle className="w-4 h-4" />
-                        {errors.familiya}
+                        {errors.last_name}
                       </p>
                     )}
                   </div>
@@ -601,30 +627,31 @@ const ApplicationPage: React.FC = () => {
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <select
-                        value={formData.city}
+                        value={selectedProvinceId ?? ''}
                         onChange={(e) => {
-                          const selectedProvince = provinces.find(p => p.name === e.target.value);
-                          handleInputChange('city', e.target.value);
-                          setSelectedProvinceId(selectedProvince ? selectedProvince.id : null);
-                          handleInputChange('village', '');
+                          const id = e.target.value ? Number(e.target.value) : null;
+                          setSelectedProvinceId(id);
+                          handleInputChange('province', id ?? '');
+                          setSelectedDistrictId(null);
+                          handleInputChange('district', '');
                         }}
                         className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
                           ? 'bg-gray-700 border-gray-600 text-white'
                           : 'bg-white border-gray-300 text-gray-900'
-                          } ${errors.city ? 'border-red-500' : ''}`}
+                          } ${errors.province ? 'border-red-500' : ''}`}
                       >
                         <option value="">Viloyatni tanlang</option>
                         {provinces.map((province) => (
-                          <option key={province.id} value={province.name}>
+                          <option key={province.id} value={province.id}>
                             {province.name}
                           </option>
                         ))}
                       </select>
                     </div>
-                    {errors.city && (
+                    {errors.province && (
                       <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
                         <AlertCircle className="w-4 h-4" />
-                        {errors.city}
+                        {errors.province}
                       </p>
                     )}
                   </div>
@@ -636,13 +663,17 @@ const ApplicationPage: React.FC = () => {
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <select
-                        value={formData.village}
-                        onChange={(e) => handleInputChange('village', e.target.value)}
+                        value={selectedDistrictId ?? ''}
+                        onChange={(e) => {
+                          const id = e.target.value ? Number(e.target.value) : null;
+                          setSelectedDistrictId(id);
+                          handleInputChange('district', id ?? '');
+                        }}
                         disabled={!selectedProvinceId || districts.length === 0}
                         className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
                           ? 'bg-gray-700 border-gray-600 text-white'
                           : 'bg-white border-gray-300 text-gray-900'
-                          } ${errors.village ? 'border-red-500' : ''} ${(!selectedProvinceId || districts.length === 0) ? 'opacity-60 cursor-not-allowed' : ''}`}
+                          } ${errors.district ? 'border-red-500' : ''} ${(!selectedProvinceId || districts.length === 0) ? 'opacity-60 cursor-not-allowed' : ''}`}
                       >
                         <option value="">
                           {!selectedProvinceId
@@ -652,16 +683,16 @@ const ApplicationPage: React.FC = () => {
                               : 'Tumanni tanlang'}
                         </option>
                         {districts.map((district) => (
-                          <option key={district.id} value={district.name}>
+                          <option key={district.id} value={district.id}>
                             {district.name}
                           </option>
                         ))}
                       </select>
                     </div>
-                    {errors.village && (
+                    {errors.district && (
                       <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
                         <AlertCircle className="w-4 h-4" />
-                        {errors.village}
+                        {errors.district}
                       </p>
                     )}
                   </div>
@@ -743,11 +774,11 @@ const ApplicationPage: React.FC = () => {
                             } ${errors.course ? 'border-red-500' : ''}`}
                         >
                           <option value="">Kursni tanlang</option>
-                          <option value="1">1-kurs</option>
-                          <option value="2">2-kurs</option>
-                          <option value="3">3-kurs</option>
-                          <option value="4">4-kurs</option>
-                          <option value="5">5-kurs</option>
+                          <option value="1-kurs">1-kurs</option>
+                          <option value="2-kurs">2-kurs</option>
+                          <option value="3-kurs">3-kurs</option>
+                          <option value="4-kurs">4-kurs</option>
+                          <option value="5-kurs">5-kurs</option>
                         </select>
                       </div>
                       {errors.course && (

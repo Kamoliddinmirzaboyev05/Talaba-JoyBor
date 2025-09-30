@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 
 // API base URL
-const API_BASE_URL = 'https://joyboryangi.pythonanywhere.com';
+const API_BASE_URL = 'https://joyborv1.pythonanywhere.com';
 
 // Create axios instance
 const api: AxiosInstance = axios.create({
@@ -166,52 +166,52 @@ export const authAPI = {
 
   // Submit application
   submitApplication: async (applicationData: {
-    user: number;
     dormitory: number;
-    room: number;
-    status: string;
-    comment: string;
     name: string;
+    last_name: string;
     middle_name?: string;
-    fio: string;
-    city: string;
-    village: string;
+    province: number; // province id
+    district: number; // district id
     faculty: string;
     direction: string;
     course: string;
     group: string;
-    phone: number;
-    passport: number;
-    user_image?: File | null;
+    phone: string; // keep as string per API
+    passport: string; // AA1234567 format
+    comment?: string;
     document?: File | null;
+    user_image?: File | null;
     passport_image_first?: File | null;
     passport_image_second?: File | null;
+    status?: string;
   }): Promise<any> => {
     try {
       // Create FormData for file uploads
       const formData = new FormData();
-      
-      // Add all text fields
-      formData.append('user', applicationData.user.toString());
+
+      // Required and text fields
       formData.append('dormitory', applicationData.dormitory.toString());
-      formData.append('room', applicationData.room.toString());
-      formData.append('status', applicationData.status);
-      formData.append('comment', applicationData.comment);
       formData.append('name', applicationData.name);
+      formData.append('last_name', applicationData.last_name);
       if (applicationData.middle_name) {
         formData.append('middle_name', applicationData.middle_name);
       }
-      formData.append('fio', applicationData.fio);
-      formData.append('city', applicationData.city);
-      formData.append('village', applicationData.village);
+      formData.append('province', applicationData.province.toString());
+      formData.append('district', applicationData.district.toString());
       formData.append('faculty', applicationData.faculty);
       formData.append('direction', applicationData.direction);
       formData.append('course', applicationData.course);
       formData.append('group', applicationData.group);
-      formData.append('phone', applicationData.phone.toString());
-      formData.append('passport', applicationData.passport.toString());
-      
-      // Add files if they exist
+      formData.append('phone', applicationData.phone);
+      formData.append('passport', applicationData.passport);
+      if (applicationData.comment) {
+        formData.append('comment', applicationData.comment);
+      }
+      if (applicationData.status) {
+        formData.append('status', applicationData.status);
+      }
+
+      // Files
       if (applicationData.user_image) {
         formData.append('user_image', applicationData.user_image);
       }
@@ -224,9 +224,7 @@ export const authAPI = {
       if (applicationData.passport_image_second) {
         formData.append('passport_image_second', applicationData.passport_image_second);
       }
-      
-      console.log('Sending application data as FormData');
-      
+
       // Send with multipart/form-data content type
       const response = await axios.post(`${API_BASE_URL}/application/create/`, formData, {
         headers: {
@@ -234,7 +232,7 @@ export const authAPI = {
           'Authorization': `Bearer ${sessionStorage.getItem('access') || sessionStorage.getItem('access_token')}`
         }
       });
-      
+
       return response.data;
     } catch (error: any) {
       console.error('API Error Details:', {
