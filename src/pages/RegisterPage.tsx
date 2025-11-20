@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, UserPlus, Phone } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, UserPlus } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { authAPI } from '../services/api';
 
 const RegisterPage: React.FC = () => {
   const { theme } = useTheme();
@@ -23,7 +24,7 @@ const RegisterPage: React.FC = () => {
     last_name: '',
     username: '',
     email: '',
-    phone: '',
+    role: 'student',
     password: '',
     password2: ''
   });
@@ -45,7 +46,6 @@ const RegisterPage: React.FC = () => {
     if (!formData.last_name) newErrors.last_name = 'Familiya kiritilishi shart';
     if (!formData.username) newErrors.username = 'Foydalanuvchi nomi kiritilishi shart';
     if (!formData.email) newErrors.email = 'Email manzil kiritilishi shart';
-    if (!formData.phone) newErrors.phone = 'Telefon raqam kiritilishi shart';
     if (!formData.password) newErrors.password = 'Parol kiritilishi shart';
     if (formData.password !== formData.password2) {
       newErrors.password2 = 'Parollar mos kelmaydi';
@@ -58,26 +58,23 @@ const RegisterPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch('https://joyborv1.pythonanywhere.com/register/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          username: formData.username,
-          email: formData.email,
-          phone: formData.phone,
-          password: formData.password,
-          password2: formData.password2,
-        }),
+      const data = await authAPI.register({
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        username: formData.username,
+        email: formData.email,
+        role: formData.role,
+        password: formData.password,
+        password2: formData.password2,
       });
 
-      // Wait for the response body only after response.ok
-      if (!response.ok) {
-        const errorData = await response.json();
-        // Show field errors if available
+      localStorage.setItem('access', data.access);
+      localStorage.setItem('refresh', data.refresh);
+      await login(data.access, data.refresh);
+      navigate(from, { replace: true });
+    } catch (error: any) {
+      if (error.response?.data) {
+        const errorData = error.response.data;
         if (typeof errorData === 'object') {
           const fieldErrors: Record<string, string> = {};
           Object.keys(errorData).forEach((key) => {
@@ -92,17 +89,9 @@ const RegisterPage: React.FC = () => {
         } else {
           setGeneralError('Ro\'yhatdan o\'tishda xatolik yuz berdi');
         }
-        return;
+      } else {
+        setGeneralError('Network error or server is down.');
       }
-
-      // Only parse JSON after ok
-      const data = await response.json();
-      localStorage.setItem('access', data.access);
-      localStorage.setItem('refresh', data.refresh);
-      await login(data.access, data.refresh);
-      navigate(from, { replace: true });
-    } catch {
-      setGeneralError('Network error or server is down.');
     } finally {
       setIsLoading(false);
     }
@@ -122,7 +111,6 @@ const RegisterPage: React.FC = () => {
       if (!formData.last_name) step1Errors.last_name = 'Familiya kiritilishi shart';
       if (!formData.username) step1Errors.username = 'Foydalanuvchi nomi kiritilishi shart';
       if (!formData.email) step1Errors.email = 'Email manzil kiritilishi shart';
-      if (!formData.phone) step1Errors.phone = 'Telefon raqam kiritilishi shart';
       
       if (Object.keys(step1Errors).length > 0) {
         setErrors(step1Errors);
@@ -336,36 +324,6 @@ const RegisterPage: React.FC = () => {
                       className="text-red-500 text-sm mt-1"
                     >
                       {errors.email}
-                    </motion.p>
-                  )}
-                </div>
-
-                {/* Phone Field */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Telefon Raqam
-                  </label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
-                        theme === 'dark' 
-                          ? 'bg-gray-700 border-gray-600 text-white' 
-                          : 'bg-white border-gray-300 text-gray-900'
-                      } ${errors.phone ? 'border-red-500' : ''}`}
-                      placeholder="+998901234567"
-                    />
-                  </div>
-                  {errors.phone && (
-                    <motion.p
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-red-500 text-sm mt-1"
-                    >
-                      {errors.phone}
                     </motion.p>
                   )}
                 </div>

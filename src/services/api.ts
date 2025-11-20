@@ -70,7 +70,7 @@ export interface RegisterRequest {
   last_name: string;
   username: string;
   email: string;
-  phone: string;
+  role: string;
   password: string;
   password2: string;
 }
@@ -106,13 +106,13 @@ export interface UserProfile {
 export const authAPI = {
   // Register user
   register: async (data: RegisterRequest): Promise<RegisterResponse> => {
-    const response = await api.post('/register/', data);
+    const response = await api.post('/api/register/', data);
     return response.data;
   },
 
   // Login user
   login: async (data: LoginRequest): Promise<LoginResponse> => {
-    const response = await api.post('/token/', data);
+    const response = await api.post('/api/token/', data);
     return response.data;
   },
 
