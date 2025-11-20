@@ -26,7 +26,7 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [featuredListings, setFeaturedListings] = useState<Listing[]>([]);
-
+// Kamoliddin 
   const [statistics, setStatistics] = useState<Statistics>({
     dormitories_count: 0,
     apartments_count: 0,
