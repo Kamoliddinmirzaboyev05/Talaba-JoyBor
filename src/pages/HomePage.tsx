@@ -26,7 +26,6 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [featuredListings, setFeaturedListings] = useState<Listing[]>([]);
-  const [allListings, setAllListings] = useState<Listing[]>([]);
 
   const [statistics, setStatistics] = useState<Statistics>({
     dormitories_count: 0,
@@ -87,28 +86,28 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
         console.log('Apartments data:', apartmentsData);
 
         // Dormitory ma'lumotlarini Listing formatiga o'tkazish
-        const convertedDormitories: Listing[] = dormitoriesData.slice(0, 2).map((dormitory: any) => ({
+        const convertedDormitories: Listing[] = dormitoriesData.map((dormitory: any) => ({
           id: `dorm-${dormitory.id}`,
           title: dormitory.name,
           type: 'dormitory' as const,
           price: dormitory.month_price,
           location: dormitory.address,
-          university: dormitory.university.name,
-          images: dormitory.images?.map((img: any) => img.image) || [],
-          amenities: dormitory.amenities?.map((amenity: any) => amenity.name) || [],
+          university: dormitory.university_name || 'Universitet nomi mavjud emas',
+          images: dormitory.images?.map((img: any) => img.image || img) || [],
+          amenities: dormitory.amenities_list || [],
           description: dormitory.description || 'Tavsif mavjud emas',
-          capacity: dormitory.total_capacity || 1,
-          available_capacity: dormitory.available_capacity,
-          available: dormitory.available_capacity > 0,
-          rating: 4.5,
+          capacity: 1,
+          available_capacity: 0,
+          available: dormitory.is_active,
+          rating: dormitory.rating || 4.5,
           reviews: 12,
           features: {
             furnished: true,
-            wifi: dormitory.amenities?.some((a: any) => a.name.toLowerCase().includes('wifi')) || false,
-            parking: dormitory.amenities?.some((a: any) => a.name.toLowerCase().includes('parking')) || false,
-            security: dormitory.amenities?.some((a: any) => a.name.toLowerCase().includes('security')) || false,
+            wifi: dormitory.amenities_list?.some((a: string) => a.toLowerCase().includes('wifi')) || false,
+            parking: dormitory.amenities_list?.some((a: string) => a.toLowerCase().includes('parking')) || false,
+            security: dormitory.amenities_list?.some((a: string) => a.toLowerCase().includes('xavfsizlik') || a.toLowerCase().includes('security')) || false,
           },
-          rules: dormitory.rules || [],
+          rules: [],
           coordinates: {
             lat: dormitory.latitude || 0,
             lng: dormitory.longitude || 0,
@@ -116,28 +115,28 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
         }));
 
         // Apartments ma'lumotlarini Listing formatiga o'tkazish
-        const convertedApartments: Listing[] = apartmentsData.slice(0, 2).map((apartment: any) => ({
+        const convertedApartments: Listing[] = apartmentsData.map((apartment: any) => ({
           id: `apt-${apartment.id}`,
           title: apartment.name || apartment.title,
           type: 'rental' as const,
           price: apartment.month_price || apartment.price,
           location: apartment.address || apartment.location,
-          university: apartment.university?.name || 'Umumiy',
+          university: apartment.university_name || 'Umumiy',
           images: apartment.images?.map((img: any) => img.image || img) || [],
-          amenities: apartment.amenities?.map((amenity: any) => amenity.name || amenity) || [],
+          amenities: apartment.amenities_list || [],
           description: apartment.description || 'Tavsif mavjud emas',
           capacity: apartment.capacity || 1,
-          available: true,
-          rating: 4.3,
+          available: apartment.is_active !== false,
+          rating: apartment.rating || 4.3,
           reviews: 8,
-          landlord: apartment.landlord,
+          landlord: apartment.landlord || apartment.admin_name,
           features: {
             furnished: true,
-            wifi: apartment.amenities?.some((a: any) => (a.name || a).toLowerCase().includes('wifi')) || false,
-            parking: apartment.amenities?.some((a: any) => (a.name || a).toLowerCase().includes('parking')) || false,
-            security: apartment.amenities?.some((a: any) => (a.name || a).toLowerCase().includes('security')) || false,
+            wifi: apartment.amenities_list?.some((a: string) => a.toLowerCase().includes('wifi')) || false,
+            parking: apartment.amenities_list?.some((a: string) => a.toLowerCase().includes('parking')) || false,
+            security: apartment.amenities_list?.some((a: string) => a.toLowerCase().includes('xavfsizlik') || a.toLowerCase().includes('security')) || false,
           },
-          rules: apartment.rules || [],
+          rules: [],
           coordinates: {
             lat: apartment.latitude || 0,
             lng: apartment.longitude || 0,
@@ -147,7 +146,7 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
         // Yotoqxonalar va apartments ni birlashtirish
         const allListingsData = [...convertedDormitories, ...convertedApartments];
         console.log('Converted data:', allListingsData);
-        console.log('Featured listings:', allListingsData.slice(0, 6));
+        console.log('Featured listings:', allListingsData);
         
         // Agar ma'lumotlar bo'sh bo'lsa, fallback data ko'rsatish
         if (allListingsData.length === 0) {
@@ -190,11 +189,9 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
               coordinates: { lat: 39.6270, lng: 66.9749 }
             }
           ];
-          setAllListings(fallbackData);
           setFeaturedListings(fallbackData);
         } else {
-          setAllListings(allListingsData);
-          setFeaturedListings(allListingsData.slice(0, 6)); // Faqat 6 ta ko'rsatish
+          setFeaturedListings(allListingsData);
         }
         
         // Statistikalarni yuklash

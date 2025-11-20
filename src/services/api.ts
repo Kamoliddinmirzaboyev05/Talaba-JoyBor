@@ -154,14 +154,16 @@ export const authAPI = {
 
   // Get dormitories list
   getDormitories: async (): Promise<any[]> => {
-    const response = await api.get('/dormitories/');
-    return response.data;
+    const response = await api.get('/api/dormitories/');
+    // API returns paginated response: {count, next, previous, results}
+    return response.data.results || response.data;
   },
 
   // Get apartments list (ijara xonadonlar)
   getApartments: async (): Promise<any[]> => {
-    const response = await api.get('/apartments/');
-    return response.data;
+    const response = await api.get('/api/apartments/');
+    // API returns paginated response: {count, next, previous, results}
+    return response.data.results || response.data;
   },
 
   // Submit application
@@ -300,12 +302,12 @@ export const authAPI = {
       // Fallback: eski usul orqali taxminiy qiymatlar
       try {
         const [dormitories, apartments] = await Promise.all([
-          api.get('/dormitories/'),
-          api.get('/apartments/')
+          api.get('/api/dormitories/'),
+          api.get('/api/apartments/')
         ]);
         return {
-          dormitories_count: dormitories.data.length || 0,
-          apartments_count: apartments.data.length || 0,
+          dormitories_count: dormitories.data.results?.length || dormitories.data.count || 0,
+          apartments_count: apartments.data.results?.length || apartments.data.count || 0,
           users_count: 0,
           applications_count: 0,
         };
