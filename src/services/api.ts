@@ -122,6 +122,12 @@ export const authAPI = {
     return response.data;
   },
 
+  // Get student profile from /api/me/ endpoint
+  getStudentProfile: async (): Promise<UserProfile> => {
+    const response = await api.get('/api/me/');
+    return response.data;
+  },
+
   // Update user profile
   updateProfile: async (data: Partial<UserProfile>): Promise<UserProfile> => {
     const response = await api.put('/profile/', data);
