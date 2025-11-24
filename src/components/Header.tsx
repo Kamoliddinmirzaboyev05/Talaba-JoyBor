@@ -29,7 +29,6 @@ const Header: React.FC = () => {
   const menuItems = [
     { label: "Bosh Sahifa", path: "/", icon: Home },
     { label: "Yotoqxonalar", path: "/dormitories", icon: Building2 },
-    { label: "Ijara Xonadonlar", path: "/rentals", icon: Home },
     { label: "Yordam", path: "/help", icon: HelpCircle },
     { label: "Biz Haqimizda", path: "/about", icon: Users },
     { label: "Aloqa", path: "/contact", icon: Phone },
@@ -84,12 +83,6 @@ const Header: React.FC = () => {
               className="text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
             >
               Yotoqxonalar
-            </button>
-            <button
-              onClick={() => navigate("/rentals")}
-              className="text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
-            >
-              Ijara Xonadonlar
             </button>
 
             <button

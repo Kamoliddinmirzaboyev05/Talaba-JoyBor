@@ -151,7 +151,6 @@ const SavedListingsPage: React.FC<SavedListingsPageProps> = ({ onListingSelect }
               >
                 <option value="all">Barcha turlar</option>
                 <option value="dormitory">Yotoqxonalar</option>
-                <option value="rental">Ijara xonadonlar</option>
               </select>
 
               {/* Sort */}

@@ -64,26 +64,19 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
 
 
 
-  // API dan yotoqxonalar va apartments ni yuklash
+  // API dan yotoqxonalar ni yuklash
   useEffect(() => {
     const fetchListings = async () => {
       try {
         setLoading(true);
         
-        // Yotoqxonalar va apartments ni parallel yuklash
-        const [dormitoriesData, apartmentsData] = await Promise.all([
-          authAPI.getDormitories().catch((error) => {
-            console.error('Dormitories fetch error:', error);
-            return [];
-          }),
-          authAPI.getApartments().catch((error) => {
-            console.error('Apartments fetch error:', error);
-            return [];
-          })
-        ]);
+        // Yotoqxonalar ni yuklash
+        const dormitoriesData = await authAPI.getDormitories().catch((error) => {
+          console.error('Dormitories fetch error:', error);
+          return [];
+        });
 
         console.log('Dormitories data:', dormitoriesData);
-        console.log('Apartments data:', apartmentsData);
 
         // Dormitory ma'lumotlarini Listing formatiga o'tkazish
         const convertedDormitories: Listing[] = dormitoriesData.map((dormitory: any) => ({
@@ -114,37 +107,8 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
           },
         }));
 
-        // Apartments ma'lumotlarini Listing formatiga o'tkazish
-        const convertedApartments: Listing[] = apartmentsData.map((apartment: any) => ({
-          id: `apt-${apartment.id}`,
-          title: apartment.name || apartment.title,
-          type: 'rental' as const,
-          price: apartment.month_price || apartment.price,
-          location: apartment.address || apartment.location,
-          university: apartment.university_name || 'Umumiy',
-          images: apartment.images?.map((img: any) => img.image || img) || [],
-          amenities: apartment.amenities_list || [],
-          description: apartment.description || 'Tavsif mavjud emas',
-          capacity: apartment.capacity || 1,
-          available: apartment.is_active !== false,
-          rating: apartment.rating || 4.3,
-          reviews: 8,
-          landlord: apartment.landlord || apartment.admin_name,
-          features: {
-            furnished: true,
-            wifi: apartment.amenities_list?.some((a: string) => a.toLowerCase().includes('wifi')) || false,
-            parking: apartment.amenities_list?.some((a: string) => a.toLowerCase().includes('parking')) || false,
-            security: apartment.amenities_list?.some((a: string) => a.toLowerCase().includes('xavfsizlik') || a.toLowerCase().includes('security')) || false,
-          },
-          rules: [],
-          coordinates: {
-            lat: apartment.latitude || 0,
-            lng: apartment.longitude || 0,
-          },
-        }));
-
-        // Yotoqxonalar va apartments ni birlashtirish
-        const allListingsData = [...convertedDormitories, ...convertedApartments];
+        // Faqat yotoqxonalar
+        const allListingsData = convertedDormitories;
         console.log('Converted data:', allListingsData);
         console.log('Featured listings:', allListingsData);
         
@@ -228,12 +192,6 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
       color: 'text-teal-600' 
     },
     { 
-      icon: Building2, 
-      label: 'Ijara Xonadonlar', 
-      value: `${statistics.apartments_count}`, 
-      color: 'text-green-600' 
-    },
-    { 
       icon: Users, 
       label: 'Talabalar', 
       value: `${statistics.users_count}`, 
@@ -292,11 +250,11 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
               Turar Joy Toping
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-              O'zbekistondagi eng yaxshi yotoqxonalar va ijara xonadonlarini bir joyda.
+              O'zbekistondagi eng yaxshi yotoqxonalarni bir joyda.
               Tez, oson va ishonchli.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex justify-center">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -305,15 +263,6 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
               >
                 <Home className="w-5 h-5" />
                 Yotoqxona Topish
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/rentals')}
-                className="bg-gradient-to-r from-green-600 to-green-700 text-white px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <Building2 className="w-5 h-5" />
-                Ijara Topish
               </motion.button>
             </div>
           </motion.div>

@@ -45,16 +45,10 @@ const AboutPage: React.FC = () => {
       color: 'text-blue-600' 
     },
     { 
-      label: 'Ijara Xonadonlar', 
-      value: `${statistics.apartments_count}`, 
+      label: 'Talabalar', 
+      value: `${statistics.users_count}`, 
       icon: MapPin, 
       color: 'text-green-600' 
-    },
-    { 
-      label: 'Jami Turar Joylar', 
-      value: `${statistics.dormitories_count + statistics.apartments_count}`, 
-      icon: Award, 
-      color: 'text-purple-600' 
     },
     { 
       label: 'Xizmat Vaqti', 

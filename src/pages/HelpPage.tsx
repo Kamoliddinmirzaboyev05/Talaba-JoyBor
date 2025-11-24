@@ -30,7 +30,7 @@ const HelpPage: React.FC = () => {
       {
         id: 'what-is-joybor',
         question: 'JoyBor nima?',
-        answer: 'JoyBor - bu O\'zbekistondagi talabalar uchun yotoqxona va ijara xonadonlarini topishga yordam beruvchi platforma. Bu yerda siz universitetingizga yaqin, qulay va arzon yashash joylarini topishingiz'
+        answer: 'JoyBor - bu O\'zbekistondagi talabalar uchun yotoqxonalarni topishga yordam beruvchi platforma. Bu yerda siz universitetingizga yaqin, qulay va arzon yashash joylarini topishingiz'
       },
       {
         id: 'how-it-works',

@@ -116,12 +116,6 @@ const DashboardPage: React.FC = () => {
       color: "from-teal-600 to-teal-700",
     },
     {
-      label: "Ijara Qidirish",
-      icon: MapPin,
-      action: () => navigate("/rentals"),
-      color: "from-green-600 to-green-700",
-    },
-    {
       label: "Xabarlar",
       icon: MessageCircle,
       action: () => navigate("/messages"),

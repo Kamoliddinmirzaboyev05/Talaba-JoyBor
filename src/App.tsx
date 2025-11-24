@@ -7,7 +7,6 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DormitoriesPage from './pages/DormitoriesPage';
-import RentalsPage from './pages/RentalsPage';
 import ListingDetailPage from './pages/ListingDetailPage';
 import ApplicationPage from './pages/ApplicationPage';
 import ApplicationsPage from './pages/ApplicationsPage';
@@ -108,7 +107,6 @@ function AppContent() {
         {/* Public Routes */}
         <Route path="/" element={<HomePage onListingSelect={handleListingSelect} onApplicationStart={handleApplicationStart} />} />
         <Route path="/dormitories" element={<DormitoriesPage onListingSelect={handleListingSelect} onApplicationStart={handleApplicationStart} />} />
-        <Route path="/rentals" element={<RentalsPage onListingSelect={handleListingSelect} onApplicationStart={handleApplicationStart} />} />
         <Route path="/help" element={<HelpPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
