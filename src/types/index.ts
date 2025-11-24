@@ -10,6 +10,7 @@ export interface User {
   student_id?: string;
   studentId?: string;
   avatar?: string;
+  image?: string;
   is_verified?: boolean;
   isVerified?: boolean;
   preferences?: {
