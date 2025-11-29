@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 
 // API base URL
-const API_BASE_URL = 'https://joyboryangi.pythonanywhere.com';
+const API_BASE_URL = 'https://joyborv1.pythonanywhere.com/api';
 
 // Create axios instance
 const api: AxiosInstance = axios.create({
@@ -239,7 +239,7 @@ export const authAPI = {
         formData.append('passport_image_second', applicationData.passport_image_second);
       }
       
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         console.log('Sending application data as FormData');
         console.log('Original data:', applicationData);
         // FormData ni debug qilish uchun
@@ -259,7 +259,7 @@ export const authAPI = {
       }
       
       // Send with multipart/form-data content type
-      const response = await axios.post(`${API_BASE_URL}/application/create/`, formData, {
+      const response = await axios.post(`${API_BASE_URL}/applications/create/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`

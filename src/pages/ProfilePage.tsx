@@ -78,6 +78,8 @@ interface Application {
   comment: string;
   document: string;
   name: string;
+  middle_name?: string;
+  last_name: string;
   fio: string;
   city: string;
   village: string;
@@ -88,6 +90,17 @@ interface Application {
   created_at: string;
   user_image: string | null;
   direction: string | null;
+  province?: {
+    id: number;
+    name: string;
+  };
+  district?: {
+    id: number;
+    name: string;
+  };
+  faculty?: string;
+  course?: string;
+  admin_comment?: string;
 }
 
 const ProfilePage: React.FC = () => {
@@ -127,7 +140,7 @@ const ProfilePage: React.FC = () => {
         return;
       }
       try {
-        const res = await fetch('https://joyboryangi.pythonanywhere.com/profile/', {
+        const res = await fetch('https://joyborv1.pythonanywhere.com/api/profile/', {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -169,7 +182,7 @@ const ProfilePage: React.FC = () => {
       return;
     }
     try {
-      const res = await fetch('https://joyboryangi.pythonanywhere.com/applications/', {
+      const res = await fetch('https://joyborv1.pythonanywhere.com/api/applications/', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -222,7 +235,7 @@ const ProfilePage: React.FC = () => {
       formData.append('address', editedProfile.address || '');
       formData.append('telegram', editedProfile.telegram || '');
 
-      const res = await fetch('https://joyboryangi.pythonanywhere.com/profile/', {
+      const res = await fetch('https://joyborv1.pythonanywhere.com/api/profile/', {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

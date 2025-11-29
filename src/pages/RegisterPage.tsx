@@ -59,7 +59,7 @@ const RegisterPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch('https://joyboryangi.pythonanywhere.com/register/', {
+      const response = await fetch('https://joyborv1.pythonanywhere.com/api/register/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

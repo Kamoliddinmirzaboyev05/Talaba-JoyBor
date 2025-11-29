@@ -67,7 +67,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
           
           // API dan to'liq profile ma'lumotlarini yuklash
-          const response = await fetch('https://joyboryangi.pythonanywhere.com/profile/', {
+          const response = await fetch('https://joyborv1.pythonanywhere.com/api/profile/', {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
@@ -93,6 +93,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               first_name: (decoded as any).first_name || '',
               last_name: (decoded as any).last_name || '',
               email: (decoded as any).email || '',
+              phone: (decoded as any).phone || '',
             });
             setIsAuthenticated(true);
           }
@@ -120,7 +121,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // JWT dan asosiy ma'lumotlarni olish
       const decoded: { user_id: number; exp: number } = jwtDecode(access);
       // API dan to'liq profile ma'lumotlarini olish
-      const response = await fetch('https://joyboryangi.pythonanywhere.com/profile/', {
+      const response = await fetch('https://joyborv1.pythonanywhere.com/api/profile/', {
         headers: {
           'Authorization': `Bearer ${access}`,
         },
@@ -135,6 +136,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           first_name: (decoded as any).first_name || '',
           last_name: (decoded as any).last_name || '',
           email: (decoded as any).email || '',
+          phone: (decoded as any).phone || '',
         });
       }
     } catch {

@@ -133,6 +133,8 @@ export interface Application {
   user: {
     id: number;
     username: string;
+    role?: string;
+    email?: string;
   };
   dormitory: {
     id: number;
@@ -140,31 +142,62 @@ export interface Application {
     address?: string;
     description?: string;
     university?: {
+      id?: number;
       name: string;
+      address?: string;
+      description?: string;
+      contact?: string;
+      logo?: string | null;
+    };
+    admin?: {
+      id: number;
+      username: string;
+      role: string;
+      email: string;
     };
     month_price?: number;
+    year_price?: number;
+    latitude?: number;
+    longitude?: number;
+    amenities?: Array<{
+      id: number;
+      name: string;
+      is_active: boolean;
+      type: string;
+    }>;
     total_capacity?: number;
     available_capacity?: number;
+    total_rooms?: number;
+    distance_to_university?: number;
+    rules?: string[];
     images?: Array<{
       id: number;
+      dormitory?: {
+        id: number;
+        name: string;
+      };
       image: string;
     }>;
   };
   name: string;
   last_name: string;
   middle_name?: string;
-  province: {
+  fio?: string;
+  city?: string;
+  village?: string;
+  university?: string;
+  province?: {
     id: number;
     name: string;
   };
-  district: {
+  district?: {
     id: number;
     name: string;
-    province: number;
+    province?: number;
   };
-  faculty: string;
+  faculty?: string;
   direction?: string;
-  course: string;
+  course?: string;
   group?: string;
   phone: number;
   passport?: number;
@@ -172,7 +205,7 @@ export interface Application {
   comment: string;
   admin_comment?: string;
   document?: string;
-  user_image?: string;
+  user_image?: string | null;
   passport_image_first?: string;
   passport_image_second?: string;
   created_at: string;
