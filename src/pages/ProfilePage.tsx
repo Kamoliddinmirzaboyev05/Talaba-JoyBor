@@ -140,7 +140,7 @@ const ProfilePage: React.FC = () => {
         return;
       }
       try {
-        const res = await fetch('https://joyborv1.pythonanywhere.com/api/profile/', {
+        const res = await fetch('https://joyborv1.pythonanywhere.com/api/me/', {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -209,6 +209,7 @@ const ProfilePage: React.FC = () => {
     if (activeTab === 'applications') {
       fetchApplications();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   const handleSave = async (e: FormEvent) => {
@@ -223,24 +224,25 @@ const ProfilePage: React.FC = () => {
       return;
     }
     try {
-      const formData = new FormData();
-      formData.append('username', editedProfile.username);
-      formData.append('first_name', editedProfile.first_name || '');
-      formData.append('last_name', editedProfile.last_name || '');
-      if (password) formData.append('password', password);
-      if (imageFile) formData.append('image', imageFile);
-      formData.append('bio', editedProfile.bio || '');
-      formData.append('phone', editedProfile.phone || '');
-      formData.append('birth_date', editedProfile.birth_date || '');
-      formData.append('address', editedProfile.address || '');
-      formData.append('telegram', editedProfile.telegram || '');
+      // API faqat JSON qabul qiladi, FormData emas
+      const updateData: Record<string, string> = {
+        email: editedProfile.email,
+        first_name: editedProfile.first_name || '',
+        last_name: editedProfile.last_name || '',
+        bio: editedProfile.bio || '',
+        phone: editedProfile.phone || '',
+        birth_date: editedProfile.birth_date || '',
+        address: editedProfile.address || '',
+        telegram: editedProfile.telegram || '',
+      };
 
-      const res = await fetch('https://joyborv1.pythonanywhere.com/api/profile/', {
+      const res = await fetch('https://joyborv1.pythonanywhere.com/api/me/', {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        body: formData,
+        body: JSON.stringify(updateData),
       });
       if (res.status === 401) {
         navigate('/login');
@@ -346,10 +348,6 @@ const ProfilePage: React.FC = () => {
           ? 'bg-gray-700 text-gray-300' 
           : 'bg-gray-100 text-gray-800';
     }
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('uz-UZ').format(price) + ' so\'m';
   };
 
 

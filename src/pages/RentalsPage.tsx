@@ -10,10 +10,10 @@ import { useTheme } from '../contexts/ThemeContext';
 
 interface RentalsPageProps {
   onListingSelect: (listing: Listing) => void;
-  onApplicationStart: (listing: Listing) => void;
+  onApplicationStart?: (listing: Listing) => void;
 }
 
-const RentalsPage: React.FC<RentalsPageProps> = ({ onListingSelect, onApplicationStart }) => {
+const RentalsPage: React.FC<RentalsPageProps> = ({ onListingSelect }) => {
   const { user } = useAuth();
   const { theme } = useTheme();
 
@@ -70,15 +70,15 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onListingSelect, onApplicatio
         const apartmentsData = await authAPI.getApartments();
 
         // API strukturasiga mos apartments mapping
-        const convertedListings: Listing[] = apartmentsData.map((apartment: any) => ({
+        const convertedListings: Listing[] = apartmentsData.map((apartment: Record<string, unknown>) => ({
           id: `apt-${apartment.id}`,
           title: apartment.title || 'Ijara Xonadon',
           type: 'rental' as const,
           price: apartment.monthly_price || 0,
           location: apartment.exact_address || 'Manzil ko\'rsatilmagan',
           university: `${apartment.room_type || 'Xona'} - ${apartment.gender || 'Aralash'}`,
-          images: apartment.images?.map((img: any) => img.image) || ['/placeholder-apartment.jpg'],
-          amenities: apartment.amenities?.map((amenity: any) => amenity.name) || [],
+          images: (apartment.images as { image: string }[] | undefined)?.map((img) => img.image) || ['/placeholder-apartment.jpg'],
+          amenities: (apartment.amenities as { name: string }[] | undefined)?.map((amenity) => amenity.name) || [],
           description: apartment.description || 'Tavsif mavjud emas',
           capacity: apartment.total_rooms || 1,
           available_capacity: apartment.available_rooms || 0,
@@ -87,15 +87,15 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onListingSelect, onApplicatio
           reviews: Math.floor(Math.random() * 20) + 5, // Random reviews 5-25
           features: {
             furnished: true, // Default
-            wifi: apartment.amenities?.some((a: any) => 
+            wifi: (apartment.amenities as { name?: string }[] | undefined)?.some((a) => 
               a.name?.toLowerCase().includes('wifi') || 
               a.name?.toLowerCase().includes('internet')
             ) || false,
-            parking: apartment.amenities?.some((a: any) => 
+            parking: (apartment.amenities as { name?: string }[] | undefined)?.some((a) => 
               a.name?.toLowerCase().includes('parking') || 
               a.name?.toLowerCase().includes('avtomobil')
             ) || false,
-            security: apartment.amenities?.some((a: any) => 
+            security: (apartment.amenities as { name?: string }[] | undefined)?.some((a) => 
               a.name?.toLowerCase().includes('security') || 
               a.name?.toLowerCase().includes('xavfsizlik')
             ) || true // Default security
@@ -122,9 +122,9 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onListingSelect, onApplicatio
           is_active: apartment.is_active !== false,
           // Landlord ma'lumotlari
           landlord: {
-            name: apartment.user?.username || 'Egasi',
-            phone: apartment.phone_number || apartment.user_phone_number || '',
-            email: apartment.user?.email || '',
+            name: (apartment.user as { username?: string } | undefined)?.username || 'Egasi',
+            phone: (apartment.phone_number as string | undefined) || (apartment.user_phone_number as string | undefined) || '',
+            email: (apartment.user as { email?: string } | undefined)?.email || '',
             verified: true,
             rating: 4.5
           }

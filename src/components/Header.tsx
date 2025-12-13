@@ -38,7 +38,6 @@ const Header: React.FC = () => {
   const menuItems = [
     { label: "Bosh Sahifa", path: "/", icon: Home },
     { label: "Yotoqxonalar", path: "/dormitories", icon: Building2 },
-    { label: "Ijara Xonadonlar", path: "/rentals", icon: Home },
     { label: "Yordam", path: "/help", icon: HelpCircle },
     { label: "Biz Haqimizda", path: "/about", icon: Users },
     { label: "Aloqa", path: "/contact", icon: Phone },
@@ -123,12 +122,6 @@ const Header: React.FC = () => {
               className={`${isActive("/dormitories") ? "text-teal-600 dark:text-teal-400 font-semibold after:w-full" : "text-gray-700 dark:text-gray-300 after:w-0"} relative pb-1 after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-[3px] after:bg-teal-500 after:rounded-full after:transition-all after:duration-300 hover:text-teal-600 dark:hover:text-teal-400 hover:after:w-full`}
             >
               Yotoqxonalar
-            </button>
-            <button
-              onClick={() => navigate("/rentals")}
-              className={`${isActive("/rentals") ? "text-teal-600 dark:text-teal-400 font-semibold after:w-full" : "text-gray-700 dark:text-gray-300 after:w-0"} relative pb-1 after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-[3px] after:bg-teal-500 after:rounded-full after:transition-all after:duration-300 hover:text-teal-600 dark:hover:text-teal-400 hover:after:w-full`}
-            >
-              Ijara Xonadonlar
             </button>
 
             <button

@@ -9,7 +9,6 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DormitoriesPage from './pages/DormitoriesPage';
-import RentalsPage from './pages/RentalsPage';
 import ListingDetailPage from './pages/ListingDetailPage';
 import ApplicationPage from './pages/ApplicationPage';
 import ApplicationsPage from './pages/ApplicationsPage';
@@ -27,14 +26,46 @@ import ContactPage from './pages/ContactPage';
 import AllListingsPage from './pages/AllListingsPage';
 import { Listing } from './types';
 
-// Global state for selected listing
-let globalSelectedListing: Listing | null = null;
+// Global state for selected listing with sessionStorage persistence
+const SELECTED_LISTING_KEY = 'selectedListing';
 
 export const setGlobalSelectedListing = (listing: Listing | null) => {
-  globalSelectedListing = listing;
+  if (listing) {
+    // Save to sessionStorage
+    try {
+      sessionStorage.setItem(SELECTED_LISTING_KEY, JSON.stringify(listing));
+    } catch (error) {
+      console.error('Error saving listing to sessionStorage:', error);
+    }
+  } else {
+    // Clear from sessionStorage
+    try {
+      sessionStorage.removeItem(SELECTED_LISTING_KEY);
+    } catch (error) {
+      console.error('Error removing listing from sessionStorage:', error);
+    }
+  }
 };
 
-export const getGlobalSelectedListing = () => globalSelectedListing;
+export const getGlobalSelectedListing = (): Listing | null => {
+  try {
+    const stored = sessionStorage.getItem(SELECTED_LISTING_KEY);
+    if (stored) {
+      return JSON.parse(stored) as Listing;
+    }
+  } catch (error) {
+    console.error('Error reading listing from sessionStorage:', error);
+  }
+  return null;
+};
+
+export const clearGlobalSelectedListing = () => {
+  try {
+    sessionStorage.removeItem(SELECTED_LISTING_KEY);
+  } catch (error) {
+    console.error('Error clearing listing from sessionStorage:', error);
+  }
+};
 
 // Protected Route component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -115,7 +146,6 @@ function AppContent() {
         <Route path="/" element={<HomePage onListingSelect={handleListingSelect} onApplicationStart={handleApplicationStart} />} />
         <Route path="/listings" element={<AllListingsPage />} />
         <Route path="/dormitories" element={<DormitoriesPage onListingSelect={handleListingSelect} onApplicationStart={handleApplicationStart} />} />
-        <Route path="/rentals" element={<RentalsPage onListingSelect={handleListingSelect} onApplicationStart={handleApplicationStart} />} />
         <Route path="/help" element={<HelpPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />

@@ -6,14 +6,14 @@ export interface SharePayload {
 
 export async function shareOrCopy(payload: SharePayload): Promise<void> {
   try {
-    const nav: any = navigator;
+    const nav = navigator as Navigator & { share?: (data: SharePayload) => Promise<void> };
     if (nav && typeof nav.share === 'function') {
       await nav.share(payload);
       return;
     }
     await navigator.clipboard.writeText(payload.url);
     alert('Link nusxalandi!');
-  } catch (error) {
+  } catch {
     try {
       await navigator.clipboard.writeText(payload.url);
       alert('Link nusxalandi!');
@@ -22,5 +22,3 @@ export async function shareOrCopy(payload: SharePayload): Promise<void> {
     }
   }
 }
-
-

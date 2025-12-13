@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Phone, CheckCircle, AlertCircle, MapPin, FileText, MessageSquare, Building, Upload, X, Users, Clock } from 'lucide-react';
+import { ArrowLeft, User, Phone, CheckCircle, AlertCircle, MapPin, FileText, MessageSquare, Building, Upload, X, Users } from 'lucide-react';
 import Header from '../components/Header';
 import { authAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { getGlobalSelectedListing } from '../App';
+import { getGlobalSelectedListing, clearGlobalSelectedListing } from '../App';
 import { Dormitory } from '../types';
 
 interface ApplicationFormData {
@@ -60,16 +60,16 @@ const ApplicationPage: React.FC = () => {
 
   const [provinces, setProvinces] = useState<{ id: number; name: string }[]>([]);
   const [districts, setDistricts] = useState<{ id: number; name: string; province: number }[]>([]);
-  const [dormitories, setDormitories] = useState<Dormitory[]>([]);
+  const [, setDormitories] = useState<Dormitory[]>([]);
   const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(null);
-  const [selectedDormitoryId, setSelectedDormitoryId] = useState<string>(selectedListing?.id || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState<Record<string, boolean>>({});
 
   // Field refs for auto-scroll/focus on validation errors
   const fieldRefs = useRef<Record<string, HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null>>({});
-  const registerFieldRef = (key: string) => (el: any) => {
+  const registerFieldRef = (key: string) => (el: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null) => {
     fieldRefs.current[key] = el;
   };
 
@@ -83,16 +83,19 @@ const ApplicationPage: React.FC = () => {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         // Defer focus slightly to ensure scroll completes on mobile
         setTimeout(() => {
-          if (typeof (el as any).focus === 'function') {
-            (el as any).focus();
+          if ('focus' in el && typeof el.focus === 'function') {
+            el.focus();
           }
         }, 150);
-      } catch {}
+      } catch (scrollError) {
+        // Ignore scroll errors
+        console.debug('Scroll error:', scrollError);
+      }
     }
   }, [errors]);
 
   // Debug logging (development only)
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV) {
     console.log('ApplicationPage - isAuthenticated:', isAuthenticated);
     console.log('ApplicationPage - selectedListing:', selectedListing);
   }
@@ -113,11 +116,19 @@ const ApplicationPage: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [provincesData, dormitoriesData] = await Promise.all([
+        const [provincesData, dormitoriesResponse] = await Promise.all([
           authAPI.getProvinces(),
           authAPI.getDormitories()
         ]);
+        
+        if (import.meta.env.DEV) {
+          console.log('Provinces loaded:', provincesData);
+          console.log('Dormitories response:', dormitoriesResponse);
+        }
+        
         setProvinces(provincesData);
+        // Handle dormitories response (can be array or object with results)
+        const dormitoriesData = dormitoriesResponse.results || dormitoriesResponse;
         setDormitories(dormitoriesData);
       } catch (error) {
         console.error('Ma\'lumotlar yuklanmadi:', error);
@@ -132,6 +143,11 @@ const ApplicationPage: React.FC = () => {
       const fetchDistricts = async () => {
         try {
           const data = await authAPI.getDistricts(selectedProvinceId);
+          
+          if (import.meta.env.DEV) {
+            console.log(`Districts for province ${selectedProvinceId}:`, data);
+          }
+          
           setDistricts(data);
         } catch (error) {
           console.error('Tumanlar yuklanmadi:', error);
@@ -249,7 +265,7 @@ const ApplicationPage: React.FC = () => {
     }
   };
 
-  const handleFileUpload = (field: keyof ApplicationFormData, file: File | null) => {
+  const handleFileUpload = async (field: keyof ApplicationFormData, file: File | null) => {
     if (file) {
       // Check file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
@@ -263,6 +279,15 @@ const ApplicationPage: React.FC = () => {
         setErrors(prev => ({ ...prev, [field]: 'Faqat JPG, PNG yoki PDF fayllar qabul qilinadi' }));
         return;
       }
+
+      // Show loading state
+      setUploadingFiles(prev => ({ ...prev, [field]: true }));
+
+      // Simulate file processing (rasmni o'qish)
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Hide loading state
+      setUploadingFiles(prev => ({ ...prev, [field]: false }));
     }
 
     handleInputChange(field, file);
@@ -384,56 +409,91 @@ const ApplicationPage: React.FC = () => {
         dormitoryId = selectedListing.id;
       }
 
+      if (isNaN(dormitoryId) || dormitoryId <= 0) {
+        setErrors({ general: 'Yotoqxona ID si noto\'g\'ri. Iltimos, yotoqxona sahifasiga qayting va qaytadan urinib ko\'ring.' });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Final validation before submission
+      if (!user?.id) {
+        setErrors({ general: 'Foydalanuvchi ma\'lumotlari topilmadi. Iltimos, qaytadan tizimga kiring.' });
+        setIsSubmitting(false);
+        return;
+      }
+
       // API endpoint orqali ariza yuborish
       const applicationData = {
-        user: user?.id!,
+        user: user.id,
         dormitory: dormitoryId,
         name: formData.name.trim(),
         last_name: formData.familiya?.trim() || undefined,
         middle_name: formData.middle_name?.trim() || undefined,
         province: selectedProvince.id,
-        district: selectedDistrict.id,
+        district: selectedDistrict.id,  // API expects 'district' field
         faculty: formData.faculty?.trim() || undefined,
         direction: formData.direction?.trim() || undefined,
         course: formData.course.trim(),
         group: formData.group?.trim() || undefined,
-        phone: phoneInt,
+        phone: phoneInt ? phoneInt.toString() : undefined,  // Convert to string
         passport: formData.passport?.trim() || undefined,
         comment: formData.comment?.trim() || undefined,
-        user_image: formData.user_image,
-        document: formData.document,
-        passport_image_first: formData.passport_image_first,
-        passport_image_second: formData.passport_image_second,
+        user_image: formData.user_image || undefined,
+        document: formData.document || undefined,
+        passport_image_first: formData.passport_image_first || undefined,
+        passport_image_second: formData.passport_image_second || undefined,
       };
 
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Yuborilayotgan ariza ma\'lumotlari:', applicationData);
-        console.log('Selected Province:', selectedProvince);
-        console.log('Selected District:', selectedDistrict);
-        console.log('Dormitory ID:', dormitoryId);
-        console.log('User ID:', user?.id);
+      if (import.meta.env.DEV) {
+        console.log('=== ARIZA MA\'LUMOTLARI ===');
+        console.log('User ID:', user?.id, typeof user?.id);
+        console.log('Dormitory ID:', dormitoryId, typeof dormitoryId);
+        console.log('Name:', applicationData.name, typeof applicationData.name);
+        console.log('Province ID:', selectedProvince.id, typeof selectedProvince.id);
+        console.log('District ID:', selectedDistrict.id, typeof selectedDistrict.id);
+        console.log('Course:', applicationData.course, typeof applicationData.course);
+        console.log('Phone:', applicationData.phone, typeof applicationData.phone);
+        console.log('\nTo\'liq ma\'lumotlar:', applicationData);
+        console.log('=== END ===\n');
       }
 
       // API orqali ariza yuborish
       const response = await authAPI.submitApplication(applicationData);
 
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         console.log('Ariza muvaffaqiyatli yuborildi:', response);
       }
 
       setSubmitSuccess(true);
+      // Clear selected listing after successful submission
+      clearGlobalSelectedListing();
       setTimeout(() => {
         navigate('/dashboard');
       }, 3000);
 
-    } catch (error: any) {
-      console.error('Ariza yuborishda xatolik:', error);
+    } catch (error: unknown) {
+      console.error('=== ARIZA YUBORISH XATOSI ===');
+      console.error('Error:', error);
+      
       let errorMessage = 'Ariza yuborishda xatolik yuz berdi. Qaytadan urinib ko\'ring.';
-      let fieldErrors: Record<string, string> = {};
+      const fieldErrors: Record<string, string> = {};
 
       try {
-        if (error.response?.data) {
-          const errorData = error.response.data;
+        const axiosError = error as { 
+          response?: { 
+            status?: number;
+            data?: Record<string, unknown>;
+          }; 
+          message?: string;
+        };
+        
+        if (axiosError.response) {
+          console.error('Response Status:', axiosError.response.status);
+          console.error('Response Data:', axiosError.response.data);
+        }
+        
+        if (axiosError.response?.data) {
+          const errorData = axiosError.response.data;
           
           // Agar server field-specific xatolarni qaytarsa
           if (typeof errorData === 'object' && !errorData.detail) {
@@ -455,26 +515,30 @@ const ApplicationPage: React.FC = () => {
           }
           
           // Umumiy xato xabari
-          if (errorData.detail) {
-            errorMessage = errorData.detail;
-          } else if (errorData.message) {
-            errorMessage = errorData.message;
+          if (typeof errorData === 'object' && errorData !== null) {
+            const dataObj = errorData as Record<string, unknown>;
+            if (dataObj.detail) {
+              errorMessage = String(dataObj.detail);
+            } else if (dataObj.message) {
+              errorMessage = String(dataObj.message);
+            }
           } else if (typeof errorData === 'string') {
             errorMessage = errorData;
           } else if (typeof errorData === 'object') {
             const firstError = Object.values(errorData)[0];
-            if (Array.isArray(firstError)) {
-              errorMessage = firstError[0];
+            if (Array.isArray(firstError) && firstError.length > 0) {
+              errorMessage = String(firstError[0]);
             } else if (typeof firstError === 'string') {
               errorMessage = firstError;
             }
           }
-        } else if (error.message) {
-          errorMessage = error.message;
+        } else if (axiosError.message) {
+          errorMessage = axiosError.message;
         }
       } catch (parseError) {
         console.error('Error parsing error response:', parseError);
-        errorMessage = error.message || errorMessage;
+        const axiosError = error as { message?: string };
+        errorMessage = axiosError.message || errorMessage;
       }
 
       setErrors({ general: errorMessage });
@@ -910,45 +974,35 @@ const ApplicationPage: React.FC = () => {
                     </label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <div className="absolute left-10 top-1/2 transform -translate-y-1/2 text-gray-600 dark:text-gray-400 font-medium">
+                        +998
+                      </div>
                       <input
                         type="tel"
-                        value={formData.phone}
+                        value={formData.phone.startsWith('998') ? formData.phone.substring(3) : formData.phone}
                         onChange={(e) => {
                           let value = e.target.value.replace(/\D/g, '');
-
-                          // O'zbekiston telefon raqami formatini to'g'rilash
-                          if (value.startsWith('998') && value.length > 3) {
-                            // 998 dan keyin 9 ta raqam bo'lishi kerak
-                            if (value.length > 12) {
-                              value = value.substring(0, 12);
-                            }
-                          } else if (value.startsWith('8') && value.length > 1) {
-                            // 8 dan boshlansa, uni 998 ga o'zgartirish
-                            value = '998' + value.substring(1);
-                            if (value.length > 12) {
-                              value = value.substring(0, 12);
-                            }
-                          } else if (value.startsWith('+') && value.length > 1) {
-                            // + dan boshlansa, uni olib tashlash
-                            value = value.substring(1);
-                            if (value.length > 12) {
-                              value = value.substring(0, 12);
-                            }
+                          
+                          // Maksimal 9 ta raqam (998 dan keyin)
+                          if (value.length > 9) {
+                            value = value.substring(0, 9);
                           }
-
-                          handleInputChange('phone', value);
+                          
+                          // 998 prefiksini qo'shish
+                          const fullNumber = '998' + value;
+                          handleInputChange('phone', fullNumber);
                         }}
                         ref={registerFieldRef('phone')}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
+                        className={`w-full pl-20 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
                           ? 'bg-gray-700 border-gray-600 text-white'
                           : 'bg-white border-gray-300 text-gray-900'
                           } ${errors.phone ? 'border-red-500' : ''}`}
-                        placeholder="998901234567"
-                        maxLength={12}
+                        placeholder="901234567"
+                        maxLength={9}
                       />
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Format: 998901234567 yoki 8901234567
+                      9 ta raqam kiriting (masalan: 901234567)
                     </div>
                     {errors.phone && (
                       <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
@@ -1019,15 +1073,25 @@ const ApplicationPage: React.FC = () => {
                         onChange={(e) => handleFileUpload('user_image', e.target.files?.[0] || null)}
                         className="hidden"
                         id="user-image-upload"
+                        disabled={uploadingFiles.user_image}
                       />
-                      <label htmlFor="user-image-upload" className="cursor-pointer">
-                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                        <p className="text-gray-600 dark:text-gray-300">
-                          {formData.user_image ? formData.user_image.name : 'O\'zingizning rasmingizni yuklang'}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">JPG, PNG (Max: 5MB)</p>
+                      <label htmlFor="user-image-upload" className={`cursor-pointer ${uploadingFiles.user_image ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                        {uploadingFiles.user_image ? (
+                          <>
+                            <div className="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                            <p className="text-teal-600 dark:text-teal-400 font-medium">Yuklanmoqda...</p>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                            <p className="text-gray-600 dark:text-gray-300">
+                              {formData.user_image ? formData.user_image.name : 'O\'zingizning rasmingizni yuklang'}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">JPG, PNG (Max: 5MB)</p>
+                          </>
+                        )}
                       </label>
-                      {formData.user_image && (
+                      {formData.user_image && !uploadingFiles.user_image && (
                         <button
                           onClick={() => handleFileUpload('user_image', null)}
                           className="mt-2 text-red-500 hover:text-red-700 flex items-center gap-1 mx-auto"
@@ -1062,15 +1126,25 @@ const ApplicationPage: React.FC = () => {
                         onChange={(e) => handleFileUpload('document', e.target.files?.[0] || null)}
                         className="hidden"
                         id="document-upload"
+                        disabled={uploadingFiles.document}
                       />
-                      <label htmlFor="document-upload" className="cursor-pointer">
-                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                        <p className="text-gray-600 dark:text-gray-300">
-                          {formData.document ? formData.document.name : 'Hujjat yuklash uchun bosing'}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">PDF, JPG, PNG (Max: 5MB)</p>
+                      <label htmlFor="document-upload" className={`cursor-pointer ${uploadingFiles.document ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                        {uploadingFiles.document ? (
+                          <>
+                            <div className="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                            <p className="text-teal-600 dark:text-teal-400 font-medium">Yuklanmoqda...</p>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                            <p className="text-gray-600 dark:text-gray-300">
+                              {formData.document ? formData.document.name : 'Hujjat yuklash uchun bosing'}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">PDF, JPG, PNG (Max: 5MB)</p>
+                          </>
+                        )}
                       </label>
-                      {formData.document && (
+                      {formData.document && !uploadingFiles.document && (
                         <button
                           onClick={() => handleFileUpload('document', null)}
                           className="mt-2 text-red-500 hover:text-red-700 flex items-center gap-1 mx-auto"
@@ -1098,14 +1172,24 @@ const ApplicationPage: React.FC = () => {
                           onChange={(e) => handleFileUpload('passport_image_first', e.target.files?.[0] || null)}
                           className="hidden"
                           id="passport-first-upload"
+                          disabled={uploadingFiles.passport_image_first}
                         />
-                        <label htmlFor="passport-first-upload" className="cursor-pointer">
-                          <Upload className="w-6 h-6 text-gray-400 mx-auto mb-2" />
-                          <p className="text-sm text-gray-600 dark:text-gray-300">
-                            {formData.passport_image_first ? formData.passport_image_first.name : 'Rasm yuklash'}
-                          </p>
+                        <label htmlFor="passport-first-upload" className={`cursor-pointer ${uploadingFiles.passport_image_first ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                          {uploadingFiles.passport_image_first ? (
+                            <>
+                              <div className="w-6 h-6 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                              <p className="text-sm text-teal-600 dark:text-teal-400 font-medium">Yuklanmoqda...</p>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-6 h-6 text-gray-400 mx-auto mb-2" />
+                              <p className="text-sm text-gray-600 dark:text-gray-300">
+                                {formData.passport_image_first ? formData.passport_image_first.name : 'Rasm yuklash'}
+                              </p>
+                            </>
+                          )}
                         </label>
-                        {formData.passport_image_first && (
+                        {formData.passport_image_first && !uploadingFiles.passport_image_first && (
                           <button
                             onClick={() => handleFileUpload('passport_image_first', null)}
                             className="mt-2 text-red-500 hover:text-red-700 flex items-center gap-1 mx-auto"
@@ -1128,14 +1212,24 @@ const ApplicationPage: React.FC = () => {
                           onChange={(e) => handleFileUpload('passport_image_second', e.target.files?.[0] || null)}
                           className="hidden"
                           id="passport-second-upload"
+                          disabled={uploadingFiles.passport_image_second}
                         />
-                        <label htmlFor="passport-second-upload" className="cursor-pointer">
-                          <Upload className="w-6 h-6 text-gray-400 mx-auto mb-2" />
-                          <p className="text-sm text-gray-600 dark:text-gray-300">
-                            {formData.passport_image_second ? formData.passport_image_second.name : 'Rasm yuklash'}
-                          </p>
+                        <label htmlFor="passport-second-upload" className={`cursor-pointer ${uploadingFiles.passport_image_second ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                          {uploadingFiles.passport_image_second ? (
+                            <>
+                              <div className="w-6 h-6 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                              <p className="text-sm text-teal-600 dark:text-teal-400 font-medium">Yuklanmoqda...</p>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-6 h-6 text-gray-400 mx-auto mb-2" />
+                              <p className="text-sm text-gray-600 dark:text-gray-300">
+                                {formData.passport_image_second ? formData.passport_image_second.name : 'Rasm yuklash'}
+                              </p>
+                            </>
+                          )}
                         </label>
-                        {formData.passport_image_second && (
+                        {formData.passport_image_second && !uploadingFiles.passport_image_second && (
                           <button
                             onClick={() => handleFileUpload('passport_image_second', null)}
                             className="mt-2 text-red-500 hover:text-red-700 flex items-center gap-1 mx-auto"
@@ -1211,78 +1305,78 @@ const ApplicationPage: React.FC = () => {
               <div className="space-y-4">
                 {/* Tanlangan yotoqxona ma'lumotlari */}
                 {selectedListing && (
-                  <div className="bg-gradient-to-r from-teal-50 to-green-50 dark:from-teal-900/20 dark:to-green-900/20 border border-teal-200 dark:border-teal-800 rounded-xl p-4">
+                  <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-700 rounded-lg p-4">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 bg-gradient-to-r from-teal-600 to-green-600 rounded-full flex items-center justify-center">
+                      <div className="w-10 h-10 bg-teal-600 rounded-lg flex items-center justify-center">
                         <Building className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-teal-900 dark:text-teal-100">
+                        <h4 className="font-semibold text-gray-900 dark:text-white">
                           {selectedListing.title}
                         </h4>
                         {selectedListing.university && (
-                          <p className="text-sm text-teal-700 dark:text-teal-300">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
                             {selectedListing.university}
                           </p>
                         )}
                       </div>
                     </div>
-                    <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg p-3">
-                      <p className="text-xs text-teal-800 dark:text-teal-200 font-medium">
-                        ✨ Siz ushbu yotoqxona uchun ariza yubormoqdasiz
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-teal-100 dark:border-teal-800">
+                      <p className="text-xs text-gray-700 dark:text-gray-300">
+                        Siz ushbu yotoqxona uchun ariza yubormoqdasiz
                       </p>
                     </div>
                   </div>
                 )}
 
-                {/* Motivatsion xabar */}
-                <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-pink-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-xl">🎯</span>
+                {/* Muhim eslatma */}
+                <div className="bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-gray-600 dark:bg-gray-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <AlertCircle className="w-5 h-5 text-white" />
                     </div>
-                    <h4 className="font-bold text-gray-900 dark:text-white mb-2">
-                      Muvaffaqiyatga Bir Qadam!
-                    </h4>
-                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                      Har bir maydonni diqqat bilan to'ldiring. To'liq va aniq ma'lumotlar sizning arizangizni tezroq ko'rib chiqishga yordam beradi.
-                    </p>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                        Muhim Eslatma
+                      </h4>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                        Barcha maydonlarni diqqat bilan to'ldiring. To'liq va aniq ma'lumotlar arizangizni tezroq ko'rib chiqishga yordam beradi.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
                 {/* Foydali maslahatlar */}
-                <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+                <div className="bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-sm">💡</span>
+                    <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <CheckCircle className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-amber-900 dark:text-amber-100 mb-2">
-                        Foydali Maslahatlar
+                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                        Tavsiyalar
                       </h4>
-                      <ul className="text-sm text-amber-800 dark:text-amber-200 space-y-1">
+                      <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1.5">
                         <li>• Haqiqiy ma'lumotlarni kiriting</li>
-                        <li>• Fakultet va yo'nalish ma'lumotlarini to'g'ri kiriting</li>
-                        <li>• O'zingizning rasmingizni aniq tortib yuklang</li>
-                        <li>• Telefon raqamingiz doim faol bo'lsin</li>
-                        <li>• Hujjat rasmlarini aniq tortib yuklang</li>
+                        <li>• Telefon raqamingiz faol bo'lsin</li>
+                        <li>• Rasmlarni aniq tortib yuklang</li>
                         <li>• Qo'shimcha izohda o'zingiz haqida yozing</li>
                       </ul>
                     </div>
                   </div>
                 </div>
 
-                {/* Qo'llab-quvvatlash */}
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
+                {/* Yordam */}
+                <div className="bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
                   <div className="text-center">
-                    <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-2">
-                      <span className="text-lg">🤝</span>
+                    <div className="w-10 h-10 bg-gray-600 dark:bg-gray-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+                      <Phone className="w-5 h-5 text-white" />
                     </div>
-                    <h4 className="font-bold text-green-900 dark:text-green-100 mb-1">
-                      Biz Sizga Yordam Beramiz!
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
+                      Yordam Kerakmi?
                     </h4>
-                    <p className="text-xs text-green-700 dark:text-green-300">
-                      Savollaringiz bo'lsa, biz bilan bog'laning. Sizning muvaffaqiyatingiz - bizning maqsadimiz!
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      Savollaringiz bo'lsa, biz bilan bog'laning
                     </p>
                   </div>
                 </div>

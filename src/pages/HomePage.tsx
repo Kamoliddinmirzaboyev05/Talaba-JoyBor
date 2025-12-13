@@ -6,7 +6,6 @@ import { Listing } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
 import SearchBar from '../components/SearchBar';
-import ListingCard from '../components/ListingCard';
 import DormitoryCard from '../components/DormitoryCard';
 import { authAPI } from '../services/api';
 
@@ -26,7 +25,6 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [featuredListings, setFeaturedListings] = useState<Listing[]>([]);
-  const [allListings, setAllListings] = useState<Listing[]>([]);
 
   const [statistics, setStatistics] = useState<Statistics>({
     dormitories_count: 0,
@@ -44,7 +42,7 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
   }, []);
 
   // Qidiruv funksiyasi
-  const handleSearch = (searchData: any) => {
+  const handleSearch = (searchData: { query: string }) => {
     const query = searchData.query.toLowerCase().trim();
     setSearchQuery(query);
     
@@ -65,164 +63,81 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
 
 
 
-  // API dan yotoqxonalar va apartments ni yuklash
+  // API dan faqat yotoqxonalarni yuklash
   useEffect(() => {
     const fetchListings = async () => {
       try {
         setLoading(true);
         
-        // Yotoqxonalar va apartments ni parallel yuklash
-        const [dormitoriesData, apartmentsData] = await Promise.all([
-          authAPI.getDormitories().catch((error) => {
-            console.error('Dormitories fetch error:', error);
-            return [];
-          }),
-          authAPI.getApartments().catch((error) => {
-            console.error('Apartments fetch error:', error);
-            return [];
-          })
-        ]);
+        // Faqat yotoqxonalarni yuklash
+        const dormitoriesResponse = await authAPI.getDormitories().catch((error) => {
+          console.error('Dormitories fetch error:', error);
+          return { results: [] };
+        });
 
+        const dormitoriesData = dormitoriesResponse.results || dormitoriesResponse;
         console.log('Dormitories data:', dormitoriesData);
-        console.log('Apartments data:', apartmentsData);
 
         // Dormitory ma'lumotlarini Listing formatiga o'tkazish
-        const convertedDormitories: Listing[] = dormitoriesData.slice(0, 2).map((dormitory: any) => ({
-          id: `dorm-${dormitory.id}`,
-          title: dormitory.name,
-          type: 'dormitory' as const,
-          price: dormitory.month_price,
-          location: dormitory.address,
-          university: dormitory.university.name,
-          images: dormitory.images?.map((img: any) => img.image) || [],
-          amenities: dormitory.amenities?.map((amenity: any) => amenity.name) || [],
-          description: dormitory.description || 'Tavsif mavjud emas',
-          capacity: dormitory.total_capacity || 1,
-          available_capacity: dormitory.available_capacity,
-          available: dormitory.available_capacity > 0,
-          rating: 4.5,
-          reviews: 12,
-          features: {
-            furnished: true,
-            wifi: dormitory.amenities?.some((a: any) => a.name.toLowerCase().includes('wifi')) || false,
-            parking: dormitory.amenities?.some((a: any) => a.name.toLowerCase().includes('parking')) || false,
-            security: dormitory.amenities?.some((a: any) => a.name.toLowerCase().includes('security')) || false,
-          },
-          rules: dormitory.rules || [],
-          coordinates: {
-            lat: dormitory.latitude || 0,
-            lng: dormitory.longitude || 0,
-          },
-        }));
+        const allListingsData: Listing[] = dormitoriesData.map((dormitory: {
+          id: number;
+          name: string;
+          month_price: number;
+          address: string;
+          university_name: string;
+          images: Array<string | { image: string }>;
+          amenities_list: Array<{ name: string }>;
+          description?: string;
+          total_capacity?: number;
+          available_capacity?: number;
+          rating?: number;
+          rules?: string[];
+          latitude?: number;
+          longitude?: number;
+        }) => {
+          const images = Array.isArray(dormitory.images) && dormitory.images.length > 0
+            ? dormitory.images.map((img: string | { image: string }) => typeof img === 'string' ? img : img?.image || '')
+            : ['/placeholder-dormitory.svg'];
+          
+          const amenities = Array.isArray(dormitory.amenities_list) && dormitory.amenities_list.length > 0
+            ? dormitory.amenities_list.map((a: { name: string }) => a?.name || '')
+            : [];
 
-        // Apartments ma'lumotlarini Listing formatiga o'tkazish
-        const convertedApartments: Listing[] = apartmentsData.slice(0, 2).map((apartment: any) => ({
-          id: `apt-${apartment.id}`,
-          title: apartment.title || 'Ijara Xonadon',
-          type: 'rental' as const,
-          price: apartment.monthly_price || 0,
-          location: apartment.exact_address || 'Manzil ko\'rsatilmagan',
-          university: `${apartment.room_type || 'Xona'} - ${apartment.gender || 'Aralash'}`,
-          images: apartment.images?.map((img: any) => img.image) || ['/placeholder-apartment.jpg'],
-          amenities: apartment.amenities?.map((amenity: any) => amenity.name) || [],
-          description: apartment.description || 'Tavsif mavjud emas',
-          capacity: apartment.total_rooms || 1,
-          available_capacity: apartment.available_rooms || 0,
-          available: apartment.available_rooms > 0 && apartment.is_active,
-          rating: 4.2,
-          reviews: Math.floor(Math.random() * 15) + 3,
-          landlord: {
-            name: apartment.user?.username || 'Egasi',
-            phone: apartment.phone_number || apartment.user_phone_number || '',
-            email: apartment.user?.email || '',
-            verified: true,
-            rating: 4.5
-          },
-          features: {
-            furnished: true,
-            wifi: apartment.amenities?.some((a: any) => 
-              a.name?.toLowerCase().includes('wifi') || 
-              a.name?.toLowerCase().includes('internet')
-            ) || false,
-            parking: apartment.amenities?.some((a: any) => 
-              a.name?.toLowerCase().includes('parking') || 
-              a.name?.toLowerCase().includes('avtomobil')
-            ) || false,
-            security: true,
-          },
-          rules: [
-            'Chekish taqiqlanadi',
-            'Begonalar kirishi taqiqlanadi'
-          ],
-          coordinates: {
-            lat: 40.3833,
-            lng: 71.7833,
-          },
-          // Qo'shimcha apartment ma'lumotlari
-          rooms: apartment.total_rooms || 1,
-          available_rooms: apartment.available_rooms || 0,
-          room_type: apartment.room_type || 'Xona',
-          gender: apartment.gender || 'Aralash',
-          owner: apartment.user?.username || 'Egasi',
-          phone_number: apartment.phone_number || apartment.user_phone_number || '',
-          user_phone_number: apartment.user_phone_number || '',
-          province: apartment.province || 3,
-          created_at: apartment.created_at || new Date().toISOString(),
-          is_active: apartment.is_active !== false
-        }));
+          return {
+            id: `dorm-${dormitory.id}`,
+            title: dormitory.name,
+            type: 'dormitory' as const,
+            price: dormitory.month_price,
+            location: dormitory.address,
+            university: dormitory.university_name,
+            images: images.filter(Boolean),
+            amenities: amenities.filter(Boolean),
+            description: dormitory.description || 'Tavsif mavjud emas',
+            capacity: dormitory.total_capacity || 0,
+            available_capacity: dormitory.available_capacity || 0,
+            available: (dormitory.available_capacity || 0) > 0,
+            rating: dormitory.rating || 0,
+            reviews: 0,
+            features: {
+              furnished: true,
+              wifi: amenities.some((a: string) => a.toLowerCase().includes('wifi')),
+              parking: amenities.some((a: string) => a.toLowerCase().includes('parking')),
+              security: amenities.some((a: string) => a.toLowerCase().includes('security')),
+            },
+            rules: dormitory.rules || [],
+            coordinates: {
+              lat: dormitory.latitude || 0,
+              lng: dormitory.longitude || 0,
+            },
+          };
+        });
 
-        // Yotoqxonalar va apartments ni birlashtirish
-        const allListingsData = [...convertedDormitories, ...convertedApartments];
+
         console.log('Converted data:', allListingsData);
         console.log('Featured listings:', allListingsData.slice(0, 6));
         
-        // Agar ma'lumotlar bo'sh bo'lsa, fallback data ko'rsatish
-        if (allListingsData.length === 0) {
-          console.log('No data received, showing fallback data');
-          const fallbackData: Listing[] = [
-            {
-              id: 'fallback-1',
-              title: 'Toshkent Davlat Universiteti Yotoqxonasi',
-              type: 'dormitory',
-              price: 500000,
-              location: 'Toshkent, Chilonzor tumani',
-              university: 'Toshkent Davlat Universiteti',
-              images: ['/placeholder-dormitory.svg'],
-              amenities: ['WiFi', 'Xavfsizlik', 'Parking'],
-              description: 'Toshkent Davlat Universiteti talabalari uchun qulay yotoqxona',
-              capacity: 4,
-              available: true,
-              rating: 4.5,
-              reviews: 25,
-              features: { furnished: true, wifi: true, parking: true, security: true },
-              rules: ['Tartib-intizom saqlash', 'Ovozni pasaytirish'],
-              coordinates: { lat: 41.2995, lng: 69.2401 }
-            },
-            {
-              id: 'fallback-2',
-              title: 'Samarqand Davlat Universiteti Yotoqxonasi',
-              type: 'dormitory',
-              price: 400000,
-              location: 'Samarqand, Registon ko\'chasi',
-              university: 'Samarqand Davlat Universiteti',
-              images: ['/placeholder-dormitory.svg'],
-              amenities: ['WiFi', 'Xavfsizlik'],
-              description: 'Samarqand Davlat Universiteti talabalari uchun qulay yotoqxona',
-              capacity: 3,
-              available: true,
-              rating: 4.3,
-              reviews: 18,
-              features: { furnished: true, wifi: true, parking: false, security: true },
-              rules: ['Tartib-intizom saqlash'],
-              coordinates: { lat: 39.6270, lng: 66.9749 }
-            }
-          ];
-          setAllListings(fallbackData);
-          setFeaturedListings(fallbackData);
-        } else {
-          setAllListings(allListingsData);
-          setFeaturedListings(allListingsData.slice(0, 6)); // Faqat 6 ta ko'rsatish
-        }
+        // Featured listings ni o'rnatish
+        setFeaturedListings(allListingsData.slice(0, 6)); // Faqat 6 ta ko'rsatish
         
         // Statistikalarni yuklash
         try {
@@ -258,16 +173,16 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
       color: 'text-teal-600' 
     },
     { 
-      icon: Building2, 
-      label: 'Ijara Xonadonlar', 
-      value: `${statistics.apartments_count}`, 
-      color: 'text-green-600' 
-    },
-    { 
       icon: Users, 
       label: 'Talabalar', 
       value: `${statistics.users_count}`, 
       color: 'text-indigo-600' 
+    },
+    { 
+      icon: Building2, 
+      label: 'Universitetlar', 
+      value: '50+', 
+      color: 'text-green-600' 
     },
     { 
       icon: Shield, 
@@ -281,7 +196,7 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
     {
       step: 1,
       title: 'Qidiring',
-      description: 'O\'zingizga mos yotoqxona yoki kvartira toping',
+      description: 'O\'zingizga mos yotoqxona toping',
       icon: Search,
       color: 'bg-teal-100 text-teal-600',
     },
@@ -322,7 +237,7 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
               Turar Joy Toping
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-              O'zbekistondagi eng yaxshi yotoqxonalar va ijara xonadonlarini bir joyda.
+              O'zbekistondagi eng yaxshi yotoqxonalarni bir joyda.
               Tez, oson va ishonchli.
             </p>
 
@@ -331,19 +246,10 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/dormitories')}
-                className="bg-gradient-to-r from-teal-600 to-teal-700 text-white px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="bg-gradient-to-r from-teal-600 to-green-600 text-white px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 <Home className="w-5 h-5" />
-                Yotoqxona Topish
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/rentals')}
-                className="bg-gradient-to-r from-green-600 to-green-700 text-white px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <Building2 className="w-5 h-5" />
-                Ijara Topish
+                Yotoqxonalarni Ko'rish
               </motion.button>
             </div>
           </motion.div>
@@ -390,7 +296,7 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
               Qidiruv
             </h2>
             <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-8">
-              O'zingizga mos yotoqxona yoki kvartira toping
+              O'zingizga mos yotoqxona toping
             </p>
             <SearchBar onSearch={handleSearch} />
           </motion.div>
@@ -476,28 +382,20 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                 >
-                  {listing.type === 'dormitory' ? (
-                    <DormitoryCard
-                      id={listing.id}
-                      name={listing.title}
-                      month_price={listing.price}
-                      address={listing.location}
-                      universityName={listing.university}
-                      images={listing.images}
-                      amenities={listing.amenities}
-                      available_capacity={(listing as any).available_capacity ?? 0}
-                      total_capacity={listing.capacity}
-                      description={listing.description}
-                      onSelect={() => onListingSelect(listing)}
-                      canApply={!!user}
-                    />
-                  ) : (
-                    <ListingCard
-                      listing={listing}
-                      onSelect={() => onListingSelect(listing)}
-                      user={null}
-                    />
-                  )}
+                  <DormitoryCard
+                    id={listing.id}
+                    name={listing.title}
+                    month_price={listing.price}
+                    address={listing.location}
+                    universityName={listing.university}
+                    images={listing.images}
+                    amenities={listing.amenities}
+                    available_capacity={(listing as { available_capacity?: number }).available_capacity ?? 0}
+                    total_capacity={listing.capacity}
+                    description={listing.description}
+                    onSelect={() => onListingSelect(listing)}
+                    canApply={!!user}
+                  />
                 </motion.div>
               ))}
             </div>
@@ -513,10 +411,10 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/listings')}
+                onClick={() => navigate('/dormitories')}
                 className="bg-gradient-to-r from-teal-600 to-green-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 inline-flex items-center gap-2"
               >
-                Barcha Elonlarni Ko'rish
+                Barcha Yotoqxonalarni Ko'rish
                 <ChevronRight className="w-5 h-5" />
               </motion.button>
             </motion.div>

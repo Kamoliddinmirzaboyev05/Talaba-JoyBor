@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Heart, MapPin, Users, Wifi, Car, Shield, Eye, MessageCircle, Share2, CheckCircle, Coffee, BookOpen, Utensils, Dumbbell, Tv, Snowflake, Sun, Moon, GraduationCap, Bed, Home, Building2, Bus, Bike, Trees, Leaf, Zap, Droplets, Flame } from 'lucide-react';
+import { Heart, MapPin, Users, Wifi, Car, Shield, Eye, MessageCircle, Share2, CheckCircle, Coffee, BookOpen, Utensils, Dumbbell, Tv, Snowflake, Sun, Moon, GraduationCap, Bed, Home, Building2, Bus, Bike, Trees, Leaf, Zap, Droplets } from 'lucide-react';
 
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay, Navigation } from 'swiper/modules';
@@ -10,7 +10,7 @@ import 'swiper/css/navigation';
 
 import { Listing, User } from '../types';
 import { shareOrCopy } from '../utils/share';
-import { formatCapacityBucket, formatCapacity, formatAvailableCapacity } from '../utils/format';
+import { formatCapacityBucket, formatCapacity } from '../utils/format';
 import { useLikes } from '../contexts/LikesContext';
 
 interface ListingCardProps {
@@ -244,7 +244,7 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect, user }) =>
         <div className="grid grid-cols-2 gap-2 mb-4">
           {listing.amenities && listing.amenities.length > 0 ? (
             listing.amenities.map((amenity, index) => {
-              const amenityName = typeof amenity === 'string' ? amenity : (amenity as any)?.name || 'Qulaylik';
+              const amenityName = typeof amenity === 'string' ? amenity : (amenity as unknown as { name?: string })?.name || 'Qulaylik';
               const icon = getAmenityIcon(amenityName);
               return (
                 <div key={index} className="flex items-center gap-2 text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 px-3 py-2 rounded-lg">

@@ -23,6 +23,7 @@ const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
+  const [studentDashboard, setStudentDashboard] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Sahifa yuklanganda yuqoriga scroll qilish
@@ -30,15 +31,28 @@ const DashboardPage: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // API dan arizalarni yuklash
+  // API dan dashboard ma'lumotlarini yuklash
   useEffect(() => {
-    const fetchApplications = async () => {
+    const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        const applicationsData = await authAPI.getApplications();
-        setApplications(applicationsData);
+        
+        // Try to get student dashboard first
+        try {
+          const studentData = await authAPI.getStudentDashboard();
+          setStudentDashboard(studentData as Record<string, unknown>);
+          
+          if (import.meta.env.DEV) {
+            console.log('Student Dashboard Data:', studentData);
+          }
+        } catch {
+          console.log('Student dashboard not available, fetching applications instead');
+          // Fallback to applications if dashboard not available
+          const applicationsData = await authAPI.getApplications();
+          setApplications(applicationsData as Application[]);
+        }
       } catch (error) {
-        console.error("Arizalar yuklanmadi:", error);
+        console.error("Ma'lumotlar yuklanmadi:", error);
         setApplications([]);
       } finally {
         setLoading(false);
@@ -46,68 +60,47 @@ const DashboardPage: React.FC = () => {
     };
 
     if (user) {
-      fetchApplications();
+      fetchDashboardData();
     }
   }, [user]);
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Tizimga kirish talab etiladi
-          </h2>
-          <button
-            onClick={() => navigate("/login")}
-            className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors duration-200"
-          >
-            Tizimga kirish
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   // Fix: get first name safely
   const firstName = user?.first_name || user?.username || "Foydalanuvchi";
 
-  // Dashboard statistikalari
-  const stats = [
-    {
-      label: "Yuborilgan Arizalar",
-      value: applications.length.toString(),
-      icon: Calendar,
-      color: "text-blue-600",
-      bg: "bg-blue-100 dark:bg-blue-900/30",
-    },
-    {
-      label: "Kutilayotgan",
-      value: applications
-        .filter((app) => app.status === "PENDING")
-        .length.toString(),
-      icon: Clock,
-      color: "text-yellow-600",
-      bg: "bg-yellow-100 dark:bg-yellow-900/30",
-    },
-    {
-      label: "Tasdiqlangan",
-      value: applications
-        .filter((app) => app.status === "APPROVED")
-        .length.toString(),
-      icon: CheckCircle,
-      color: "text-green-600",
-      bg: "bg-green-100 dark:bg-green-900/30",
-    },
-    {
-      label: "Rad etilgan",
-      value: applications
-        .filter((app) => app.status === "REJECTED")
-        .length.toString(),
-      icon: XCircle,
-      color: "text-red-600",
-      bg: "bg-red-100 dark:bg-red-900/30",
-    },
-  ];
+  // Dashboard statistikalari - xavfsiz hisoblash
+  const stats = React.useMemo(() => {
+    const safeApplications = Array.isArray(applications) ? applications : [];
+    return [
+      {
+        label: "Yuborilgan Arizalar",
+        value: String(safeApplications.length || 0),
+        icon: Calendar,
+        color: "text-blue-600",
+        bg: "bg-blue-100 dark:bg-blue-900/30",
+      },
+      {
+        label: "Kutilayotgan",
+        value: String(safeApplications.filter((app) => app?.status === "PENDING").length || 0),
+        icon: Clock,
+        color: "text-yellow-600",
+        bg: "bg-yellow-100 dark:bg-yellow-900/30",
+      },
+      {
+        label: "Tasdiqlangan",
+        value: String(safeApplications.filter((app) => app?.status === "APPROVED").length || 0),
+        icon: CheckCircle,
+        color: "text-green-600",
+        bg: "bg-green-100 dark:bg-green-900/30",
+      },
+      {
+        label: "Rad etilgan",
+        value: String(safeApplications.filter((app) => app?.status === "REJECTED").length || 0),
+        icon: XCircle,
+        color: "text-red-600",
+        bg: "bg-red-100 dark:bg-red-900/30",
+      },
+    ];
+  }, [applications]);
 
   const quickActions = [
     {
@@ -187,8 +180,275 @@ const DashboardPage: React.FC = () => {
     }
   };
 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Tizimga kirish talab etiladi
+          </h2>
+          <button
+            onClick={() => navigate("/login")}
+            className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors duration-200"
+          >
+            Tizimga kirish
+          </button>
+        </div>
+      </div>
+    );
+  }
 
+  // Agar talaba ro'yxatiga qo'shilgan bo'lsa (student dashboard mavjud)
+  if (studentDashboard) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Header />
 
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Welcome Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mb-8"
+          >
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Xush kelibsiz, {firstName}! 🎉
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300">
+              Siz yotoqxonaga qabul qilindingiz
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Yotoqxona Ma'lumotlari */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
+              >
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Home className="w-5 h-5 text-teal-600" />
+                  Yotoqxona Ma'lumotlari
+                </h2>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
+                    <span className="text-gray-600 dark:text-gray-400">Yotoqxona:</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">
+                      {String((studentDashboard.dormitory_info as { name?: string })?.name || '')}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
+                    <span className="text-gray-600 dark:text-gray-400">Manzil:</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {String((studentDashboard.dormitory_info as { address?: string })?.address || '')}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
+                    <span className="text-gray-600 dark:text-gray-400">Qavat:</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {String((studentDashboard.floor_info as { name?: string })?.name || '')}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
+                    <span className="text-gray-600 dark:text-gray-400">Xona:</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {String((studentDashboard.room_info as { name?: string })?.name || '')}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-3">
+                    <span className="text-gray-600 dark:text-gray-400">Oylik to'lov:</span>
+                    <span className="font-semibold text-teal-600 dark:text-teal-400">
+                      {new Intl.NumberFormat('uz-UZ').format((studentDashboard.dormitory_info as { month_price?: number })?.month_price || 0)} so'm
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Xona Ma'lumotlari */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
+              >
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-teal-600" />
+                  Xona Ma'lumotlari
+                </h2>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
+                    <span className="text-gray-600 dark:text-gray-400">Sig'im:</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {(studentDashboard.room_info as { capacity?: number })?.capacity || 0} kishi
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
+                    <span className="text-gray-600 dark:text-gray-400">Hozirgi band:</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {(studentDashboard.room_info as { current_occupancy?: number })?.current_occupancy || 0} kishi
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-3">
+                    <span className="text-gray-600 dark:text-gray-400">Bo'sh joylar:</span>
+                    <span className="font-semibold text-green-600 dark:text-green-400">
+                      {((studentDashboard.room_info as { capacity?: number })?.capacity || 0) - ((studentDashboard.room_info as { current_occupancy?: number })?.current_occupancy || 0)} joy
+                    </span>
+                  </div>
+                </div>
+
+                {/* Xonadoshlar */}
+                {Array.isArray(studentDashboard.roommates) && studentDashboard.roommates.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                      Xonadoshlar
+                    </h3>
+                    <div className="space-y-2">
+                      {(studentDashboard.roommates as Array<{ name?: string; course?: string }>).map((roommate, index) => (
+                        <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                          <div className="w-10 h-10 bg-teal-600 rounded-full flex items-center justify-center text-white font-semibold">
+                            {roommate?.name?.charAt(0) || '?'}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              {roommate?.name || 'Noma\'lum'}
+                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {roommate?.course || ''}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Holat */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
+              >
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Holat
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span className="text-green-600 dark:text-green-400 font-medium">
+                      {String(studentDashboard.status || '')}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span className="text-green-600 dark:text-green-400 font-medium">
+                      {studentDashboard.placement_status ? String(studentDashboard.placement_status) : ''}
+                    </span>
+                  </div>
+                  {Boolean(studentDashboard.accepted_date) && (
+                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Qabul qilingan sana:
+                      </p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {formatDate(String(studentDashboard.accepted_date))}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Shaxsiy Ma'lumotlar */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
+              >
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Shaxsiy Ma'lumotlar
+                </h3>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">F.I.O:</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {String(studentDashboard.last_name || '')} {String(studentDashboard.name || '')} {String(studentDashboard.middle_name || '')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Fakultet:</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {String(studentDashboard.faculty || '')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Yo'nalish:</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {String(studentDashboard.direction || '')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Kurs:</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {String(studentDashboard.course || '')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Guruh:</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {String(studentDashboard.group || '')}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Quick Actions */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
+              >
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Tezkor Harakatlar
+                </h3>
+                <div className="space-y-3">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => navigate('/profile')}
+                    className="w-full flex items-center gap-3 p-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-all duration-300"
+                  >
+                    <Users className="w-5 h-5" />
+                    <span className="font-medium">Profilni Ko'rish</span>
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => navigate('/messages')}
+                    className="w-full flex items-center gap-3 p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-300"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    <span className="font-medium">Xabarlar</span>
+                  </motion.button>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Oddiy dashboard (ariza yuborgan, lekin hali qabul qilinmagan)
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
@@ -295,7 +555,7 @@ const DashboardPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {applications.slice(0, 3).map((application, index) => (
+                  {(Array.isArray(applications) ? applications : []).slice(0, 3).map((application, index) => (
                     <motion.div
                       key={application.id}
                       initial={{ opacity: 0, x: -20 }}

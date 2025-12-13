@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Pagination, Autoplay, Navigation } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/pagination';
-import 'swiper/css/navigation';
-
 import { Search, SlidersHorizontal, Building2 } from 'lucide-react';
 import { Listing, Dormitory } from '../types';
-import { formatCapacityBucket } from '../utils/format';
 import DormitoryCard from '../components/DormitoryCard';
 import Header from '../components/Header';
 import { authAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import { shareOrCopy } from '../utils/share';
 
 interface DormitoriesPageProps {
   onListingSelect: (listing: Listing) => void;
@@ -62,7 +54,7 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
   }, [location.state]);
 
   // Get unique universities for filter
-  const universities = Array.from(new Set(dormitories.map(d => d.university.name))).sort();
+  const universities = Array.from(new Set(dormitories.map(d => d.university_name))).sort();
 
   const priceRanges = [
     { label: '100,000 - 300,000', value: '100000-300000' },
@@ -71,23 +63,18 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
     { label: '1,000,000+', value: '1000000' }
   ];
 
-  // Share functionality
-  const handleShare = async (dormitory: Dormitory, e: React.MouseEvent) => {
-    e.stopPropagation();
-    await shareOrCopy({
-      title: `${dormitory.name} - JoyBor`,
-      text: `${dormitory.description || 'Yotoqxona haqida ma\'lumot'} - ${formatPrice(dormitory.month_price)}/oy`,
-      url: `${window.location.origin}/dormitory/${dormitory.id}`,
-    });
-  };
+
 
   // API dan yotoqxonalarni yuklash
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const dormitoriesData = await authAPI.getDormitories();
-
+        const response = await authAPI.getDormitories();
+        
+        // API returns { count, next, previous, results }
+        const dormitoriesData = response.results || response;
+        
         setDormitories(dormitoriesData);
         setFilteredDormitories(dormitoriesData);
       } catch (error) {
@@ -108,7 +95,7 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
     if (searchQuery) {
       filtered = filtered.filter(dormitory =>
         dormitory.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        dormitory.university.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        dormitory.university_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         dormitory.address.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
@@ -116,7 +103,7 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
     // Filtrlar bo'yicha filtrlash
     if (selectedFilters.university) {
       filtered = filtered.filter(dormitory =>
-        dormitory.university.name === selectedFilters.university
+        dormitory.university_name === selectedFilters.university
       );
     }
 
@@ -135,7 +122,7 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
     if (selectedFilters.capacity) {
       const capacity = parseInt(selectedFilters.capacity);
       filtered = filtered.filter(dormitory =>
-        dormitory.available_capacity >= capacity
+        (dormitory.available_capacity || 0) >= capacity
       );
     }
 
@@ -147,9 +134,9 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
         case 'price-high':
           return b.month_price - a.month_price;
         case 'capacity':
-          return b.available_capacity - a.available_capacity;
+          return (b.available_capacity || 0) - (a.available_capacity || 0);
         case 'distance':
-          return a.distance_to_university - b.distance_to_university;
+          return (a.distance_to_university || 0) - (b.distance_to_university || 0);
         default:
           return a.name.localeCompare(b.name);
       }
@@ -160,36 +147,42 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
 
   // Yotoqxonani Listing formatiga o'tkazish
   const convertDormitoryToListing = (dormitory: Dormitory): Listing => {
+    // Handle images - can be empty array
+    const images = Array.isArray(dormitory.images) && dormitory.images.length > 0
+      ? dormitory.images.map(img => typeof img === 'string' ? img : img?.image || '')
+      : ['/placeholder-dormitory.svg'];
+    
+    // Handle amenities - can be empty array
+    const amenities = Array.isArray(dormitory.amenities_list) && dormitory.amenities_list.length > 0
+      ? dormitory.amenities_list.map(amenity => amenity?.name || '')
+      : [];
+
     return {
       id: dormitory.id.toString(),
       title: dormitory.name,
       type: 'dormitory',
       price: dormitory.month_price,
       location: dormitory.address,
-      university: dormitory.university.name,
-      images: dormitory.images.map(img => img.image),
-      amenities: dormitory.amenities.map(amenity => amenity.name),
+      university: dormitory.university_name,
+      images: images.filter(Boolean),
+      amenities: amenities.filter(Boolean),
       description: dormitory.description,
-      capacity: dormitory.total_capacity,
-      available: dormitory.available_capacity > 0,
-      rating: 4.5, // Default rating
-      reviews: 0, // Default reviews
+      capacity: dormitory.total_capacity || 0,
+      available: (dormitory.available_capacity || 0) > 0,
+      rating: dormitory.rating || 0,
+      reviews: 0,
       features: {
         furnished: true,
-        wifi: dormitory.amenities.some(a => a.name.toLowerCase().includes('wifi')),
-        parking: dormitory.amenities.some(a => a.name.toLowerCase().includes('parking')),
-        security: dormitory.amenities.some(a => a.name.toLowerCase().includes('security'))
+        wifi: amenities.some(a => a.toLowerCase().includes('wifi')),
+        parking: amenities.some(a => a.toLowerCase().includes('parking')),
+        security: amenities.some(a => a.toLowerCase().includes('security'))
       },
-      rules: dormitory.rules,
+      rules: dormitory.rules || [],
       coordinates: {
         lat: dormitory.latitude,
         lng: dormitory.longitude
       }
     };
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('uz-UZ').format(price) + ' so\'m';
   };
 
 
@@ -379,25 +372,35 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
           </motion.div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredDormitories.map((dormitory, index) => (
-              <DormitoryCard
-                key={dormitory.id}
-                id={dormitory.id}
-                name={dormitory.name}
-                month_price={dormitory.month_price}
-                address={dormitory.address}
-                universityName={dormitory.university.name}
-                images={dormitory.images.map(img => img.image)}
-                amenities={dormitory.amenities.map(a => a.name)}
-                available_capacity={dormitory.available_capacity}
-                total_capacity={dormitory.total_capacity}
-                distance_to_university={dormitory.distance_to_university}
-                description={dormitory.description}
-                onSelect={() => onListingSelect(convertDormitoryToListing(dormitory))}
-                onApplicationStart={() => onApplicationStart(convertDormitoryToListing(dormitory))}
-                canApply={!!user}
-              />
-            ))}
+            {filteredDormitories.map((dormitory) => {
+              const images = Array.isArray(dormitory.images) && dormitory.images.length > 0
+                ? dormitory.images.map(img => typeof img === 'string' ? img : img?.image || '')
+                : ['/placeholder-dormitory.svg'];
+              
+              const amenities = Array.isArray(dormitory.amenities_list) && dormitory.amenities_list.length > 0
+                ? dormitory.amenities_list.map(a => a?.name || '')
+                : [];
+
+              return (
+                <DormitoryCard
+                  key={dormitory.id}
+                  id={dormitory.id}
+                  name={dormitory.name}
+                  month_price={dormitory.month_price}
+                  address={dormitory.address}
+                  universityName={dormitory.university_name}
+                  images={images.filter(Boolean)}
+                  amenities={amenities.filter(Boolean)}
+                  available_capacity={dormitory.available_capacity || 0}
+                  total_capacity={dormitory.total_capacity || 0}
+                  distance_to_university={dormitory.distance_to_university}
+                  description={dormitory.description}
+                  onSelect={() => onListingSelect(convertDormitoryToListing(dormitory))}
+                  onApplicationStart={() => onApplicationStart(convertDormitoryToListing(dormitory))}
+                  canApply={!!user}
+                />
+              );
+            })}
           </div>
         )}
       </div>

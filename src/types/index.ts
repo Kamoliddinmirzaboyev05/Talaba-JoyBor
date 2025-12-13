@@ -26,7 +26,7 @@ export interface User {
 export interface Listing {
   id: string;
   title: string;
-  type: 'dormitory' | 'rental';
+  type: 'dormitory';
   price: number;
   location: string;
   university: string;
@@ -76,47 +76,30 @@ export interface Listing {
 
 export interface Dormitory {
   id: number;
-  university: {
-    id: number;
-    name: string;
-    address: string;
-    description: string;
-    contact: string;
-    logo: string | null;
-  };
-  admin: {
-    id: number;
-    username: string;
-    role: string;
-    email: string;
-  };
   name: string;
   address: string;
   description: string;
-  images: {
-    id: number;
-    dormitory: {
-      id: number;
-      name: string;
-    };
-    image: string;
-  }[];
   month_price: number;
   year_price: number;
   latitude: number;
   longitude: number;
-  amenities: {
-    id: number;
-    name: string;
-    is_active: boolean;
-    type: string;
-  }[];
-  total_capacity: number;
-  available_capacity: number;
-  total_rooms: number;
-  distance_to_university: number;
-  rules: string[];
-  // Add province and district for filtering
+  rating: number;
+  is_active: boolean;
+  // Direct fields from API
+  university: number;  // University ID
+  university_name: string;
+  admin: number;  // Admin ID
+  admin_name: string;
+  // Arrays (can be empty)
+  images: Array<{ id?: number; image: string } | string>;  // Array of image objects or URLs
+  amenities: number[];  // Array of amenity IDs
+  amenities_list: Array<{ id?: number; name: string; is_active?: boolean; type?: string }>;  // Array of amenity objects
+  // Optional fields for compatibility
+  total_capacity?: number;
+  available_capacity?: number;
+  total_rooms?: number;
+  distance_to_university?: number;
+  rules?: string[];
   province?: {
     id: number;
     name: string;
@@ -126,6 +109,13 @@ export interface Dormitory {
     name: string;
     province: number;
   };
+}
+
+export interface DormitoryAPIResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Dormitory[];
 }
 
 export interface Application {
@@ -245,28 +235,3 @@ export interface Notification {
   priority?: 'low' | 'medium' | 'high';
 }
 
-export interface APINotificationItem {
-  id: number; // user-notification id
-  notification: {
-    id: number;
-    message: string;
-    image: string | null;
-    image_url: string | null;
-    target_type: string; // e.g., all_students
-    target_user: number | null;
-    created_at: string;
-    is_active: boolean;
-  };
-  is_read: boolean;
-  received_at: string;
-}
-
-export interface APINotificationLegacy { // keep legacy for compatibility if backend changes
-  id: number;
-  title?: string;
-  message: string;
-  type?: string;
-  created_at: string;
-  is_read: boolean;
-  action_url?: string;
-}

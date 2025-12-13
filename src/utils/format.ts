@@ -29,11 +29,11 @@ export const formatCapacity = (count: number): string => {
 export const formatAvailableCapacity = (totalCapacity: number, availableCapacity: number): string => {
   const emptySpots = totalCapacity - availableCapacity;
   
-  if (emptySpots >= 50) return '50+ ta bo\'sh joy';
-  if (emptySpots >= 15) return '15+ ta bo\'sh joy';
-  if (emptySpots >= 10) return '10+ ta bo\'sh joy';
-  if (emptySpots > 0) return `${emptySpots} ta bo\'sh joy`;
-  return 'Bo\'sh joy yo\'q';
+  if (emptySpots >= 50) return "50+ ta bo'sh joy";
+  if (emptySpots >= 15) return "15+ ta bo'sh joy";
+  if (emptySpots >= 10) return "10+ ta bo'sh joy";
+  if (emptySpots > 0) return `${emptySpots} ta bo'sh joy`;
+  return "Bo'sh joy yo'q";
 };
 
 // Format a phone number for display: +998 XX XXX XX XX (spaces)

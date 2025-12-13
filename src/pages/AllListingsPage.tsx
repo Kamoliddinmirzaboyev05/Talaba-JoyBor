@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Search, Building2, Home } from 'lucide-react';
+import { Search, Home } from 'lucide-react';
 import Header from '../components/Header';
 import { Listing } from '../types';
 import { authAPI } from '../services/api';
 import DormitoryCard from '../components/DormitoryCard';
-import ListingCard from '../components/ListingCard';
 
 const AllListingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -24,70 +23,61 @@ const AllListingsPage: React.FC = () => {
         setLoading(true);
         setError('');
 
-        const [dormitoriesData, apartmentsData] = await Promise.all([
-          authAPI.getDormitories().catch(() => []),
-          authAPI.getApartments().catch(() => []),
-        ]);
+        const dormitoriesResponse = await authAPI.getDormitories().catch(() => ({ results: [] }));
+        const dormitoriesData = dormitoriesResponse.results || dormitoriesResponse;
 
-        const convertedDormitories: Listing[] = (dormitoriesData || []).map((dormitory: any) => ({
-          id: `dorm-${dormitory.id}`,
-          title: dormitory.name,
-          type: 'dormitory' as const,
-          price: dormitory.month_price,
-          location: dormitory.address,
-          university: dormitory.university?.name || '',
-          images: dormitory.images?.map((img: any) => img.image) || [],
-          amenities: dormitory.amenities?.map((amenity: any) => amenity.name) || [],
-          description: dormitory.description || '',
-          capacity: dormitory.total_capacity || 1,
-          available_capacity: dormitory.available_capacity,
-          available: (dormitory.available_capacity || 0) > 0,
-          rating: 0,
-          reviews: 0,
-          features: { furnished: true, wifi: false, parking: false, security: true },
-          rules: [],
-          coordinates: { lat: dormitory.latitude || 0, lng: dormitory.longitude || 0 },
-        }));
+        const convertedDormitories: Listing[] = (dormitoriesData || []).map((dormitory: {
+          id: number;
+          name: string;
+          month_price: number;
+          address: string;
+          university_name: string;
+          images: Array<string | { image: string }>;
+          amenities_list: Array<{ name: string }>;
+          description: string;
+          total_capacity?: number;
+          available_capacity?: number;
+          rating?: number;
+          rules?: string[];
+          latitude?: number;
+          longitude?: number;
+        }) => {
+          const images = Array.isArray(dormitory.images) && dormitory.images.length > 0
+            ? dormitory.images.map((img: string | { image: string }) => typeof img === 'string' ? img : img?.image || '')
+            : ['/placeholder-dormitory.svg'];
+          
+          const amenities = Array.isArray(dormitory.amenities_list) && dormitory.amenities_list.length > 0
+            ? dormitory.amenities_list.map((a: { name: string }) => a?.name || '')
+            : [];
 
-        const convertedApartments: Listing[] = (apartmentsData || []).map((apartment: any) => ({
-          id: `apt-${apartment.id}`,
-          title: apartment.title || 'Ijara Xonadon',
-          type: 'rental' as const,
-          price: apartment.monthly_price || 0,
-          location: apartment.exact_address || 'Manzil ko\'rsatilmagan',
-          university: `${apartment.room_type || 'Xona'} - ${apartment.gender || 'Aralash'}`,
-          images: apartment.images?.map((img: any) => img.image) || ['/placeholder-apartment.jpg'],
-          amenities: apartment.amenities?.map((amenity: any) => amenity.name) || [],
-          description: apartment.description || '',
-          capacity: apartment.total_rooms || 1,
-          available_capacity: apartment.available_rooms || 0,
-          available: (apartment.available_rooms || 0) > 0 && apartment.is_active !== false,
-          rating: 0,
-          reviews: 0,
-          landlord: {
-            name: apartment.user?.username || 'Egasi',
-            phone: apartment.phone_number || apartment.user_phone_number || '',
-            email: apartment.user?.email || '',
-            verified: true,
-            rating: 0,
-          },
-          features: { furnished: true, wifi: true, parking: false, security: true },
-          rules: [],
-          coordinates: { lat: 0, lng: 0 },
-          rooms: apartment.total_rooms || 1,
-          available_rooms: apartment.available_rooms || 0,
-          room_type: apartment.room_type || 'Xona',
-          gender: apartment.gender || 'Aralash',
-          owner: apartment.user?.username || 'Egasi',
-          phone_number: apartment.phone_number || apartment.user_phone_number || '',
-          user_phone_number: apartment.user_phone_number || '',
-          province: apartment.province,
-          created_at: apartment.created_at || new Date().toISOString(),
-          is_active: apartment.is_active !== false,
-        }));
+          return {
+            id: `dorm-${dormitory.id}`,
+            title: dormitory.name,
+            type: 'dormitory' as const,
+            price: dormitory.month_price,
+            location: dormitory.address,
+            university: dormitory.university_name || '',
+            images: images.filter(Boolean),
+            amenities: amenities.filter(Boolean),
+            description: dormitory.description || '',
+            capacity: dormitory.total_capacity || 0,
+            available_capacity: dormitory.available_capacity || 0,
+            available: (dormitory.available_capacity || 0) > 0,
+            rating: dormitory.rating || 0,
+            reviews: 0,
+            features: {
+              furnished: true,
+              wifi: amenities.some((a: string) => a.toLowerCase().includes('wifi')),
+              parking: amenities.some((a: string) => a.toLowerCase().includes('parking')),
+              security: amenities.some((a: string) => a.toLowerCase().includes('security')),
+            },
+            rules: dormitory.rules || [],
+            coordinates: { lat: dormitory.latitude || 0, lng: dormitory.longitude || 0 },
+          };
+        });
 
-        setListings([...convertedDormitories, ...convertedApartments]);
-      } catch (e) {
+        setListings(convertedDormitories);
+      } catch {
         setError('Ma\'lumotlarni yuklashda xatolik.');
       } finally {
         setLoading(false);
@@ -101,25 +91,15 @@ const AllListingsPage: React.FC = () => {
       <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Barcha E'lonlar</h1>
-          <div className="flex gap-2">
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => navigate('/dormitories')}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-teal-600 text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20"
-            >
-              <Home className="w-4 h-4" /> Yotoqxonalar
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => navigate('/rentals')}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
-            >
-              <Building2 className="w-4 h-4" /> Kvartiralar
-            </motion.button>
-          </div>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Barcha Yotoqxonalar</h1>
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => navigate('/dormitories')}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-teal-600 to-green-600 text-white hover:shadow-lg"
+          >
+            <Home className="w-4 h-4" /> Yotoqxonalar
+          </motion.button>
         </div>
 
         {loading ? (
@@ -142,30 +122,21 @@ const AllListingsPage: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {listings.map((listing) => (
-              <div key={listing.id}>
-                {listing.type === 'dormitory' ? (
-                  <DormitoryCard
-                    id={listing.id}
-                    name={listing.title}
-                    month_price={listing.price}
-                    address={listing.location}
-                    universityName={listing.university}
-                    images={listing.images}
-                    amenities={listing.amenities}
-                    available_capacity={(listing as any).available_capacity ?? 0}
-                    total_capacity={listing.capacity}
-                    description={listing.description}
-                    onSelect={() => navigate(`/listing/${listing.id}`)}
-                    canApply={false}
-                  />
-                ) : (
-                  <ListingCard
-                    listing={listing}
-                    onSelect={() => navigate(`/listing/${listing.id}`)}
-                    user={null}
-                  />
-                )}
-              </div>
+              <DormitoryCard
+                key={listing.id}
+                id={listing.id}
+                name={listing.title}
+                month_price={listing.price}
+                address={listing.location}
+                universityName={listing.university}
+                images={listing.images}
+                amenities={listing.amenities}
+                available_capacity={(listing as { available_capacity?: number }).available_capacity ?? 0}
+                total_capacity={listing.capacity}
+                description={listing.description}
+                onSelect={() => navigate(`/listing/${listing.id}`)}
+                canApply={false}
+              />
             ))}
           </div>
         )}

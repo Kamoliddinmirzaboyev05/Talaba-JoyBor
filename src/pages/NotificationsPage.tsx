@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Check, Filter, Search, Calendar, MessageCircle, CheckCircle, Info, RefreshCw, Clock } from 'lucide-react';
-import { Notification, APINotificationItem, APINotificationLegacy } from '../types';
+import { Notification } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import Header from '../components/Header';
 import { useTheme } from '../contexts/ThemeContext';
-import { authAPI } from '../services/api';
+// import { authAPI } from '../services/api'; // API o'chirilgan
 import { formatTime } from "../utils/format";
 
 const NotificationsPage: React.FC = () => {
@@ -39,125 +39,86 @@ const NotificationsPage: React.FC = () => {
       setLoadingMore(true);
     }
 
-    try {
-      const apiNotifications: any[] = await authAPI.getNotifications();
-
-      // Convert API format to local format (support both new and legacy shapes)
-      const convertedNotifications: Notification[] = apiNotifications.map((item: APINotificationItem | APINotificationLegacy) => {
-        const isNew = (item as APINotificationItem).notification !== undefined;
-        if (isNew) {
-          const n = (item as APINotificationItem);
-          return {
-            id: n.notification.id, // notification ichidagi id ni ishlatamiz
-            title: 'Bildirishnoma',
-            message: n.notification.message,
-            type: 'system' as const,
-            timestamp: n.notification.created_at,
-            read: n.is_read,
-            actionUrl: undefined,
-            image: n.notification.image_url || n.notification.image || undefined,
-          };
-        } else {
-          const n = item as APINotificationLegacy;
-          return {
-            id: n.id,
-            title: n.title || 'Bildirishnoma',
-            message: n.message,
-            type: (n.type as 'application' | 'message' | 'system' | 'reminder') || 'system',
-            timestamp: n.created_at,
-            read: n.is_read,
-            actionUrl: n.action_url,
-          };
-        }
-      });
-
-      // Sort notifications by timestamp (newest first)
-      const sortedNotifications = convertedNotifications.sort((a, b) =>
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-      );
-
-      // Implement pagination
-      const startIndex = (pageNum - 1) * ITEMS_PER_PAGE;
-      const endIndex = startIndex + ITEMS_PER_PAGE;
-      const paginatedNotifications = sortedNotifications.slice(startIndex, endIndex);
-
-      if (append) {
-        setNotifications(prev => [...prev, ...paginatedNotifications]);
-      } else {
-        setNotifications(paginatedNotifications);
+    // API o'chirilgan - faqat mock data ishlatamiz
+    const fallbackNotifications: Notification[] = [
+      {
+        id: 1,
+        title: 'Ariza tasdiqlandi! 🎉',
+        message: 'Tabriklaymiz! Sizning Toshkent Davlat Universiteti yotoqxonasiga arizangiz tasdiqlandi. Keyingi qadamlar haqida tez orada xabar beramiz.',
+        type: 'application',
+        timestamp: new Date().toISOString(),
+        read: false,
+        actionUrl: '/applications',
+        image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=100&h=100&fit=crop&crop=center',
+        priority: 'high'
+      },
+      {
+        id: 2,
+        title: 'Yangi xabar keldi',
+        message: 'Yotoqxona ma\'muriyatidan sizga yangi xabar keldi. Iltimos, xabarlar bo\'limini tekshiring.',
+        type: 'message',
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        read: false,
+        actionUrl: '/messages',
+        priority: 'medium'
+      },
+      {
+        id: 3,
+        title: 'Yangi yotoqxonalar qo\'shildi',
+        message: 'Samarqand viloyatida 5 ta yangi yotoqxona qo\'shildi. Ularni ko\'rib chiqing!',
+        type: 'system',
+        timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+        read: false,
+        actionUrl: '/dormitories',
+        image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=100&h=100&fit=crop&crop=center',
+        priority: 'medium'
+      },
+      {
+        id: 4,
+        title: 'Tizim yangilandi',
+        message: 'JoyBor platformasi yangi funksiyalar bilan yangilandi. Yangi imkoniyatlarni kashf eting!',
+        type: 'system',
+        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        read: true,
+        actionUrl: '/about',
+        priority: 'low'
+      },
+      {
+        id: 5,
+        title: 'Eslatma: To\'lov muddati',
+        message: 'Yotoqxona to\'lovi muddati yaqinlashmoqda. 3 kun ichida to\'lovni amalga oshiring.',
+        type: 'reminder',
+        timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+        read: false,
+        actionUrl: '/payments',
+        priority: 'high'
       }
+    ];
 
-      // Check if there are more items
-      setHasMore(endIndex < sortedNotifications.length);
-    } catch (error) {
-      console.error('Failed to load notifications:', error);
-      // Fallback to sample notifications for testing
-      const fallbackNotifications: Notification[] = [
-        {
-          id: 1,
-          title: 'Ariza tasdiqlandi! 🎉',
-          message: 'Tabriklaymiz! Sizning Toshkent Davlat Universiteti yotoqxonasiga arizangiz tasdiqlandi. Keyingi qadamlar haqida tez orada xabar beramiz.',
-          type: 'application',
-          timestamp: new Date().toISOString(),
-          read: false,
-          actionUrl: '/applications',
-          image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=100&h=100&fit=crop&crop=center',
-          priority: 'high'
-        },
-        {
-          id: 2,
-          title: 'Yangi xabar keldi',
-          message: 'Yotoqxona ma\'muriyatidan sizga yangi xabar keldi. Iltimos, xabarlar bo\'limini tekshiring.',
-          type: 'message',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          read: false,
-          actionUrl: '/messages',
-          priority: 'medium'
-        },
-        {
-          id: 3,
-          title: 'Yangi yotoqxonalar qo\'shildi',
-          message: 'Samarqand viloyatida 5 ta yangi yotoqxona qo\'shildi. Ularni ko\'rib chiqing!',
-          type: 'system',
-          timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-          read: false,
-          actionUrl: '/dormitories',
-          image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=100&h=100&fit=crop&crop=center',
-          priority: 'medium'
-        },
-        {
-          id: 4,
-          title: 'Tizim yangilandi',
-          message: 'JoyBor platformasi yangi funksiyalar bilan yangilandi. Yangi imkoniyatlarni kashf eting!',
-          type: 'system',
-          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-          read: true,
-          actionUrl: '/about',
-          priority: 'low'
-        },
-        {
-          id: 5,
-          title: 'Eslatma: To\'lov muddati',
-          message: 'Yotoqxona to\'lovi muddati yaqinlashmoqda. 3 kun ichida to\'lovni amalga oshiring.',
-          type: 'reminder',
-          timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-          read: false,
-          actionUrl: '/payments',
-          priority: 'high'
-        }
-      ];
-      setNotifications(fallbackNotifications);
-    } finally {
-      if (pageNum === 1) {
-        setLoading(false);
-      } else {
-        setLoadingMore(false);
-      }
+    // Implement pagination for mock data
+    const startIndex = (pageNum - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const paginatedNotifications = fallbackNotifications.slice(startIndex, endIndex);
+
+    if (append) {
+      setNotifications(prev => [...prev, ...paginatedNotifications]);
+    } else {
+      setNotifications(paginatedNotifications);
+    }
+
+    // Check if there are more items
+    setHasMore(endIndex < fallbackNotifications.length);
+
+    if (pageNum === 1) {
+      setLoading(false);
+    } else {
+      setLoadingMore(false);
     }
   };
 
   useEffect(() => {
     loadNotifications(1, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const handleLoadMore = () => {
@@ -229,45 +190,21 @@ const NotificationsPage: React.FC = () => {
 
 
   const handleMarkAsRead = async (notificationId: number) => {
-    try {
-      await authAPI.markNotificationAsRead(notificationId);
+    // API o'chirilgan - faqat local state yangilanadi
+    setNotifications(prev => prev.map(notif =>
+      notif.id === notificationId ? { ...notif, read: true } : notif
+    ));
 
-      // Update local state
-      setNotifications(prev => prev.map(notif =>
-        notif.id === notificationId ? { ...notif, read: true } : notif
-      ));
-
-      // Refresh unread count in header
-      refreshUnreadCount();
-    } catch (error) {
-      console.error('Failed to mark notification as read:', error);
-    }
+    // Refresh unread count in header
+    refreshUnreadCount();
   };
 
   const handleMarkAllAsRead = async () => {
-    try {
-      // Get all notifications from API first
-      const apiNotifications = await authAPI.getNotifications();
-      const unreadNotifications = apiNotifications.filter((item: any) => {
-        const isNew = item.notification !== undefined;
-        return isNew ? !item.is_read : !item.is_read;
-      });
+    // API o'chirilgan - faqat local state yangilanadi
+    setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
 
-      // Mark all unread notifications as read using notification.id
-      await Promise.all(unreadNotifications.map((item: any) => {
-        const isNew = item.notification !== undefined;
-        const notificationId = isNew ? item.notification.id : item.id;
-        return authAPI.markNotificationAsRead(notificationId);
-      }));
-
-      // Update local state
-      setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
-
-      // Refresh unread count in header
-      refreshUnreadCount();
-    } catch (error) {
-      console.error('Failed to mark all notifications as read:', error);
-    }
+    // Refresh unread count in header
+    refreshUnreadCount();
   };
 
 

@@ -67,7 +67,7 @@ const ContactForm: React.FC = () => {
     setTimeout(() => {
       setIsSubmitting(false);
       // Example of normalized phone ready for API
-      const _normalized = normalizePhoneForApi(formData.phone);
+      normalizePhoneForApi(formData.phone);
       setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
       alert('Xabaringiz muvaffaqiyatli yuborildi! Tez orada javob beramiz.');
     }, 1500);

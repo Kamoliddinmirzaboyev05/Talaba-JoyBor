@@ -6,9 +6,6 @@ const API_BASE_URL = 'https://joyborv1.pythonanywhere.com/api';
 // Create axios instance
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 // Request interceptor to add auth token
@@ -18,7 +15,21 @@ api.interceptors.request.use(
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
-    config.headers['Content-Type'] = 'application/json';
+    
+    // Handle Content-Type based on data type
+    if (config.data instanceof FormData) {
+      // For FormData, delete Content-Type to let browser set it with boundary
+      delete config.headers['Content-Type'];
+      
+      if (import.meta.env.DEV) {
+        console.log('📤 FormData request detected, Content-Type removed');
+        console.log('Headers:', config.headers);
+      }
+    } else {
+      // For other requests, use application/json
+      config.headers['Content-Type'] = 'application/json';
+    }
+    
     return config;
   },
   (error) => {
@@ -118,13 +129,13 @@ export const authAPI = {
 
   // Get user profile
   getProfile: async (): Promise<UserProfile> => {
-    const response = await api.get('/profile/');
+    const response = await api.get('/me/');
     return response.data;
   },
 
   // Update user profile
   updateProfile: async (data: Partial<UserProfile>): Promise<UserProfile> => {
-    const response = await api.put('/profile/', data);
+    const response = await api.put('/me/', data);
     return response.data;
   },
 
@@ -143,28 +154,34 @@ export const authAPI = {
   // Get provinces/cities list
   getProvinces: async (): Promise<{ id: number; name: string }[]> => {
     const response = await api.get('/provinces/');
-    return response.data;
+    // API returns { count, next, previous, results }
+    return response.data.results || response.data;
   },
 
   // Get districts by province ID
-  getDistricts: async (provinceId: number): Promise<{ id: number; name: string; province: number }[]> => {
+  getDistricts: async (provinceId: number): Promise<{ id: number; name: string; province: number; province_name?: string }[]> => {
     const response = await api.get(`/districts/?province=${provinceId}`);
-    return response.data;
+    // API returns { count, next, previous, results }
+    return response.data.results || response.data;
   },
 
   // Get dormitories list
-  getDormitories: async (): Promise<any[]> => {
+  getDormitories: async (): Promise<{ count: number; next: string | null; previous: string | null; results: unknown[] }> => {
     const response = await api.get('/dormitories/');
+    // API returns { count, next, previous, results }
     return response.data;
   },
 
-  // Get apartments list (ijara xonadonlar)
-  getApartments: async (): Promise<any[]> => {
+  // Get apartments list
+  getApartments: async (): Promise<unknown[]> => {
     const response = await api.get('/apartments/');
-    return response.data;
+    // API returns array or { count, next, previous, results }
+    return response.data.results || response.data;
   },
 
-  // Submit application
+
+
+  // Submit application - API rasmiga asoslangan to'liq versiya
   submitApplication: async (applicationData: {
     user: number;
     dormitory: number;
@@ -172,126 +189,187 @@ export const authAPI = {
     last_name?: string;
     middle_name?: string;
     province: number;
-    district: number;
+    district: number;  // district field (API da "district" deb ko'rsatilgan)
     faculty?: string;
     direction?: string;
     course: string;
     group?: string;
-    phone?: number;
+    phone?: string;  // string formatida (API da string)
     passport?: string;
     comment?: string;
     user_image?: File | null;
     document?: File | null;
     passport_image_first?: File | null;
     passport_image_second?: File | null;
-  }): Promise<any> => {
+  }): Promise<unknown> => {
     try {
       // Create FormData for file uploads
       const formData = new FormData();
       
-      // Add all required fields first
+      // MAJBURIY MAYDONLAR (required=true)
+      // 1. user (integer, required)
       formData.append('user', applicationData.user.toString());
+      
+      // 2. dormitory (integer, required)
       formData.append('dormitory', applicationData.dormitory.toString());
+      
+      // 3. name (string, maxLength: 128, required)
       formData.append('name', applicationData.name.trim());
+      
+      // 4. province (integer, required)
       formData.append('province', applicationData.province.toString());
+      
+      // 5. district (integer, required)
       formData.append('district', applicationData.district.toString());
+      
+      // 6. course (string, required)
       formData.append('course', applicationData.course.trim());
       
-      // Add nullable fields only if they have values
-      if (applicationData.last_name && typeof applicationData.last_name === 'string' && applicationData.last_name.trim()) {
+      // IXTIYORIY MAYDONLAR (nullable=true)
+      // last_name (string, maxLength: 128, nullable)
+      if (applicationData.last_name && applicationData.last_name.trim()) {
         formData.append('last_name', applicationData.last_name.trim());
       }
-      if (applicationData.faculty && typeof applicationData.faculty === 'string' && applicationData.faculty.trim()) {
-        formData.append('faculty', applicationData.faculty.trim());
-      }
-      if (applicationData.phone && typeof applicationData.phone === 'number') {
-        formData.append('phone', applicationData.phone.toString());
-      }
-      if (applicationData.passport && typeof applicationData.passport === 'string' && applicationData.passport.trim()) {
-        formData.append('passport', applicationData.passport.trim());
-      }
       
-      // Add optional fields only if they have values
+      // middle_name (string, maxLength: 128, nullable)
       if (applicationData.middle_name && applicationData.middle_name.trim()) {
         formData.append('middle_name', applicationData.middle_name.trim());
       }
+      
+      // faculty (string, maxLength: 128, nullable)
+      if (applicationData.faculty && applicationData.faculty.trim()) {
+        formData.append('faculty', applicationData.faculty.trim());
+      }
+      
+      // direction (string, maxLength: 128, nullable)
       if (applicationData.direction && applicationData.direction.trim()) {
         formData.append('direction', applicationData.direction.trim());
       }
+      
+      // group (string, maxLength: 128, nullable)
       if (applicationData.group && applicationData.group.trim()) {
         formData.append('group', applicationData.group.trim());
       }
+      
+      // phone (string, nullable)
+      if (applicationData.phone && applicationData.phone.trim()) {
+        formData.append('phone', applicationData.phone.trim());
+      }
+      
+      // passport (string, maxLength: 128, nullable)
+      if (applicationData.passport && applicationData.passport.trim()) {
+        formData.append('passport', applicationData.passport.trim());
+      }
+      
+      // comment (string, nullable)
       if (applicationData.comment && applicationData.comment.trim()) {
         formData.append('comment', applicationData.comment.trim());
       }
       
-      // Add files if they exist
-      if (applicationData.user_image) {
+      // FAYL MAYDONLARI (file, nullable)
+      // user_image (file, nullable)
+      if (applicationData.user_image && applicationData.user_image instanceof File) {
         formData.append('user_image', applicationData.user_image);
       }
-      if (applicationData.document) {
+      
+      // document (file, nullable)
+      if (applicationData.document && applicationData.document instanceof File) {
         formData.append('document', applicationData.document);
       }
-      if (applicationData.passport_image_first) {
+      
+      // passport_image_first (file, nullable)
+      if (applicationData.passport_image_first && applicationData.passport_image_first instanceof File) {
         formData.append('passport_image_first', applicationData.passport_image_first);
       }
-      if (applicationData.passport_image_second) {
+      
+      // passport_image_second (file, nullable)
+      if (applicationData.passport_image_second && applicationData.passport_image_second instanceof File) {
         formData.append('passport_image_second', applicationData.passport_image_second);
       }
       
+      // Debug logging
       if (import.meta.env.DEV) {
-        console.log('Sending application data as FormData');
+        console.log('=== ARIZA YUBORISH DEBUG ===');
         console.log('Original data:', applicationData);
-        // FormData ni debug qilish uchun
-        for (let [key, value] of formData.entries()) {
+        console.log('\n📋 FormData entries:');
+        const formDataEntries: Record<string, string> = {};
+        for (const [key, value] of formData.entries()) {
           if (value instanceof File) {
-            console.log(`${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+            const fileInfo = `File(${value.name}, ${value.size} bytes, ${value.type})`;
+            console.log(`  ✓ ${key}: ${fileInfo}`);
+            formDataEntries[key] = fileInfo;
           } else {
-            console.log(`${key}:`, value);
+            console.log(`  ✓ ${key}: ${value}`);
+            formDataEntries[key] = String(value);
+          }
+        }
+        console.log('\n📊 FormData summary:', formDataEntries);
+        console.log('=== END DEBUG ===\n');
+      }
+      
+      // Send request
+      const response = await api.post('/applications/create/', formData, {
+        timeout: 30000, // 30 seconds timeout
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      if (import.meta.env.DEV) {
+        console.log('✅ Ariza muvaffaqiyatli yuborildi:', response.data);
+      }
+      
+      return response.data;
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number; statusText?: string; data?: unknown }; message?: string; config?: { url?: string; method?: string; headers?: unknown } };
+      console.error('=== ❌ ARIZA YUBORISH XATOSI ===');
+      console.error('Status:', err.response?.status);
+      console.error('Status Text:', err.response?.statusText);
+      console.error('Error Message:', err.message);
+      
+      if (err.response?.data) {
+        console.error('Server Response:', err.response.data);
+        
+        // Parse HTML error if present
+        if (typeof err.response.data === 'string' && err.response.data.includes('<!doctype html>')) {
+          console.error('⚠️ Server returned HTML error page');
+          const titleMatch = err.response.data.match(/<title>(.*?)<\/title>/);
+          if (titleMatch) {
+            console.error('Error Title:', titleMatch[1]);
           }
         }
       }
       
-      // Get current token
-      const token = sessionStorage.getItem('access') || sessionStorage.getItem('access_token');
-      if (!token) {
-        throw new Error('Authentication token not found');
+      if (err.config) {
+        console.error('Request URL:', err.config.url);
+        console.error('Request Method:', err.config.method);
+        console.error('Request Headers:', err.config.headers);
       }
       
-      // Send with multipart/form-data content type
-      const response = await axios.post(`${API_BASE_URL}/applications/create/`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`
-        },
-        timeout: 30000 // 30 seconds timeout
-      });
-      
-      return response.data;
-    } catch (error: any) {
-      console.error('API Error Details:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message,
-        config: error.config
-      });
-      
-      // Xato ma'lumotlarini batafsil ko'rsatish
-      if (error.response?.data) {
-        console.error('Server response data:', error.response.data);
-      }
+      console.error('=== END XATO ===\n');
       
       throw error;
     }
   },
 
   // Get user applications
-  getApplications: async (): Promise<any[]> => {
+  getApplications: async (): Promise<unknown[]> => {
     try {
       const response = await api.get('/applications/');
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Applications fetch error:', error);
+      throw error;
+    }
+  },
+
+  // Get student dashboard data
+  getStudentDashboard: async (): Promise<unknown> => {
+    try {
+      const response = await api.get('/student/dashboard/');
+      return response.data;
+    } catch (error: unknown) {
+      console.error('Student dashboard fetch error:', error);
       throw error;
     }
   },
@@ -301,7 +379,7 @@ export const authAPI = {
     try {
       const response = await api.get('/universities/');
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Universities fetch error:', error);
       // Fallback universitetlar ro'yxati
       return [
@@ -336,7 +414,7 @@ export const authAPI = {
         users_count: Number(data.students_count) || 0,
         applications_count: 0,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       // 401 xatosi yoki boshqa autentifikatsiya muammolari uchun
       if (error.response?.status === 401) {
         console.warn('Statistics API requires authentication, using fallback data');
@@ -370,24 +448,55 @@ export const authAPI = {
   },
 
   // Get notifications
-  getNotifications: async (): Promise<any[]> => {
+  getNotifications: async (): Promise<unknown[]> => {
     try {
       const response = await api.get('/notifications/my/');
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // If endpoint doesn't exist (404) or other errors, return mock data
+      if (error.response?.status === 404) {
+        console.warn('Notifications endpoint not available, using mock data');
+        // Mock notifications data
+        return [
+          {
+            id: 1,
+            title: "Arizangiz qabul qilindi",
+            message: "Sizning yotoqxona uchun arizangiz muvaffaqiyatli qabul qilindi va ko'rib chiqilmoqda.",
+            is_read: false,
+            created_at: new Date().toISOString(),
+            type: "application_update"
+          },
+          {
+            id: 2,
+            title: "Yangi yotoqxona qo'shildi",
+            message: "Toshkent shahrida yangi yotoqxona mavjud. Ko'rib chiqishingiz mumkin.",
+            is_read: false,
+            created_at: new Date(Date.now() - 3600000).toISOString(), // 1 soat oldin
+            type: "new_listing"
+          },
+          {
+            id: 3,
+            title: "Profilingizni to'ldiring",
+            message: "To'liq profil ko'proq imkoniyatlar beradi. Profilingizni to'ldiring.",
+            is_read: true,
+            created_at: new Date(Date.now() - 86400000).toISOString(), // 1 kun oldin
+            type: "profile_reminder"
+          }
+        ];
+      }
       console.error('Notifications fetch error:', error);
-      throw error;
+      return []; // Return empty array for other errors
     }
   },
 
   // Mark notification as read
-  markNotificationAsRead: async (notificationId: number): Promise<any> => {
+  markNotificationAsRead: async (notificationId: number): Promise<unknown> => {
     try {
       const response = await api.post('/notifications/mark-read/', {
         notification_id: notificationId
       });
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Mark notification as read error:', error);
       throw error;
     }

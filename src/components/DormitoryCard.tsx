@@ -38,7 +38,6 @@ const DormitoryCard: React.FC<DormitoryCardProps> = ({
   images,
   amenities,
   available_capacity,
-  total_capacity,
   distance_to_university,
   description,
   onSelect,
@@ -210,7 +209,7 @@ const DormitoryCard: React.FC<DormitoryCardProps> = ({
             Ko'rish
           </motion.button>
 
-          {canApply && onApplicationStart && (total_capacity - available_capacity > 0) && (
+          {canApply && onApplicationStart && (
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, UserPlus, Phone } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, UserPlus } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
-import { formatPhoneInput, normalizePhoneForApi } from '../utils/format';
 import { useAuth } from '../contexts/AuthContext';
 
 const RegisterPage: React.FC = () => {
@@ -24,7 +23,6 @@ const RegisterPage: React.FC = () => {
     last_name: '',
     username: '',
     email: '',
-    phone: '',
     password: '',
     password2: ''
   });
@@ -34,6 +32,13 @@ const RegisterPage: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState('');
 
+
+  // Email formatini tekshirish
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -42,13 +47,46 @@ const RegisterPage: React.FC = () => {
 
     // Frontend validation
     const newErrors: Record<string, string> = {};
-    if (!formData.first_name) newErrors.first_name = 'Ism kiritilishi shart';
-    if (!formData.last_name) newErrors.last_name = 'Familiya kiritilishi shart';
-    if (!formData.username) newErrors.username = 'Foydalanuvchi nomi kiritilishi shart';
-    if (!formData.email) newErrors.email = 'Email manzil kiritilishi shart';
-    if (!formData.phone) newErrors.phone = 'Telefon raqam kiritilishi shart';
-    if (!formData.password) newErrors.password = 'Parol kiritilishi shart';
-    if (formData.password !== formData.password2) {
+    
+    // Ism va familiya validatsiyasi
+    if (!formData.first_name.trim()) {
+      newErrors.first_name = 'Ism kiritilishi shart';
+    } else if (formData.first_name.trim().length < 2) {
+      newErrors.first_name = 'Ism kamida 2 ta belgidan iborat bo\'lishi kerak';
+    }
+    
+    if (!formData.last_name.trim()) {
+      newErrors.last_name = 'Familiya kiritilishi shart';
+    } else if (formData.last_name.trim().length < 2) {
+      newErrors.last_name = 'Familiya kamida 2 ta belgidan iborat bo\'lishi kerak';
+    }
+    
+    // Username validatsiyasi
+    if (!formData.username.trim()) {
+      newErrors.username = 'Foydalanuvchi nomi kiritilishi shart';
+    } else if (formData.username.trim().length < 3) {
+      newErrors.username = 'Foydalanuvchi nomi kamida 3 ta belgidan iborat bo\'lishi kerak';
+    }
+    
+    // Email validatsiyasi
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email manzil kiritilishi shart';
+    } else if (!isValidEmail(formData.email)) {
+      newErrors.email = 'Noto\'g\'ri email format';
+    }
+    
+    
+    // Parol validatsiyasi
+    if (!formData.password) {
+      newErrors.password = 'Parol kiritilishi shart';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak';
+    }
+    
+    // Parolni tasdiqlash
+    if (!formData.password2) {
+      newErrors.password2 = 'Parolni tasdiqlash shart';
+    } else if (formData.password !== formData.password2) {
       newErrors.password2 = 'Parollar mos kelmaydi';
     }
 
@@ -65,13 +103,13 @@ const RegisterPage: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          username: formData.username,
-          email: formData.email,
-          phone: normalizePhoneForApi(formData.phone),
+          username: formData.username.trim(),
           password: formData.password,
           password2: formData.password2,
+          email: formData.email.trim(),
+          role: 'student',
+          first_name: formData.first_name.trim(),
+          last_name: formData.last_name.trim(),
         }),
       });
 
@@ -98,9 +136,77 @@ const RegisterPage: React.FC = () => {
 
       // Only parse JSON after ok
       const data = await response.json();
-      localStorage.setItem('access', data.access);
-      localStorage.setItem('refresh', data.refresh);
+      console.log('Register API javobi:', data);
+      
+      // API javobida tokenlar borligini tekshirish
+      if (!data.access || !data.refresh) {
+        console.log('API javobida tokenlar yo\'q, avtomatik login qilinmoqda...');
+        
+        // Agar register API tokenlarni qaytarmasa, login API orqali kirish
+        try {
+          const loginResponse = await fetch('https://joyborv1.pythonanywhere.com/api/token/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              username: formData.username.trim(),
+              password: formData.password,
+            }),
+          });
+
+          if (loginResponse.ok) {
+            const loginData = await loginResponse.json();
+            console.log('Login API javobi:', loginData);
+            
+            // Tokenlarni sessionStorage ga saqlash
+            sessionStorage.setItem('access', loginData.access);
+            sessionStorage.setItem('refresh', loginData.refresh);
+            
+            // Login funksiyasini chaqirish
+            await login(loginData.access, loginData.refresh);
+            
+            console.log('Avtomatik login muvaffaqiyatli, dashboard ga yo\'naltirilmoqda...');
+            
+            // Dashboard ga yo'naltirish
+            navigate(from, { replace: true });
+            return;
+          } else {
+            console.error('Avtomatik login xatosi');
+            // Login sahifasiga yo'naltirish
+            navigate('/login', { 
+              state: { 
+                message: 'Ro\'yxatdan o\'tish muvaffaqiyatli! Endi tizimga kiring.',
+                username: formData.username 
+              } 
+            });
+            return;
+          }
+        } catch (loginError) {
+          console.error('Avtomatik login xatosi:', loginError);
+          // Login sahifasiga yo'naltirish
+          navigate('/login', { 
+            state: { 
+              message: 'Ro\'yxatdan o\'tish muvaffaqiyatli! Endi tizimga kiring.',
+              username: formData.username 
+            } 
+          });
+          return;
+        }
+      }
+      
+      // Tokenlarni sessionStorage ga saqlash (AuthContext bilan mos kelishi uchun)
+      sessionStorage.setItem('access', data.access);
+      sessionStorage.setItem('refresh', data.refresh);
+      
+      console.log('Tokenlar saqlandi, login funksiyasi chaqirilmoqda...');
+      
+      // Login funksiyasini chaqirish - bu user ma'lumotlarini yuklaydi
       await login(data.access, data.refresh);
+      
+      console.log('Login muvaffaqiyatli, dashboard ga yo\'naltirilmoqda...');
+      
+      // Dashboard ga yo'naltirish
       navigate(from, { replace: true });
     } catch {
       setGeneralError('Network error or server is down.');
@@ -110,10 +216,8 @@ const RegisterPage: React.FC = () => {
   };
 
   const handleInputChange = (field: string, value: string) => {
-    if (field === 'phone') {
-      value = formatPhoneInput(value);
-    }
     setFormData(prev => ({ ...prev, [field]: value }));
+    
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -122,11 +226,30 @@ const RegisterPage: React.FC = () => {
   const nextStep = () => {
     const step1Errors: Record<string, string> = {};
     if (currentStep === 1) {
-      if (!formData.first_name) step1Errors.first_name = 'Ism kiritilishi shart';
-      if (!formData.last_name) step1Errors.last_name = 'Familiya kiritilishi shart';
-      if (!formData.username) step1Errors.username = 'Foydalanuvchi nomi kiritilishi shart';
-      if (!formData.email) step1Errors.email = 'Email manzil kiritilishi shart';
-      if (!formData.phone) step1Errors.phone = 'Telefon raqam kiritilishi shart';
+      if (!formData.first_name.trim()) {
+        step1Errors.first_name = 'Ism kiritilishi shart';
+      } else if (formData.first_name.trim().length < 2) {
+        step1Errors.first_name = 'Ism kamida 2 ta belgidan iborat bo\'lishi kerak';
+      }
+      
+      if (!formData.last_name.trim()) {
+        step1Errors.last_name = 'Familiya kiritilishi shart';
+      } else if (formData.last_name.trim().length < 2) {
+        step1Errors.last_name = 'Familiya kamida 2 ta belgidan iborat bo\'lishi kerak';
+      }
+      
+      if (!formData.username.trim()) {
+        step1Errors.username = 'Foydalanuvchi nomi kiritilishi shart';
+      } else if (formData.username.trim().length < 3) {
+        step1Errors.username = 'Foydalanuvchi nomi kamida 3 ta belgidan iborat bo\'lishi kerak';
+      }
+      
+      if (!formData.email.trim()) {
+        step1Errors.email = 'Email manzil kiritilishi shart';
+      } else if (!isValidEmail(formData.email)) {
+        step1Errors.email = 'Noto\'g\'ri email format';
+      }
+      
       
       if (Object.keys(step1Errors).length > 0) {
         setErrors(step1Errors);
@@ -344,36 +467,6 @@ const RegisterPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* Phone Field */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Telefon Raqam
-                  </label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
-                        theme === 'dark' 
-                          ? 'bg-gray-700 border-gray-600 text-white' 
-                          : 'bg-white border-gray-300 text-gray-900'
-                      } ${errors.phone ? 'border-red-500' : ''}`}
-                      placeholder="+998901234567"
-                    />
-                  </div>
-                  {errors.phone && (
-                    <motion.p
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-red-500 text-sm mt-1"
-                    >
-                      {errors.phone}
-                    </motion.p>
-                  )}
-                </div>
-
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -409,7 +502,7 @@ const RegisterPage: React.FC = () => {
                           ? 'bg-gray-700 border-gray-600 text-white' 
                           : 'bg-white border-gray-300 text-gray-900'
                       } ${errors.password ? 'border-red-500' : ''}`}
-                      placeholder="Kuchli parol yarating"
+                      placeholder="Parol kiriting (kamida 6 ta belgi)"
                     />
                     <button
                       type="button"
@@ -419,6 +512,7 @@ const RegisterPage: React.FC = () => {
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
+                  
                   {errors.password && (
                     <motion.p
                       initial={{ opacity: 0, y: -10 }}

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, LogIn } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
 
   // Sahifa yuklanganda yuqoriga scroll qilish
@@ -14,14 +15,20 @@ const LoginPage: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
   const { theme } = useTheme();
+  
+  // Register sahifasidan kelgan xabar
+  const registerMessage = (location.state as { message?: string })?.message;
+  const registeredUsername = (location.state as { username?: string })?.username;
+  
   const [formData, setFormData] = useState({
-    username: '',
+    username: registeredUsername || '',
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState('');
+  const [successMessage] = useState(registerMessage || '');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,6 +131,17 @@ const LoginPage: React.FC = () => {
           className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8"
         >
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Success Message */}
+            {successMessage && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-green-600 dark:text-green-400 text-sm"
+              >
+                {successMessage}
+              </motion.div>
+            )}
+            
             {/* General Error */}
             {generalError && (
               <motion.div

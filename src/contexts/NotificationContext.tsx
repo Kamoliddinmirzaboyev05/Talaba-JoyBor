@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
-import { authAPI } from '../services/api';
+// import { authAPI } from '../services/api'; // API o'chirilgan
 
 interface NotificationContextType {
   unreadCount: number;
@@ -31,19 +31,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       return;
     }
 
-    try {
-      const notifications = await authAPI.getNotifications();
-      const unread = notifications.filter((item: any) => {
-        // Support both new and legacy notification formats
-        const isNew = item.notification !== undefined;
-        return isNew ? !item.is_read : !item.is_read;
-      }).length;
-      setUnreadCount(unread);
-    } catch (error) {
-      console.error('Failed to fetch unread count:', error);
-      // Set to 0 on error instead of fallback
-      setUnreadCount(0);
-    }
+    // API o'chirilgan - faqat mock data
+    // Mock data: 2 o'qilmagan bildirishnoma
+    setUnreadCount(2);
   };
 
   const refreshUnreadCount = () => {
@@ -57,7 +47,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     const interval = setInterval(fetchUnreadCount, 30000);
     
     return () => clearInterval(interval);
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, fetchUnreadCount]);
 
   const value = {
     unreadCount,

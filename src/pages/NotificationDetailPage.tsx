@@ -6,14 +6,12 @@ import { Notification } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import Header from '../components/Header';
-import { useTheme } from '../contexts/ThemeContext';
 import { authAPI } from '../services/api';
 import { formatTime } from "../utils/format";
 
 const NotificationDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { theme } = useTheme();
   const { refreshUnreadCount } = useNotifications();
   const navigate = useNavigate();
   const [notification, setNotification] = useState<Notification | null>(null);
@@ -31,30 +29,61 @@ const NotificationDetailPage: React.FC = () => {
       setLoading(true);
       try {
         const apiNotifications = await authAPI.getNotifications();
-        const foundNotification = apiNotifications.find((item: any) => {
-          const isNew = item.notification !== undefined;
-          return isNew ? item.notification.id === parseInt(id) : item.id === parseInt(id);
-        });
+        
+        // Define notification types
+        type NewNotificationFormat = {
+          notification: {
+            id: number;
+            message: string;
+            created_at: string;
+            image_url?: string;
+            image?: string;
+          };
+          is_read: boolean;
+        };
+        
+        type LegacyNotificationFormat = {
+          id: number;
+          title?: string;
+          message: string;
+          type?: string;
+          created_at: string;
+          is_read: boolean;
+          action_url?: string;
+        };
+        
+        const foundNotification = apiNotifications.find((item: unknown) => {
+          const typedItem = item as Record<string, unknown>;
+          const isNew = typedItem.notification !== undefined;
+          return isNew ? (typedItem.notification as { id: number }).id === parseInt(id) : (typedItem as { id: number }).id === parseInt(id);
+        }) as (NewNotificationFormat | LegacyNotificationFormat) | undefined;
 
         if (foundNotification) {
-          const isNew = foundNotification.notification !== undefined;
+          const isNew = 'notification' in foundNotification;
+          
+          const legacyType = (foundNotification as LegacyNotificationFormat).type;
+          const validType: 'application' | 'message' | 'system' | 'reminder' = 
+            (legacyType === 'application' || legacyType === 'message' || legacyType === 'system' || legacyType === 'reminder') 
+              ? legacyType 
+              : 'system';
+          
           const convertedNotification: Notification = isNew ? {
-            id: foundNotification.notification.id,
+            id: (foundNotification as NewNotificationFormat).notification.id,
             title: 'Bildirishnoma',
-            message: foundNotification.notification.message,
+            message: (foundNotification as NewNotificationFormat).notification.message,
             type: 'system',
-            timestamp: foundNotification.notification.created_at,
+            timestamp: (foundNotification as NewNotificationFormat).notification.created_at,
             read: foundNotification.is_read,
             actionUrl: undefined,
-            image: foundNotification.notification.image_url || foundNotification.notification.image,
+            image: (foundNotification as NewNotificationFormat).notification.image_url || (foundNotification as NewNotificationFormat).notification.image,
           } : {
-            id: foundNotification.id,
-            title: foundNotification.title || 'Bildirishnoma',
-            message: foundNotification.message,
-            type: foundNotification.type || 'system',
-            timestamp: foundNotification.created_at,
-            read: foundNotification.is_read,
-            actionUrl: foundNotification.action_url,
+            id: (foundNotification as LegacyNotificationFormat).id,
+            title: (foundNotification as LegacyNotificationFormat).title || 'Bildirishnoma',
+            message: (foundNotification as LegacyNotificationFormat).message,
+            type: validType,
+            timestamp: (foundNotification as LegacyNotificationFormat).created_at,
+            read: (foundNotification as LegacyNotificationFormat).is_read,
+            actionUrl: (foundNotification as LegacyNotificationFormat).action_url,
           };
           
           setNotification(convertedNotification);
@@ -75,6 +104,7 @@ const NotificationDetailPage: React.FC = () => {
     };
 
     loadNotification();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user, navigate]);
 
   const handleMarkAsRead = async (notificationId: number) => {
