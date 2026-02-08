@@ -75,7 +75,6 @@ const RegisterPage: React.FC = () => {
       newErrors.email = 'Noto\'g\'ri email format';
     }
     
-    
     // Parol validatsiyasi
     if (!formData.password) {
       newErrors.password = 'Parol kiritilishi shart';
@@ -97,6 +96,7 @@ const RegisterPage: React.FC = () => {
     }
 
     try {
+      // 1-qadam: Ro'yxatdan o'tish
       const response = await fetch('https://joyborv1.pythonanywhere.com/api/register/', {
         method: 'POST',
         headers: {
@@ -107,109 +107,94 @@ const RegisterPage: React.FC = () => {
           password: formData.password,
           password2: formData.password2,
           email: formData.email.trim(),
-          role: 'student',
           first_name: formData.first_name.trim(),
           last_name: formData.last_name.trim(),
+          role: 'student',
         }),
       });
 
       // Wait for the response body only after response.ok
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Register API xatosi:', errorData);
+        
         // Show field errors if available
         if (typeof errorData === 'object') {
           const fieldErrors: Record<string, string> = {};
           Object.keys(errorData).forEach((key) => {
             if (Array.isArray(errorData[key])) {
-              fieldErrors[key] = errorData[key][0];
+              // Xatolarni o'zbek tiliga tarjima qilish
+              const errorMsg = errorData[key][0];
+              if (errorMsg.includes('already exists')) {
+                fieldErrors[key] = key === 'username' 
+                  ? 'Bu foydalanuvchi nomi band' 
+                  : key === 'email' 
+                  ? 'Bu email manzil allaqachon ro\'yxatdan o\'tgan' 
+                  : errorMsg;
+              } else {
+                fieldErrors[key] = errorMsg;
+              }
             } else if (typeof errorData[key] === 'string') {
               fieldErrors[key] = errorData[key];
             }
           });
           setErrors(fieldErrors);
-          setGeneralError(errorData.detail || 'Ro\'yhatdan o\'tishda xatolik yuz berdi');
+          
+          // Umumiy xato xabarini ko'rsatish
+          if (Object.keys(fieldErrors).length > 0) {
+            setGeneralError('Iltimos, xatolarni to\'g\'rilang');
+          } else {
+            setGeneralError(errorData.detail || 'Ro\'yhatdan o\'tishda xatolik yuz berdi');
+          }
         } else {
           setGeneralError('Ro\'yhatdan o\'tishda xatolik yuz berdi');
         }
+        setIsLoading(false);
         return;
       }
 
-      // Only parse JSON after ok
-      const data = await response.json();
-      console.log('Register API javobi:', data);
+      // Ro'yxatdan o'tish muvaffaqiyatli
+      const registerData = await response.json();
+      console.log('✅ Ro\'yxatdan o\'tish muvaffaqiyatli:', registerData);
       
-      // API javobida tokenlar borligini tekshirish
-      if (!data.access || !data.refresh) {
-        console.log('API javobida tokenlar yo\'q, avtomatik login qilinmoqda...');
-        
-        // Agar register API tokenlarni qaytarmasa, login API orqali kirish
-        try {
-          const loginResponse = await fetch('https://joyborv1.pythonanywhere.com/api/token/', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              username: formData.username.trim(),
-              password: formData.password,
-            }),
-          });
+      // 2-qadam: Darhol login qilish
+      console.log('🔄 Avtomatik login qilinmoqda...');
+      const loginResponse = await fetch('https://joyborv1.pythonanywhere.com/api/token/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: formData.username.trim(),
+          password: formData.password,
+        }),
+      });
 
-          if (loginResponse.ok) {
-            const loginData = await loginResponse.json();
-            console.log('Login API javobi:', loginData);
-            
-            // Tokenlarni sessionStorage ga saqlash
-            sessionStorage.setItem('access', loginData.access);
-            sessionStorage.setItem('refresh', loginData.refresh);
-            
-            // Login funksiyasini chaqirish
-            await login(loginData.access, loginData.refresh);
-            
-            console.log('Avtomatik login muvaffaqiyatli, dashboard ga yo\'naltirilmoqda...');
-            
-            // Dashboard ga yo'naltirish
-            navigate(from, { replace: true });
-            return;
-          } else {
-            console.error('Avtomatik login xatosi');
-            // Login sahifasiga yo'naltirish
-            navigate('/login', { 
-              state: { 
-                message: 'Ro\'yxatdan o\'tish muvaffaqiyatli! Endi tizimga kiring.',
-                username: formData.username 
-              } 
-            });
-            return;
-          }
-        } catch (loginError) {
-          console.error('Avtomatik login xatosi:', loginError);
-          // Login sahifasiga yo'naltirish
-          navigate('/login', { 
-            state: { 
-              message: 'Ro\'yxatdan o\'tish muvaffaqiyatli! Endi tizimga kiring.',
-              username: formData.username 
-            } 
-          });
-          return;
-        }
+      if (!loginResponse.ok) {
+        const loginError = await loginResponse.json();
+        console.error('❌ Avtomatik login xatosi:', loginError);
+        setGeneralError('Ro\'yxatdan o\'tish muvaffaqiyatli, lekin tizimga kirishda xatolik yuz berdi. Iltimos, login sahifasidan kiring.');
+        setIsLoading(false);
+        return;
       }
+
+      const loginData = await loginResponse.json();
+      console.log('✅ Login muvaffaqiyatli:', loginData);
       
-      // Tokenlarni sessionStorage ga saqlash (AuthContext bilan mos kelishi uchun)
-      sessionStorage.setItem('access', data.access);
-      sessionStorage.setItem('refresh', data.refresh);
-      
-      console.log('Tokenlar saqlandi, login funksiyasi chaqirilmoqda...');
+      // Tokenlarni sessionStorage ga saqlash
+      sessionStorage.setItem('access', loginData.access);
+      sessionStorage.setItem('refresh', loginData.refresh);
       
       // Login funksiyasini chaqirish - bu user ma'lumotlarini yuklaydi
-      await login(data.access, data.refresh);
+      login(loginData.access, loginData.refresh);
       
-      console.log('Login muvaffaqiyatli, dashboard ga yo\'naltirilmoqda...');
+      console.log('✅ Tizimga muvaffaqiyatli kirildi, dashboard ga yo\'naltirilmoqda...');
       
       // Dashboard ga yo'naltirish
       navigate(from, { replace: true });
-    } catch {
-      setGeneralError('Network error or server is down.');
+    } catch (error) {
+      console.error('❌ Network xatosi:', error);
+      setGeneralError('Tarmoq xatosi yoki server ishlamayapti. Iltimos, qaytadan urinib ko\'ring.');
     } finally {
       setIsLoading(false);
     }
@@ -249,7 +234,6 @@ const RegisterPage: React.FC = () => {
       } else if (!isValidEmail(formData.email)) {
         step1Errors.email = 'Noto\'g\'ri email format';
       }
-      
       
       if (Object.keys(step1Errors).length > 0) {
         setErrors(step1Errors);

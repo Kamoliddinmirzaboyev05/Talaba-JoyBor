@@ -25,6 +25,12 @@ const DashboardPage: React.FC = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [studentDashboard, setStudentDashboard] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [platformStats, setPlatformStats] = useState({
+    activeUsers: 0,
+    totalDormitories: 0,
+    totalRooms: 0,
+    freeRooms: 0
+  });
 
   // Sahifa yuklanganda yuqoriga scroll qilish
   useEffect(() => {
@@ -36,6 +42,20 @@ const DashboardPage: React.FC = () => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
+        
+        // Platform statistikalarini yuklash
+        try {
+          const stats = await authAPI.getStatistics();
+          setPlatformStats({
+            activeUsers: stats.users_count || 0,
+            totalDormitories: stats.dormitories_count || 0,
+            totalRooms: stats.rooms_total || 0,
+            freeRooms: stats.rooms_free || 0
+          });
+          console.log('✅ Platform statistikalari yuklandi:', stats);
+        } catch (error) {
+          console.error('❌ Platform statistikalari yuklanmadi:', error);
+        }
         
         // Try to get student dashboard first
         try {
@@ -72,35 +92,35 @@ const DashboardPage: React.FC = () => {
     const safeApplications = Array.isArray(applications) ? applications : [];
     return [
       {
-        label: "Yuborilgan Arizalar",
-        value: String(safeApplications.length || 0),
-        icon: Calendar,
+        label: "Faol Talabalar",
+        value: String(platformStats.activeUsers || 0),
+        icon: Users,
         color: "text-blue-600",
         bg: "bg-blue-100 dark:bg-blue-900/30",
       },
       {
         label: "Kutilayotgan",
-        value: String(safeApplications.filter((app) => app?.status === "PENDING").length || 0),
+        value: String(safeApplications.filter((app) => app?.status?.toUpperCase() === "PENDING").length || 0),
         icon: Clock,
         color: "text-yellow-600",
         bg: "bg-yellow-100 dark:bg-yellow-900/30",
       },
       {
         label: "Tasdiqlangan",
-        value: String(safeApplications.filter((app) => app?.status === "APPROVED").length || 0),
+        value: String(safeApplications.filter((app) => app?.status?.toUpperCase() === "APPROVED").length || 0),
         icon: CheckCircle,
         color: "text-green-600",
         bg: "bg-green-100 dark:bg-green-900/30",
       },
       {
         label: "Rad etilgan",
-        value: String(safeApplications.filter((app) => app?.status === "REJECTED").length || 0),
+        value: String(safeApplications.filter((app) => app?.status?.toUpperCase() === "REJECTED").length || 0),
         icon: XCircle,
         color: "text-red-600",
         bg: "bg-red-100 dark:bg-red-900/30",
       },
     ];
-  }, [applications]);
+  }, [applications, platformStats]);
 
   const quickActions = [
     {
@@ -130,7 +150,8 @@ const DashboardPage: React.FC = () => {
   ];
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
+    const upperStatus = status.toUpperCase();
+    switch (upperStatus) {
       case "APPROVED":
         return <CheckCircle className="w-5 h-5 text-green-500" />;
       case "PENDING":
@@ -147,7 +168,8 @@ const DashboardPage: React.FC = () => {
   };
 
   const getStatusText = (status: string) => {
-    switch (status) {
+    const upperStatus = status.toUpperCase();
+    switch (upperStatus) {
       case "APPROVED":
         return "Tasdiqlangan";
       case "PENDING":
@@ -164,7 +186,8 @@ const DashboardPage: React.FC = () => {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    const upperStatus = status.toUpperCase();
+    switch (upperStatus) {
       case "APPROVED":
         return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
       case "PENDING":
@@ -213,10 +236,10 @@ const DashboardPage: React.FC = () => {
             className="mb-8"
           >
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Xush kelibsiz, {firstName}! 🎉
+              Xush kelibsiz, {String(studentDashboard.name || firstName)}! 🎉
             </h1>
             <p className="text-gray-600 dark:text-gray-300">
-              Siz yotoqxonaga qabul qilindingiz
+              {String(studentDashboard.placement_status || 'Siz yotoqxonaga qabul qilindingiz')}
             </p>
           </motion.div>
 
@@ -301,7 +324,7 @@ const DashboardPage: React.FC = () => {
                 </div>
 
                 {/* Xonadoshlar */}
-                {Array.isArray(studentDashboard.roommates) && studentDashboard.roommates.length > 0 && (
+                {Array.isArray(studentDashboard.roommates) && studentDashboard.roommates.length > 0 ? (
                   <div className="mt-6">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
                       Xonadoshlar
@@ -324,53 +347,24 @@ const DashboardPage: React.FC = () => {
                       ))}
                     </div>
                   </div>
+                ) : (
+                  <div className="mt-6 text-center py-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <Users className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Hozircha xonadoshlar yo'q
+                    </p>
+                  </div>
                 )}
               </motion.div>
             </div>
 
             {/* Sidebar */}
             <div className="space-y-6">
-              {/* Holat */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
-              >
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Holat
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                    <span className="text-green-600 dark:text-green-400 font-medium">
-                      {String(studentDashboard.status || '')}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                    <span className="text-green-600 dark:text-green-400 font-medium">
-                      {studentDashboard.placement_status ? String(studentDashboard.placement_status) : ''}
-                    </span>
-                  </div>
-                  {Boolean(studentDashboard.accepted_date) && (
-                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Qabul qilingan sana:
-                      </p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {formatDate(String(studentDashboard.accepted_date))}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-
               {/* Shaxsiy Ma'lumotlar */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
                 className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
               >
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -383,29 +377,47 @@ const DashboardPage: React.FC = () => {
                       {String(studentDashboard.last_name || '')} {String(studentDashboard.name || '')} {String(studentDashboard.middle_name || '')}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Fakultet:</p>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {String(studentDashboard.faculty || '')}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Yo'nalish:</p>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {String(studentDashboard.direction || '')}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Kurs:</p>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {String(studentDashboard.course || '')}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Guruh:</p>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {String(studentDashboard.group || '')}
-                    </p>
+                  {(studentDashboard.province_name as string | undefined) && (
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Viloyat:</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {studentDashboard.province_name as string}
+                      </p>
+                    </div>
+                  )}
+                  {(studentDashboard.district_name as string | undefined) && (
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Tuman:</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {studentDashboard.district_name as string}
+                      </p>
+                    </div>
+                  )}
+                  {(studentDashboard.phone as string | undefined) && (
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Telefon:</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        +{studentDashboard.phone as string}
+                      </p>
+                    </div>
+                  )}
+                  <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Ta'lim:</p>
+                    {(studentDashboard.faculty as string | undefined) && (
+                      <p className="font-medium text-gray-900 dark:text-white mb-1">
+                        📚 {studentDashboard.faculty as string}
+                      </p>
+                    )}
+                    {(studentDashboard.direction as string | undefined) && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        {studentDashboard.direction as string}
+                      </p>
+                    )}
+                    {((studentDashboard.course as string | undefined) || (studentDashboard.group as string | undefined)) && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {(studentDashboard.course as string) || ''} {(studentDashboard.group as string | undefined) ? `• ${studentDashboard.group as string}` : ''}
+                      </p>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -414,7 +426,7 @@ const DashboardPage: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.5 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
                 className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
               >
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -569,7 +581,7 @@ const DashboardPage: React.FC = () => {
                           <div className="flex items-center gap-2 mb-1">
                             <Home className="w-4 h-4 text-teal-600" />
                             <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-teal-600 transition-colors">
-                              {application.dormitory?.name || 'Yotoqxona nomi'}
+                              {application.dormitory_name || application.dormitory?.name || 'Yotoqxona nomi'}
                             </h3>
                           </div>
                           <p className="text-sm text-gray-600 dark:text-gray-400 ml-6">
@@ -590,15 +602,15 @@ const DashboardPage: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center justify-between text-sm mb-2">
                         <div className="flex items-center gap-4 text-gray-600 dark:text-gray-400">
                           <div className="flex items-center gap-1">
                             <Users className="w-4 h-4" />
-                            <span>{application.name}</span>
+                            <span>{application.name} {application.last_name}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <MapPin className="w-4 h-4" />
-                            <span>{application.city}</span>
+                            <span>{application.province_name || application.city || 'Shahar'}</span>
                           </div>
                         </div>
                         {application.created_at && (
@@ -611,23 +623,42 @@ const DashboardPage: React.FC = () => {
                         )}
                       </div>
 
+                      {/* Additional info */}
+                      {(application.faculty || application.course) && (
+                        <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mb-2">
+                          {application.faculty && (
+                            <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                              {application.faculty}
+                            </span>
+                          )}
+                          {application.direction && (
+                            <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                              {application.direction}
+                            </span>
+                          )}
+                          {application.course && (
+                            <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                              {application.course}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
                       {/* Progress indicator */}
                       <div className="mt-3 flex items-center gap-2">
                         <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
                           <div
-                            className={`h-1.5 rounded-full transition-all duration-300 ${application.status === 'PENDING' ? 'bg-yellow-500 w-1/3' :
-                              application.status === 'INTERVIEW' ? 'bg-blue-500 w-2/3' :
-                                application.status === 'APPROVED' ? 'bg-green-500 w-full' :
-                                  application.status === 'REJECTED' ? 'bg-red-500 w-full' :
-                                    'bg-gray-400 w-1/4'
-                              }`}
+                            className={`h-1.5 rounded-full transition-all duration-300 ${
+                              application.status?.toUpperCase() === 'PENDING' ? 'bg-yellow-500 w-1/3' :
+                              application.status?.toUpperCase() === 'INTERVIEW' ? 'bg-blue-500 w-2/3' :
+                              application.status?.toUpperCase() === 'APPROVED' ? 'bg-green-500 w-full' :
+                              application.status?.toUpperCase() === 'REJECTED' ? 'bg-red-500 w-full' :
+                              'bg-gray-400 w-1/4'
+                            }`}
                           />
                         </div>
                         <span className="text-xs text-gray-500 dark:text-gray-400 min-w-fit">
-                          {application.status === 'PENDING' ? 'Kutilmoqda' :
-                            application.status === 'INTERVIEW' ? 'Suhbat' :
-                              application.status === 'APPROVED' ? 'Tasdiqlangan' :
-                                application.status === 'REJECTED' ? 'Rad etilgan' : 'Jarayon'}
+                          {getStatusText(application.status)}
                         </span>
                       </div>
                     </motion.div>
@@ -664,6 +695,68 @@ const DashboardPage: React.FC = () => {
                 ))}
               </div>
             </motion.div>
+
+            {/* Latest Application Details */}
+            {applications.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.35 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
+              >
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  So'nggi Ariza
+                </h3>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Yotoqxona:</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {applications[0].dormitory_name || applications[0].dormitory?.name || 'Noma\'lum'}
+                    </p>
+                  </div>
+                  {applications[0].faculty && (
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Fakultet:</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {applications[0].faculty}
+                      </p>
+                    </div>
+                  )}
+                  {applications[0].direction && (
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Yo'nalish:</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {applications[0].direction}
+                      </p>
+                    </div>
+                  )}
+                  {applications[0].course && (
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Kurs:</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {applications[0].course}
+                      </p>
+                    </div>
+                  )}
+                  {applications[0].group && (
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Guruh:</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {applications[0].group}
+                      </p>
+                    </div>
+                  )}
+                  <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Holat:</span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(applications[0].status)}`}>
+                        {getStatusText(applications[0].status)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
             {/* Profile Summary */}
             <motion.div

@@ -81,7 +81,6 @@ export interface RegisterRequest {
   last_name: string;
   username: string;
   email: string;
-  phone: string;
   password: string;
   password2: string;
 }
@@ -355,7 +354,7 @@ export const authAPI = {
   // Get user applications
   getApplications: async (): Promise<unknown[]> => {
     try {
-      const response = await api.get('/applications/');
+      const response = await api.get('/student/application/');
       return response.data;
     } catch (error: unknown) {
       console.error('Applications fetch error:', error);
@@ -403,23 +402,33 @@ export const authAPI = {
     apartments_count: number;
     users_count: number;
     applications_count: number;
+    universities_count?: number;
+    rooms_total?: number;
+    rooms_occupied?: number;
+    rooms_free?: number;
   }> => {
     try {
-      // Real statistikalar: students_count, dormitories_count, apartments_count
-      const response = await api.get('/statistics/');
+      // Real statistikalar: /api/stats/ endpointidan
+      const response = await api.get('/stats/');
       const data = response.data || {};
+      
       return {
-        dormitories_count: Number(data.dormitories_count) || 0,
-        apartments_count: Number(data.apartments_count) || 0,
-        users_count: Number(data.students_count) || 0,
-        applications_count: 0,
+        dormitories_count: Number(data.dormitories?.total) || 0,
+        apartments_count: Number(data.apartments?.total) || 0,
+        users_count: Number(data.users?.active) || 0, // users.active ishlatiladi
+        applications_count: Number(data.applications?.total) || 0,
+        universities_count: Number(data.universities?.total) || 0,
+        rooms_total: Number(data.rooms?.total) || 0,
+        rooms_occupied: Number(data.rooms?.occupied) || 0,
+        rooms_free: Number(data.rooms?.free) || 0,
       };
     } catch (error: unknown) {
-      // 401 xatosi yoki boshqa autentifikatsiya muammolari uchun
-      if (error.response?.status === 401) {
-        console.warn('Statistics API requires authentication, using fallback data');
+      const err = error as { response?: { status?: number } };
+      // 401 yoki 404 xatosi uchun console.warn ishlatamiz (bu normal holat)
+      if (err.response?.status === 401 || err.response?.status === 404) {
+        console.warn('Statistics API not available, using fallback data');
       } else {
-        console.error('Statistics fetch error:', error);
+        console.warn('Statistics fetch error, using fallback data');
       }
       
       // Fallback: eski usul orqali taxminiy qiymatlar
@@ -431,17 +440,18 @@ export const authAPI = {
         return {
           dormitories_count: dormitories.data.length || 0,
           apartments_count: apartments.data.length || 0,
-          users_count: 150, // Taxminiy qiymat
-          applications_count: 45, // Taxminiy qiymat
+          users_count: 5, // Taxminiy qiymat
+          applications_count: 1, // Taxminiy qiymat
+          universities_count: 1,
         };
-      } catch (fallbackError) {
-        console.warn('Fallback statistics error, using static data:', fallbackError);
-        // Eng oxirgi fallback - statik qiymatlar
+      } catch {
+        // Eng oxirgi fallback - statik qiymatlar (console.warn ni olib tashlaymiz)
         return {
-          dormitories_count: 25,
-          apartments_count: 40,
-          users_count: 150,
-          applications_count: 45,
+          dormitories_count: 2,
+          apartments_count: 0,
+          users_count: 5,
+          applications_count: 1,
+          universities_count: 1,
         };
       }
     }
@@ -453,8 +463,9 @@ export const authAPI = {
       const response = await api.get('/notifications/my/');
       return response.data;
     } catch (error: unknown) {
+      const err = error as { response?: { status?: number } };
       // If endpoint doesn't exist (404) or other errors, return mock data
-      if (error.response?.status === 404) {
+      if (err.response?.status === 404) {
         console.warn('Notifications endpoint not available, using mock data');
         // Mock notifications data
         return [

@@ -63,6 +63,7 @@ const ListingDetailPage: React.FC = () => {
     getGlobalSelectedListing()
   );
   const [loading, setLoading] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false);
 
   const onApplicationStart = (listing: Listing) => {
     setGlobalSelectedListing(listing);
@@ -496,9 +497,28 @@ const ListingDetailPage: React.FC = () => {
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                 Tavsif
               </h2>
-              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                {listing.description}
-              </p>
+              <div className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                {listing.description && listing.description.length > 200 ? (
+                  <>
+                    <p>
+                      {showFullDescription
+                        ? listing.description
+                        : `${listing.description.substring(0, 200)}...`}
+                    </p>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setShowFullDescription(!showFullDescription)}
+                      className="mt-3 text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 font-medium transition-colors duration-200 flex items-center gap-1"
+                    >
+                      {showFullDescription ? "Kamroq ko'rish" : "Ko'proq ko'rish"}
+                      <span className="text-lg">{showFullDescription ? "↑" : "↓"}</span>
+                    </motion.button>
+                  </>
+                ) : (
+                  <p>{listing.description}</p>
+                )}
+              </div>
             </motion.div>
 
             {/* Amenities */}

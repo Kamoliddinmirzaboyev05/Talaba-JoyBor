@@ -120,13 +120,22 @@ export interface DormitoryAPIResponse {
 
 export interface Application {
   id: number;
-  user: {
+  user_info?: {
     id: number;
     username: string;
     role?: string;
     email?: string;
   };
-  dormitory: {
+  user?: {
+    id: number;
+    username: string;
+    role?: string;
+    email?: string;
+  };
+  dormitory_name?: string;
+  province_name?: string;
+  district_name?: string;
+  dormitory?: {
     id: number;
     name: string;
     address?: string;
@@ -179,20 +188,20 @@ export interface Application {
   province?: {
     id: number;
     name: string;
-  };
+  } | number;
   district?: {
     id: number;
     name: string;
     province?: number;
-  };
+  } | number;
   faculty?: string;
   direction?: string;
   course?: string;
   group?: string;
-  phone: number;
-  passport?: number;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'INTERVIEW' | 'COMPLETED';
-  comment: string;
+  phone: string | number;
+  passport?: string | number;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'INTERVIEW' | 'COMPLETED' | 'Pending' | 'Approved' | 'Rejected';
+  comment?: string;
   admin_comment?: string;
   document?: string;
   user_image?: string | null;

@@ -14,6 +14,7 @@ interface Statistics {
   apartments_count: number;
   users_count: number;
   applications_count: number;
+  universities_count?: number;
 }
 
 interface HomePageProps {
@@ -30,7 +31,8 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
     dormitories_count: 0,
     apartments_count: 0,
     users_count: 0,
-    applications_count: 0
+    applications_count: 0,
+    universities_count: 0
   });
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -79,7 +81,7 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
         console.log('Dormitories data:', dormitoriesData);
 
         // Dormitory ma'lumotlarini Listing formatiga o'tkazish
-        const allListingsData: Listing[] = dormitoriesData.map((dormitory: {
+        const allListingsData: Listing[] = (dormitoriesData as Array<{
           id: number;
           name: string;
           month_price: number;
@@ -94,7 +96,7 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
           rules?: string[];
           latitude?: number;
           longitude?: number;
-        }) => {
+        }>).map((dormitory) => {
           const images = Array.isArray(dormitory.images) && dormitory.images.length > 0
             ? dormitory.images.map((img: string | { image: string }) => typeof img === 'string' ? img : img?.image || '')
             : ['/placeholder-dormitory.svg'];
@@ -142,15 +144,17 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
         // Statistikalarni yuklash
         try {
           const stats = await authAPI.getStatistics();
+          console.log('✅ Statistikalar yuklandi:', stats);
           setStatistics(stats);
         } catch (error) {
-          console.error('Statistics fetch error:', error);
+          console.error('❌ Statistikalar yuklanmadi:', error);
           // Fallback statistika
           setStatistics({
-            dormitories_count: 15,
-            apartments_count: 8,
-            users_count: 120,
-            applications_count: 45
+            dormitories_count: 2,
+            apartments_count: 0,
+            users_count: 0,
+            applications_count: 0,
+            universities_count: 1
           });
         }
         
@@ -181,13 +185,13 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
     { 
       icon: Building2, 
       label: 'Universitetlar', 
-      value: '50+', 
+      value: `${statistics.universities_count || 0}`, 
       color: 'text-green-600' 
     },
     { 
       icon: Shield, 
-      label: 'Ishonchli Platforma', 
-      value: '24/7', 
+      label: 'Arizalar', 
+      value: `${statistics.applications_count || 0}`, 
       color: 'text-purple-600' 
     }
   ];
