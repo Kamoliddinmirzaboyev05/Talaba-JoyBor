@@ -5,10 +5,10 @@ import { User, Mail, Phone, MapPin, Edit3, Save, X, Camera, Lock, FileText, Cloc
 
 import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
-import { formatPhoneInput, formatPhoneNumber, formatDate } from '../utils/format';
+import { formatPhoneInput, formatPhoneNumber, formatDate, formatPrice } from '../utils/format';
 import { useTheme } from '../contexts/ThemeContext';
-
-
+import { authAPI } from '../services/api';
+import { Application } from '../types';
 
 interface ProfileData {
   username: string;
@@ -21,86 +21,6 @@ interface ProfileData {
   birth_date?: string;
   address?: string;
   telegram?: string;
-}
-
-interface Application {
-  id: number;
-  user: {
-    id: number;
-    username: string;
-    role: string;
-    email: string;
-  };
-  dormitory: {
-    id: number;
-    university: {
-      id: number;
-      name: string;
-      address: string;
-      description: string;
-      contact: string;
-      logo: string | null;
-    };
-    admin: {
-      id: number;
-      username: string;
-      role: string;
-      email: string;
-    };
-    name: string;
-    address: string;
-    description: string;
-    images: Array<{
-      id: number;
-      dormitory: {
-        id: number;
-        name: string;
-      };
-      image: string;
-    }>;
-    month_price: number;
-    year_price: number;
-    latitude: number;
-    longitude: number;
-    amenities: Array<{
-      id: number;
-      name: string;
-      is_active: boolean;
-      type: string;
-    }>;
-    total_capacity: number;
-    available_capacity: number;
-    total_rooms: number;
-    distance_to_university: number;
-    rules: string[];
-  };
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
-  comment: string;
-  document: string;
-  name: string;
-  middle_name?: string;
-  last_name: string;
-  fio: string;
-  city: string;
-  village: string;
-  university: string;
-  phone: number;
-  passport_image_first: string;
-  passport_image_second: string;
-  created_at: string;
-  user_image: string | null;
-  direction: string | null;
-  province?: {
-    id: number;
-    name: string;
-  };
-  district?: {
-    id: number;
-    name: string;
-  };
-  faculty?: string;
-  course?: string;
-  admin_comment?: string;
 }
 
 const ProfilePage: React.FC = () => {
@@ -132,29 +52,9 @@ const ProfilePage: React.FC = () => {
       console.log('ProfilePage: fetchProfile boshlandi');
       setLoading(true);
       setError('');
-      const token = sessionStorage.getItem('access') || localStorage.getItem('access');
-      console.log('ProfilePage: Token mavjudmi?', !!token);
-      if (!token) {
-        console.log('Token topilmadi, login sahifasiga yo\'naltirilmoqda');
-        navigate('/login');
-        return;
-      }
+      
       try {
-        const res = await fetch('https://joyborv1.pythonanywhere.com/api/me/', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-        if (res.status === 401) {
-          navigate('/login');
-          return;
-        }
-        if (!res.ok) {
-          setError('Profilni yuklashda xatolik.');
-          setLoading(false);
-          return;
-        }
-        const data = await res.json();
+        const data = await authAPI.getProfile();
         console.log('ProfilePage: Profile ma\'lumotlari yuklandi', data);
         // Format phone for display
         const hydrated = { ...data, phone: data.phone ? formatPhoneNumber(data.phone) : '' };
@@ -162,8 +62,12 @@ const ProfilePage: React.FC = () => {
         setEditedProfile(hydrated);
         setImageFile(null);
         setPassword('');
-      } catch (error) {
+      } catch (error: any) {
         console.error('ProfilePage: Xatolik yuz berdi', error);
+        if (error.response?.status === 401) {
+            navigate('/login');
+            return;
+        }
         setError('Tarmoq xatosi yoki server ishlamayapti.');
       } finally {
         setLoading(false);
@@ -176,30 +80,16 @@ const ProfilePage: React.FC = () => {
   const fetchApplications = async () => {
     setApplicationsLoading(true);
     setApplicationsError('');
-    const token = sessionStorage.getItem('access') || localStorage.getItem('access');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
+    
     try {
-      const res = await fetch('https://joyborv1.pythonanywhere.com/api/applications/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      if (res.status === 401) {
-        navigate('/login');
-        return;
+      const data = await authAPI.getApplications();
+      setApplications(data as Application[]);
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+          navigate('/login');
+          return;
       }
-      if (!res.ok) {
-        setApplicationsError('Arizalarni yuklashda xatolik.');
-        setApplicationsLoading(false);
-        return;
-      }
-      const data = await res.json();
-      setApplications(data);
-    } catch {
-      setApplicationsError('Tarmoq xatosi yoki server ishlamayapti.');
+      setApplicationsError('Arizalarni yuklashda xatolik.');
     } finally {
       setApplicationsLoading(false);
     }
@@ -218,14 +108,13 @@ const ProfilePage: React.FC = () => {
     setError('');
     setSuccess('');
     setFieldErrors({});
-    const token = sessionStorage.getItem('access') || localStorage.getItem('access');
-    if (!token || !editedProfile) {
-      navigate('/login');
+    
+    if (!editedProfile) {
       return;
     }
     try {
       // API faqat JSON qabul qiladi, FormData emas
-      const updateData: Record<string, string> = {
+      const updateData: any = {
         email: editedProfile.email,
         first_name: editedProfile.first_name || '',
         last_name: editedProfile.last_name || '',
@@ -235,36 +124,9 @@ const ProfilePage: React.FC = () => {
         address: editedProfile.address || '',
         telegram: editedProfile.telegram || '',
       };
-
-      const res = await fetch('https://joyborv1.pythonanywhere.com/api/me/', {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updateData),
-      });
-      if (res.status === 401) {
-        navigate('/login');
-        return;
-      }
-      const data = await res.json();
-      if (!res.ok) {
-        if (typeof data === 'object') {
-          const fieldErrs: Record<string, string> = {};
-          Object.keys(data).forEach((key) => {
-            if (Array.isArray(data[key])) {
-              fieldErrs[key] = data[key][0];
-            } else if (typeof data[key] === 'string') {
-              fieldErrs[key] = data[key];
-            }
-          });
-          setFieldErrors(fieldErrs);
-        }
-        setError(data.detail || 'Profilni yangilashda xatolik.');
-        setSaving(false);
-        return;
-      }
+      
+      const data = await authAPI.updateProfile(updateData);
+      
       setProfile(data);
       setEditedProfile(data);
       setImageFile(null);
@@ -272,8 +134,29 @@ const ProfilePage: React.FC = () => {
       setSuccess('Profil muvaffaqiyatli yangilandi!');
       setIsEditing(false);
       updateUserProfile(data); // Update AuthContext after successful profile update
-    } catch {
-      setError('Tarmoq xatosi yoki server ishlamayapti.');
+    } catch (error: any) {
+        if (error.response?.status === 401) {
+            navigate('/login');
+            return;
+        }
+        
+        if (error.response?.data) {
+             const data = error.response.data;
+             if (typeof data === 'object') {
+              const fieldErrs: Record<string, string> = {};
+              Object.keys(data).forEach((key) => {
+                if (Array.isArray(data[key])) {
+                  fieldErrs[key] = data[key][0];
+                } else if (typeof data[key] === 'string') {
+                  fieldErrs[key] = data[key];
+                }
+              });
+              setFieldErrors(fieldErrs);
+            }
+            setError(data.detail || 'Profilni yangilashda xatolik.');
+        } else {
+            setError('Tarmoq xatosi yoki server ishlamayapti.');
+        }
     } finally {
       setSaving(false);
     }
@@ -844,10 +727,10 @@ const ProfilePage: React.FC = () => {
                           <div className="flex items-start justify-between mb-4">
                             <div className="flex-1">
                               <h3 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                                {application.dormitory.name}
+                                {application.dormitory?.name}
                               </h3>
                               <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                                {application.dormitory.university?.name || 'Universitet nomi mavjud emas'} - {application.dormitory.address || 'Manzil mavjud emas'}
+                                {application.dormitory?.university?.name || 'Universitet nomi mavjud emas'} - {application.dormitory?.address || 'Manzil mavjud emas'}
                               </p>
                               <div className="flex items-center gap-2 mb-2">
                                 {getStatusIcon(application.status)}
@@ -858,7 +741,7 @@ const ProfilePage: React.FC = () => {
                             </div>
                             <div className="text-right">
                               <p className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                                {formatPrice(application.dormitory.month_price || 0)}
+                                {formatPrice(application.dormitory?.month_price || 0)}
                               </p>
                               <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>oyiga</p>
                             </div>
@@ -873,10 +756,10 @@ const ProfilePage: React.FC = () => {
                                 <strong>Telefon:</strong> {formatPhoneNumber('+' + String(application.phone))}
                               </p>
                               <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                                <strong>Viloyat:</strong> {application.province?.name || 'Noma\'lum'}
+                                <strong>Viloyat:</strong> {(typeof application.province === 'object' ? application.province?.name : application.province) || 'Noma\'lum'}
                               </p>
                               <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                                <strong>Tuman:</strong> {application.district?.name || 'Noma\'lum'}
+                                <strong>Tuman:</strong> {(typeof application.district === 'object' ? application.district?.name : application.district) || 'Noma\'lum'}
                               </p>
                             </div>
                             <div>
@@ -998,94 +881,12 @@ const ProfilePage: React.FC = () => {
                               )}
                             </div>
                           </div>
-
-                          <div className={`flex items-center justify-between pt-4 border-t ${theme === 'dark' ? 'border-gray-600' : 'border-gray-200'}`}>
-                            <div className="flex items-center gap-4">
-                              {application.document && (
-                                <a
-                                  href={application.document}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={`flex items-center gap-2 text-sm ${
-                                    theme === 'dark' 
-                                      ? 'text-teal-400 hover:text-teal-300' 
-                                      : 'text-teal-600 hover:text-teal-700'
-                                  }`}
-                                >
-                                  <FileText className="w-4 h-4" />
-                                  Hujjat
-                                </a>
-                              )}
-                              {application.passport_image_first && (
-                                <a
-                                  href={application.passport_image_first}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={`flex items-center gap-2 text-sm ${
-                                    theme === 'dark' 
-                                      ? 'text-teal-400 hover:text-teal-300' 
-                                      : 'text-teal-600 hover:text-teal-700'
-                                  }`}
-                                >
-                                  <Eye className="w-4 h-4" />
-                                  Pasport (1-bet)
-                                </a>
-                              )}
-                              {application.passport_image_second && (
-                                <a
-                                  href={application.passport_image_second}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={`flex items-center gap-2 text-sm ${
-                                    theme === 'dark' 
-                                      ? 'text-teal-400 hover:text-teal-300' 
-                                      : 'text-teal-600 hover:text-teal-700'
-                                  }`}
-                                >
-                                  <Eye className="w-4 h-4" />
-                                  Pasport (2-bet)
-                                </a>
-                              )}
-                            </div>
-                            <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                              ID: #{application.id}
-                            </div>
-                          </div>
-
-                          {application.dormitory.images?.length > 0 && (
-                            <div className={`mt-4 pt-4 border-t ${theme === 'dark' ? 'border-gray-600' : 'border-gray-200'}`}>
-                              <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                                <strong>Yotoqxona rasmlari:</strong>
-                              </p>
-                              <div className="flex gap-2 overflow-x-auto">
-                                {application.dormitory.images?.slice(0, 3).map((image) => (
-                                  <img
-                                    key={image.id}
-                                    src={image.image}
-                                    alt={application.dormitory.name}
-                                    className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
-                                  />
-                                ))}
-                                {application.dormitory.images?.length > 3 && (
-                                  <div className={`w-20 h-20 rounded-lg flex items-center justify-center text-xs flex-shrink-0 ${
-                                    theme === 'dark' 
-                                      ? 'bg-gray-600 text-gray-300' 
-                                      : 'bg-gray-200 text-gray-600'
-                                  }`}>
-                                    +{(application.dormitory.images?.length || 0) - 3}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
                         </motion.div>
                       ))}
                     </div>
                   )}
                 </div>
               )}
-
-              {/* Other tabs can be implemented as needed */}
             </motion.div>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, UserPlus } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { authAPI } from '../services/api';
 
 const RegisterPage: React.FC = () => {
   const { theme } = useTheme();
@@ -97,26 +98,47 @@ const RegisterPage: React.FC = () => {
 
     try {
       // 1-qadam: Ro'yxatdan o'tish
-      const response = await fetch('https://joyborv1.pythonanywhere.com/api/register/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: formData.username.trim(),
-          password: formData.password,
-          password2: formData.password2,
-          email: formData.email.trim(),
-          first_name: formData.first_name.trim(),
-          last_name: formData.last_name.trim(),
-          role: 'student',
-        }),
+      await authAPI.register({
+        username: formData.username.trim(),
+        password: formData.password,
+        password2: formData.password2,
+        email: formData.email.trim(),
+        first_name: formData.first_name.trim(),
+        last_name: formData.last_name.trim(),
+        role: 'student',
       });
 
-      // Wait for the response body only after response.ok
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Register API xatosi:', errorData);
+      console.log('✅ Ro\'yxatdan o\'tish muvaffaqiyatli');
+      
+      // 2-qadam: Darhol login qilish
+      console.log('🔄 Avtomatik login qilinmoqda...');
+      
+      try {
+        const loginData = await authAPI.login({
+          username: formData.username.trim(),
+          password: formData.password,
+        });
+
+        console.log('✅ Login muvaffaqiyatli:', loginData);
+        
+        // Login funksiyasini chaqirish - bu user ma'lumotlarini yuklaydi
+        // AuthContext already handles sessionStorage inside login, but we can pass it directly
+        login(loginData.access, loginData.refresh);
+        
+        console.log('✅ Tizimga muvaffaqiyatli kirildi, dashboard ga yo\'naltirilmoqda...');
+        
+        // Dashboard ga yo'naltirish
+        navigate(from, { replace: true });
+      } catch (loginError) {
+        console.error('❌ Avtomatik login xatosi:', loginError);
+        setGeneralError('Ro\'yxatdan o\'tish muvaffaqiyatli, lekin tizimga kirishda xatolik yuz berdi. Iltimos, login sahifasidan kiring.');
+      }
+
+    } catch (error: any) {
+      console.error('Register API xatosi:', error);
+      
+      if (error.response?.data) {
+        const errorData = error.response.data;
         
         // Show field errors if available
         if (typeof errorData === 'object') {
@@ -149,52 +171,9 @@ const RegisterPage: React.FC = () => {
         } else {
           setGeneralError('Ro\'yhatdan o\'tishda xatolik yuz berdi');
         }
-        setIsLoading(false);
-        return;
+      } else {
+        setGeneralError('Tarmoq xatosi yoki server ishlamayapti. Iltimos, qaytadan urinib ko\'ring.');
       }
-
-      // Ro'yxatdan o'tish muvaffaqiyatli
-      const registerData = await response.json();
-      console.log('✅ Ro\'yxatdan o\'tish muvaffaqiyatli:', registerData);
-      
-      // 2-qadam: Darhol login qilish
-      console.log('🔄 Avtomatik login qilinmoqda...');
-      const loginResponse = await fetch('https://joyborv1.pythonanywhere.com/api/token/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: formData.username.trim(),
-          password: formData.password,
-        }),
-      });
-
-      if (!loginResponse.ok) {
-        const loginError = await loginResponse.json();
-        console.error('❌ Avtomatik login xatosi:', loginError);
-        setGeneralError('Ro\'yxatdan o\'tish muvaffaqiyatli, lekin tizimga kirishda xatolik yuz berdi. Iltimos, login sahifasidan kiring.');
-        setIsLoading(false);
-        return;
-      }
-
-      const loginData = await loginResponse.json();
-      console.log('✅ Login muvaffaqiyatli:', loginData);
-      
-      // Tokenlarni sessionStorage ga saqlash
-      sessionStorage.setItem('access', loginData.access);
-      sessionStorage.setItem('refresh', loginData.refresh);
-      
-      // Login funksiyasini chaqirish - bu user ma'lumotlarini yuklaydi
-      login(loginData.access, loginData.refresh);
-      
-      console.log('✅ Tizimga muvaffaqiyatli kirildi, dashboard ga yo\'naltirilmoqda...');
-      
-      // Dashboard ga yo'naltirish
-      navigate(from, { replace: true });
-    } catch (error) {
-      console.error('❌ Network xatosi:', error);
-      setGeneralError('Tarmoq xatosi yoki server ishlamayapti. Iltimos, qaytadan urinib ko\'ring.');
     } finally {
       setIsLoading(false);
     }

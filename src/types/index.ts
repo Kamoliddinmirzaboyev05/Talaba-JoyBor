@@ -244,3 +244,97 @@ export interface Notification {
   priority?: 'low' | 'medium' | 'high';
 }
 
+export interface StudentDashboard {
+  id: number;
+  user_info: {
+    id: number;
+    username: string;
+    role: string;
+    email: string;
+  };
+  dormitory_info: {
+    id: number;
+    name: string;
+    address: string;
+    month_price: number;
+    year_price: number;
+  };
+  floor_info: {
+    id: number;
+    name: string;
+    gender: string;
+  };
+  room_info: {
+    id: number;
+    name: string;
+    capacity: number;
+    current_occupancy: number;
+    status: string;
+  };
+  roommates: Array<{
+    id: number;
+    name: string;
+    last_name: string;
+    middle_name: string;
+    course: string;
+    faculty: string;
+    phone: string;
+    picture: string;
+  }>;
+  recent_payments: Array<{
+    id: number;
+    student_info: {
+      id: number;
+      name: string;
+      course: string;
+      group: string;
+      room_name: string;
+      floor_name: string;
+    };
+    student: number;
+    dormitory: number;
+    dormitory_name: string;
+    amount: number;
+    paid_date: string;
+    valid_until: string | null;
+    method: string;
+    status: string;
+    comment: string;
+  }>;
+  application_info: {
+    id: number;
+    status: string;
+    created_at: string;
+    admin_comment: string;
+    dormitory_name: string;
+  };
+  province_name: string;
+  district_name: string;
+  name: string;
+  last_name: string;
+  middle_name: string;
+  faculty: string;
+  direction: string;
+  passport: string;
+  group: string;
+  course: string;
+  gender: string;
+  phone: string;
+  picture: string;
+  passport_image_first: string;
+  passport_image_second: string;
+  document: string;
+  privilege: boolean;
+  privilege_share: number;
+  accepted_date: string;
+  status: string;
+  placement_status: string;
+  is_active: boolean;
+  user: number;
+  province: number;
+  district: number;
+  dormitory: number;
+  floor: number;
+  room: number;
+}
+

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import { User } from '../types';
+import { authAPI } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -54,7 +55,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (token) {
         try {
-          const decoded: { user_id: number; exp: number; username?: string; first_name?: string; last_name?: string; email?: string; phone?: string } = jwtDecode(token);
+          const decoded: any = jwtDecode(token);
           console.log('AuthContext: Token decode qilindi', decoded);
           
           // Token muddati tugaganmi tekshirish
@@ -68,36 +69,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             return;
           }
           
-          // API dan to'liq profile ma'lumotlarini yuklash
-          const response = await fetch('https://joyborv1.pythonanywhere.com/api/me/', {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          });
-          
-          if (response.ok) {
-            const profileData = await response.json();
+          try {
+            // API dan to'liq profile ma'lumotlarini yuklash
+            const profileData = await authAPI.getProfile();
             console.log('AuthContext: Profile ma\'lumotlari yuklandi', profileData);
             setUser({ ...profileData, id: decoded.user_id });
             setIsAuthenticated(true);
-          } else if (response.status === 401) {
-            console.log('AuthContext: 401 xatosi, token yaroqsiz');
-            sessionStorage.removeItem('access');
-            sessionStorage.removeItem('refresh');
-            setUser(null);
-            setIsAuthenticated(false);
-          } else {
-            // API dan ma'lumot olishda xatolik bo'lsa, JWT dan asosiy ma'lumotlarni ishlatamiz
-            console.log('AuthContext: API xatosi, JWT ma\'lumotlarini ishlatish');
-            setUser({
-              id: decoded.user_id,
-              username: decoded.username || '',
-              first_name: decoded.first_name || '',
-              last_name: decoded.last_name || '',
-              email: decoded.email || '',
-              phone: decoded.phone || '',
-            });
-            setIsAuthenticated(true);
+          } catch (error: any) {
+            console.error('AuthContext: Profile yuklashda xatolik', error);
+            
+            if (error.response?.status === 401) {
+                console.log('AuthContext: 401 xatosi, token yaroqsiz');
+                sessionStorage.removeItem('access');
+                sessionStorage.removeItem('refresh');
+                setUser(null);
+                setIsAuthenticated(false);
+            } else {
+                // API xatosi bo'lsa ham JWT ma'lumotlari bilan davom etamiz
+                console.log('AuthContext: API xatosi, JWT ma\'lumotlarini ishlatish');
+                setUser({
+                  id: decoded.user_id,
+                  username: decoded.username || '',
+                  first_name: decoded.first_name || '',
+                  last_name: decoded.last_name || '',
+                  email: decoded.email || '',
+                  phone: decoded.phone || '',
+                });
+                setIsAuthenticated(true);
+            }
           }
         } catch (error) {
           console.error('AuthContext: Token decode xatosi', error);
@@ -119,19 +118,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (access: string, refresh: string) => {
     sessionStorage.setItem('access', access);
     sessionStorage.setItem('refresh', refresh);
+    
     try {
-      // JWT dan asosiy ma'lumotlarni olish
-      const decoded: { user_id: number; exp: number; username?: string; first_name?: string; last_name?: string; email?: string; phone?: string } = jwtDecode(access);
-      // API dan to'liq profile ma'lumotlarini olish
-      const response = await fetch('https://joyborv1.pythonanywhere.com/api/me/', {
-        headers: {
-          'Authorization': `Bearer ${access}`,
-        },
-      });
-      if (response.ok) {
-        const profileData = await response.json();
+      const decoded: any = jwtDecode(access);
+      try {
+        const profileData = await authAPI.getProfile();
         setUser({ ...profileData, id: decoded.user_id });
-      } else {
+      } catch (error) {
+        console.error('AuthContext: Login profile fetch error', error);
+        // Fallback to decoded token data
         setUser({
           id: decoded.user_id,
           username: decoded.username || '',
@@ -141,10 +136,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           phone: decoded.phone || '',
         });
       }
-    } catch {
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('AuthContext: Login error', error);
       setUser(null);
+      setIsAuthenticated(false);
     }
-    setIsAuthenticated(true);
   };
 
   const logout = () => {

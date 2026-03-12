@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import { Application, StudentDashboard } from '../types';
 
 // API base URL
 const API_BASE_URL = 'https://joyborv1.pythonanywhere.com/api';
@@ -83,6 +84,7 @@ export interface RegisterRequest {
   email: string;
   password: string;
   password2: string;
+  role?: string;
 }
 
 export interface RegisterResponse {
@@ -110,6 +112,10 @@ export interface UserProfile {
   university?: string;
   student_id?: string;
   is_verified?: boolean;
+  bio?: string;
+  birth_date?: string;
+  address?: string;
+  telegram?: string;
 }
 
 // API functions
@@ -352,10 +358,14 @@ export const authAPI = {
   },
 
   // Get user applications
-  getApplications: async (): Promise<unknown[]> => {
+  getApplications: async (): Promise<Application[]> => {
     try {
       const response = await api.get('/student/application/');
-      return response.data;
+      // Agar javob bitta obyekt bo'lsa, uni massivga o'raymiz
+      if (response.data && !Array.isArray(response.data)) {
+        return [response.data];
+      }
+      return response.data || [];
     } catch (error: unknown) {
       console.error('Applications fetch error:', error);
       throw error;
@@ -363,7 +373,7 @@ export const authAPI = {
   },
 
   // Get student dashboard data
-  getStudentDashboard: async (): Promise<unknown> => {
+  getStudentDashboard: async (): Promise<StudentDashboard> => {
     try {
       const response = await api.get('/student/dashboard/');
       return response.data;

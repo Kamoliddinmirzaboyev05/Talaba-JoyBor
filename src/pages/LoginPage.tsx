@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, LogIn } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { authAPI } from '../services/api';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -48,32 +49,24 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch('https://joyborv1.pythonanywhere.com/api/token/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password,
-        }),
+      const data = await authAPI.login({
+        username: formData.username,
+        password: formData.password,
       });
 
-      // Wait for the response body only after response.ok
-      if (!response.ok) {
-        const errorData = await response.json();
-        setGeneralError(errorData.detail || 'Kirishda xatolik yuz berdi');
-        return;
-      }
-
-      // Only parse JSON after ok
-      const data = await response.json();
+      // Tokenlarni localStorage ga saqlash (AuthContext ularni sessionStorage ga ko'chiradi)
       localStorage.setItem('access', data.access);
       localStorage.setItem('refresh', data.refresh);
+      
       await login(data.access, data.refresh);
       navigate('/dashboard', { replace: true });
-    } catch {
-      setGeneralError('Network error or server is down.');
+    } catch (error: any) {
+      console.error('Login error:', error);
+      if (error.response?.data?.detail) {
+        setGeneralError(error.response.data.detail);
+      } else {
+        setGeneralError('Kirishda xatolik yuz berdi. Server ishlamayotgan bo\'lishi mumkin.');
+      }
     } finally {
       setIsLoading(false);
     }

@@ -11,19 +11,32 @@ import {
   CheckCircle,
   AlertCircle,
   XCircle,
+  User,
+  CreditCard,
+  FileText,
+  ShieldCheck,
+  Briefcase,
+  GraduationCap,
+  Layers,
+  ChevronRight,
+  LogOut,
+  Bell,
+  Settings,
+  Building,
+  Phone,
 } from "lucide-react";
-import { Application } from "../types";
+import { Application, StudentDashboard } from "../types";
 import { useAuth } from "../contexts/AuthContext";
 import Header from "../components/Header";
 import { authAPI } from "../services/api";
-import { formatDate } from "../utils/format";
+import { formatDate, formatDateTime } from "../utils/format";
 
 
 const DashboardPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
-  const [studentDashboard, setStudentDashboard] = useState<Record<string, unknown> | null>(null);
+  const [studentDashboard, setStudentDashboard] = useState<StudentDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [platformStats, setPlatformStats] = useState({
     activeUsers: 0,
@@ -60,13 +73,13 @@ const DashboardPage: React.FC = () => {
         // Try to get student dashboard first
         try {
           const studentData = await authAPI.getStudentDashboard();
-          setStudentDashboard(studentData as Record<string, unknown>);
+          setStudentDashboard(studentData as StudentDashboard);
           
           if (import.meta.env.DEV) {
             console.log('Student Dashboard Data:', studentData);
           }
-        } catch {
-          console.log('Student dashboard not available, fetching applications instead');
+        } catch (err) {
+          console.log('Student dashboard not available, fetching applications instead', err);
           // Fallback to applications if dashboard not available
           const applicationsData = await authAPI.getApplications();
           setApplications(applicationsData as Application[]);
@@ -86,6 +99,13 @@ const DashboardPage: React.FC = () => {
 
   // Fix: get first name safely
   const firstName = user?.first_name || user?.username || "Foydalanuvchi";
+
+  // Tasdiqlangan arizani topish
+  const approvedApplication = React.useMemo(() => {
+    return (Array.isArray(applications) ? applications : []).find(
+      (app) => app.status?.toUpperCase() === "APPROVED" || app.status?.toUpperCase() === "TASDIQLANGAN" || app.status?.toUpperCase() === "TASDIQLANDI"
+    );
+  }, [applications]);
 
   // Dashboard statistikalari - xavfsiz hisoblash
   const stats = React.useMemo(() => {
@@ -107,7 +127,7 @@ const DashboardPage: React.FC = () => {
       },
       {
         label: "Tasdiqlangan",
-        value: String(safeApplications.filter((app) => app?.status?.toUpperCase() === "APPROVED").length || 0),
+        value: String(safeApplications.filter((app) => app?.status?.toUpperCase() === "APPROVED" || app?.status?.toUpperCase() === "TASDIQLANDI").length || 0),
         icon: CheckCircle,
         color: "text-green-600",
         bg: "bg-green-100 dark:bg-green-900/30",
@@ -124,39 +144,47 @@ const DashboardPage: React.FC = () => {
 
   const quickActions = [
     {
-      label: "Yotoqxona Qidirish",
+      label: "Yotoqxona",
       icon: Home,
-      action: () => navigate("/dormitories"),
-      color: "from-teal-600 to-teal-700",
-    },
-    {
-      label: "Ijara Qidirish",
-      icon: MapPin,
-      action: () => navigate("/rentals"),
-      color: "from-green-600 to-green-700",
+      path: "/dormitories",
+      color: "text-teal-600",
+      bg: "bg-teal-50 dark:bg-teal-900/20",
     },
     {
       label: "Xabarlar",
       icon: MessageCircle,
-      action: () => navigate("/messages"),
-      color: "from-blue-600 to-blue-700",
+      path: "/messages",
+      color: "text-blue-600",
+      bg: "bg-blue-50 dark:bg-blue-900/20",
+    },
+    {
+      label: "To'lovlar",
+      icon: CreditCard,
+      path: "/payments",
+      color: "text-purple-600",
+      bg: "bg-purple-50 dark:bg-purple-900/20",
     },
     {
       label: "Profil",
-      icon: Users,
-      action: () => navigate("/profile"),
-      color: "from-purple-600 to-purple-700",
+      icon: Settings,
+      path: "/profile",
+      color: "text-gray-600",
+      bg: "bg-gray-50 dark:bg-gray-900/20",
     },
   ];
 
   const getStatusIcon = (status: string) => {
-    const upperStatus = status.toUpperCase();
+    const upperStatus = status?.toUpperCase();
     switch (upperStatus) {
       case "APPROVED":
+      case "TASDIQLANDI":
+      case "TASDIQLANGAN":
         return <CheckCircle className="w-5 h-5 text-green-500" />;
       case "PENDING":
+      case "KUTILMOQDA":
         return <Clock className="w-5 h-5 text-yellow-500" />;
       case "REJECTED":
+      case "RAD ETILGAN":
         return <XCircle className="w-5 h-5 text-red-500" />;
       case "INTERVIEW":
         return <AlertCircle className="w-5 h-5 text-blue-500" />;
@@ -168,31 +196,39 @@ const DashboardPage: React.FC = () => {
   };
 
   const getStatusText = (status: string) => {
-    const upperStatus = status.toUpperCase();
+    const upperStatus = status?.toUpperCase();
     switch (upperStatus) {
       case "APPROVED":
+      case "TASDIQLANDI":
+      case "TASDIQLANGAN":
         return "Tasdiqlangan";
       case "PENDING":
+      case "KUTILMOQDA":
         return "Kutilmoqda";
       case "REJECTED":
+      case "RAD ETILGAN":
         return "Rad etilgan";
       case "INTERVIEW":
         return "Suhbat";
       case "COMPLETED":
         return "Yakunlangan";
       default:
-        return "Noma'lum";
+        return status || "Noma'lum";
     }
   };
 
   const getStatusColor = (status: string) => {
-    const upperStatus = status.toUpperCase();
+    const upperStatus = status?.toUpperCase();
     switch (upperStatus) {
       case "APPROVED":
+      case "TASDIQLANDI":
+      case "TASDIQLANGAN":
         return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
       case "PENDING":
+      case "KUTILMOQDA":
         return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300";
       case "REJECTED":
+      case "RAD ETILGAN":
         return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
       case "INTERVIEW":
         return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
@@ -205,256 +241,405 @@ const DashboardPage: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Tizimga kirish talab etiladi
-          </h2>
-          <button
-            onClick={() => navigate("/login")}
-            className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors duration-200"
-          >
-            Tizimga kirish
-          </button>
-        </div>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center max-w-sm"
+        >
+          <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl">
+            <div className="w-20 h-20 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center mx-auto mb-6 text-teal-600">
+              <ShieldCheck className="w-10 h-10" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              Tizimga kiring
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-8">
+              Dashboardingizga kirish uchun tizimga login qilishingiz kerak.
+            </p>
+            <button
+              onClick={() => navigate("/login")}
+              className="w-full bg-teal-600 text-white px-6 py-4 rounded-2xl font-bold hover:bg-teal-700 transition-all shadow-lg shadow-teal-500/30"
+            >
+              Tizimga kirish
+            </button>
+          </div>
+        </motion.div>
       </div>
     );
   }
 
-  // Agar talaba ro'yxatiga qo'shilgan bo'lsa (student dashboard mavjud)
+  // Student Dashboard mavjud bo'lsa (yotoqxonaga qabul qilingan talaba)
   if (studentDashboard) {
+    const baseUrl = "https://joyborv1.pythonanywhere.com";
+    const userImage = studentDashboard.picture ? (studentDashboard.picture.startsWith('http') ? studentDashboard.picture : `${baseUrl}${studentDashboard.picture}`) : null;
+
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0F172A] pb-24 md:pb-8">
         <Header />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Welcome Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-8"
-          >
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Xush kelibsiz, {String(studentDashboard.name || firstName)}! 🎉
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300">
-              {String(studentDashboard.placement_status || 'Siz yotoqxonaga qabul qilindingiz')}
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Yotoqxona Ma'lumotlari */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
-              >
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <Home className="w-5 h-5 text-teal-600" />
-                  Yotoqxona Ma'lumotlari
-                </h2>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
-                    <span className="text-gray-600 dark:text-gray-400">Yotoqxona:</span>
-                    <span className="font-semibold text-gray-900 dark:text-white">
-                      {String((studentDashboard.dormitory_info as { name?: string })?.name || '')}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
-                    <span className="text-gray-600 dark:text-gray-400">Manzil:</span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {String((studentDashboard.dormitory_info as { address?: string })?.address || '')}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
-                    <span className="text-gray-600 dark:text-gray-400">Qavat:</span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {String((studentDashboard.floor_info as { name?: string })?.name || '')}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
-                    <span className="text-gray-600 dark:text-gray-400">Xona:</span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {String((studentDashboard.room_info as { name?: string })?.name || '')}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-3">
-                    <span className="text-gray-600 dark:text-gray-400">Oylik to'lov:</span>
-                    <span className="font-semibold text-teal-600 dark:text-teal-400">
-                      {new Intl.NumberFormat('uz-UZ').format((studentDashboard.dormitory_info as { month_price?: number })?.month_price || 0)} so'm
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Xona Ma'lumotlari */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
-              >
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <Users className="w-5 h-5 text-teal-600" />
-                  Xona Ma'lumotlari
-                </h2>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
-                    <span className="text-gray-600 dark:text-gray-400">Sig'im:</span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {(studentDashboard.room_info as { capacity?: number })?.capacity || 0} kishi
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
-                    <span className="text-gray-600 dark:text-gray-400">Hozirgi band:</span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {(studentDashboard.room_info as { current_occupancy?: number })?.current_occupancy || 0} kishi
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-3">
-                    <span className="text-gray-600 dark:text-gray-400">Bo'sh joylar:</span>
-                    <span className="font-semibold text-green-600 dark:text-green-400">
-                      {((studentDashboard.room_info as { capacity?: number })?.capacity || 0) - ((studentDashboard.room_info as { current_occupancy?: number })?.current_occupancy || 0)} joy
-                    </span>
-                  </div>
-                </div>
-
-                {/* Xonadoshlar */}
-                {Array.isArray(studentDashboard.roommates) && studentDashboard.roommates.length > 0 ? (
-                  <div className="mt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                      Xonadoshlar
-                    </h3>
-                    <div className="space-y-2">
-                      {(studentDashboard.roommates as Array<{ name?: string; course?: string }>).map((roommate, index) => (
-                        <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                          <div className="w-10 h-10 bg-teal-600 rounded-full flex items-center justify-center text-white font-semibold">
-                            {roommate?.name?.charAt(0) || '?'}
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900 dark:text-white">
-                              {roommate?.name || 'Noma\'lum'}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {roommate?.course || ''}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
+          {/* Mobile Header / Profile */}
+          <div className="flex items-center justify-between mb-8 md:hidden">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-teal-500 bg-white shadow-sm">
+                {userImage ? (
+                  <img src={userImage} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="mt-6 text-center py-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <Users className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-600 dark:text-gray-400">
-                      Hozircha xonadoshlar yo'q
-                    </p>
+                  <div className="w-full h-full flex items-center justify-center text-teal-600 font-bold bg-teal-50">
+                    {studentDashboard.name?.charAt(0)}
                   </div>
                 )}
-              </motion.div>
+              </div>
+              <div>
+                <h2 className="font-bold text-gray-900 dark:text-white leading-tight">
+                  {studentDashboard.name}
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {studentDashboard.placement_status}
+                </p>
+              </div>
             </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Shaxsiy Ma'lumotlar */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
+            <div className="flex gap-2">
+              <button className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-sm text-gray-500">
+                <Bell className="w-5 h-5" />
+              </button>
+              <button 
+                onClick={logout}
+                className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-sm text-red-500"
               >
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Shaxsiy Ma'lumotlar
-                </h3>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">F.I.O:</p>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {String(studentDashboard.last_name || '')} {String(studentDashboard.name || '')} {String(studentDashboard.middle_name || '')}
-                    </p>
-                  </div>
-                  {(studentDashboard.province_name as string | undefined) && (
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Viloyat:</p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {studentDashboard.province_name as string}
-                      </p>
-                    </div>
-                  )}
-                  {(studentDashboard.district_name as string | undefined) && (
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Tuman:</p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {studentDashboard.district_name as string}
-                      </p>
-                    </div>
-                  )}
-                  {(studentDashboard.phone as string | undefined) && (
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Telefon:</p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        +{studentDashboard.phone as string}
-                      </p>
-                    </div>
-                  )}
-                  <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Ta'lim:</p>
-                    {(studentDashboard.faculty as string | undefined) && (
-                      <p className="font-medium text-gray-900 dark:text-white mb-1">
-                        📚 {studentDashboard.faculty as string}
-                      </p>
-                    )}
-                    {(studentDashboard.direction as string | undefined) && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        {studentDashboard.direction as string}
-                      </p>
-                    )}
-                    {((studentDashboard.course as string | undefined) || (studentDashboard.group as string | undefined)) && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {(studentDashboard.course as string) || ''} {(studentDashboard.group as string | undefined) ? `• ${studentDashboard.group as string}` : ''}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Quick Actions */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
-              >
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Tezkor Harakatlar
-                </h3>
-                <div className="space-y-3">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => navigate('/profile')}
-                    className="w-full flex items-center gap-3 p-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-all duration-300"
-                  >
-                    <Users className="w-5 h-5" />
-                    <span className="font-medium">Profilni Ko'rish</span>
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => navigate('/messages')}
-                    className="w-full flex items-center gap-3 p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-300"
-                  >
-                    <MessageCircle className="w-5 h-5" />
-                    <span className="font-medium">Xabarlar</span>
-                  </motion.button>
-                </div>
-              </motion.div>
+                <LogOut className="w-5 h-5" />
+              </button>
             </div>
           </div>
+
+          {/* Desktop Welcome Section */}
+          <div className="hidden md:flex justify-between items-center mb-10">
+            <div>
+              <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">
+                Xush kelibsiz, {studentDashboard.name}! 🎉
+              </h1>
+              <p className="text-gray-500 dark:text-gray-400 text-lg">
+                Bugungi kuningiz xayrli o'tsin
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  {studentDashboard.placement_status}
+                </p>
+                <p className="text-xs text-teal-600 dark:text-teal-400 font-bold uppercase tracking-wider">
+                  {studentDashboard.status}
+                </p>
+              </div>
+              <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-teal-500 bg-white shadow-md">
+                {userImage ? (
+                  <img src={userImage} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-teal-600 font-bold text-xl bg-teal-50">
+                    {studentDashboard.name?.charAt(0)}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
+            {/* Left Column - Main Info */}
+            <div className="lg:col-span-8 space-y-6 md:space-y-8">
+              
+              {/* Quick Info Grid - Mobile Optimized */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
+                  <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 mb-3">
+                    <Layers className="w-5 h-5" />
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Qavat</p>
+                  <p className="font-bold text-gray-900 dark:text-white">{studentDashboard.floor_info?.name}</p>
+                </div>
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
+                  <div className="w-10 h-10 bg-teal-50 dark:bg-teal-900/30 rounded-2xl flex items-center justify-center text-teal-600 mb-3">
+                    <Home className="w-5 h-5" />
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Xona</p>
+                  <p className="font-bold text-gray-900 dark:text-white">{studentDashboard.room_info?.name}</p>
+                </div>
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
+                  <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center text-purple-600 mb-3">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Xonadoshlar</p>
+                  <p className="font-bold text-gray-900 dark:text-white">{studentDashboard.room_info?.current_occupancy}/{studentDashboard.room_info?.capacity}</p>
+                </div>
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
+                  <div className="w-10 h-10 bg-green-50 dark:bg-green-900/30 rounded-2xl flex items-center justify-center text-green-600 mb-3">
+                    <CreditCard className="w-5 h-5" />
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Status</p>
+                  <p className="font-bold text-green-600">{studentDashboard.room_info?.status}</p>
+                </div>
+              </div>
+
+              {/* Dormitory Details Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700 overflow-hidden"
+              >
+                <div className="p-6 md:p-10">
+                  <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3">
+                      <div className="w-2 h-8 bg-teal-500 rounded-full"></div>
+                      Yotoqxona Ma'lumotlari
+                    </h2>
+                    <span className="hidden md:block px-4 py-1.5 bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 rounded-full text-xs font-bold uppercase tracking-widest">
+                      ID: {studentDashboard.dormitory_info?.id}
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between p-4 md:p-6 bg-gray-50 dark:bg-gray-900/50 rounded-3xl transition-all hover:bg-gray-100 dark:hover:bg-gray-900">
+                      <div className="flex items-center gap-4 mb-2 md:mb-0">
+                        <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-2xl flex items-center justify-center text-teal-600 shadow-sm">
+                          <Building className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Yotoqxona</p>
+                          <p className="font-black text-gray-900 dark:text-white text-lg">{studentDashboard.dormitory_info?.name}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 md:text-right flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-red-500" />
+                        {studentDashboard.dormitory_info?.address}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-6 bg-teal-600 rounded-3xl text-white shadow-lg shadow-teal-500/20">
+                        <p className="text-xs font-bold text-teal-100 uppercase tracking-widest mb-1">Oylik to'lov</p>
+                        <p className="text-3xl font-black">
+                          {new Intl.NumberFormat('uz-UZ').format(studentDashboard.dormitory_info?.month_price || 0)} <span className="text-sm font-medium">so'm</span>
+                        </p>
+                      </div>
+                      <div className="p-6 bg-white dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 rounded-3xl shadow-sm">
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Yillik to'lov</p>
+                        <p className="text-3xl font-black text-gray-900 dark:text-white">
+                          {new Intl.NumberFormat('uz-UZ').format(studentDashboard.dormitory_info?.year_price || 0)} <span className="text-sm font-medium">so'm</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Roommates Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-2">
+                  <h2 className="text-2xl font-black text-gray-900 dark:text-white">Xonadoshlar</h2>
+                  <span className="text-sm font-bold text-teal-600 bg-teal-50 dark:bg-teal-900/30 px-3 py-1 rounded-full">
+                    {studentDashboard.roommates?.length || 0} kishi
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {studentDashboard.roommates?.map((mate: any) => (
+                    <motion.div
+                      key={mate.id}
+                      whileHover={{ scale: 1.02 }}
+                      className="bg-white dark:bg-gray-800 p-5 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex items-center gap-4"
+                    >
+                      <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
+                        {mate.picture ? (
+                          <img src={`${baseUrl}${mate.picture}`} alt={mate.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-xl">
+                            {mate.name?.charAt(0)}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-black text-gray-900 dark:text-white truncate">{mate.name} {mate.last_name}</h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <GraduationCap className="w-3.5 h-3.5 text-teal-500" />
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{mate.faculty} • {mate.course}</p>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Phone className="w-3.5 h-3.5 text-blue-500" />
+                          <p className="text-xs text-gray-500 dark:text-gray-400">+{mate.phone}</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                  {(!studentDashboard.roommates || studentDashboard.roommates.length === 0) && (
+                    <div className="col-span-full py-12 text-center bg-gray-50 dark:bg-gray-900/30 rounded-[2rem] border-2 border-dashed border-gray-200 dark:border-gray-700">
+                      <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500 font-medium">Hozircha xonadoshlar yo'q</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Recent Payments - Mobile Style Scroll */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-2">
+                  <h2 className="text-2xl font-black text-gray-900 dark:text-white">Oxirgi To'lovlar</h2>
+                  <button className="text-teal-600 font-bold text-sm hover:underline">Hammasi</button>
+                </div>
+                
+                <div className="space-y-3">
+                  {studentDashboard.recent_payments?.map((payment: any) => (
+                    <div key={payment.id} className="bg-white dark:bg-gray-800 p-5 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-green-50 dark:bg-green-900/30 rounded-2xl flex items-center justify-center text-green-600">
+                          <CreditCard className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <p className="font-black text-gray-900 dark:text-white">{new Intl.NumberFormat('uz-UZ').format(payment.amount)} so'm</p>
+                          <p className="text-xs text-gray-500">{formatDateTime(payment.paid_date)} • {payment.method}</p>
+                        </div>
+                      </div>
+                      <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-[10px] font-black uppercase tracking-widest">
+                        {payment.status}
+                      </span>
+                    </div>
+                  ))}
+                  {(!studentDashboard.recent_payments || studentDashboard.recent_payments.length === 0) && (
+                    <div className="py-8 text-center bg-gray-50 dark:bg-gray-900/30 rounded-3xl border border-dashed border-gray-200">
+                      <p className="text-gray-400 font-medium">To'lovlar tarixi mavjud emas</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column - Sidebar */}
+            <div className="lg:col-span-4 space-y-6 md:space-y-8">
+              
+              {/* Profile Card */}
+              <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+                <div className="h-24 bg-gradient-to-r from-teal-500 to-blue-600"></div>
+                <div className="px-6 pb-8 -mt-12">
+                  <div className="flex justify-center mb-4">
+                    <div className="w-24 h-24 rounded-[2rem] overflow-hidden border-4 border-white dark:border-gray-800 bg-white shadow-lg">
+                      {userImage ? (
+                        <img src={userImage} alt="Profile" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-teal-600 font-black text-3xl bg-teal-50">
+                          {studentDashboard.name?.charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-center mb-6">
+                    <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight">
+                      {studentDashboard.last_name} {studentDashboard.name}
+                    </h3>
+                    <p className="text-gray-500 text-sm">{studentDashboard.middle_name}</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-2xl">
+                      <GraduationCap className="w-5 h-5 text-teal-600" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Fakultet</p>
+                        <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{studentDashboard.faculty}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-2xl">
+                      <Briefcase className="w-5 h-5 text-blue-600" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Yo'nalish</p>
+                        <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{studentDashboard.direction}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-2xl">
+                        <Clock className="w-5 h-5 text-purple-600" />
+                        <div>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Kurs</p>
+                          <p className="text-xs font-bold text-gray-900 dark:text-white">{studentDashboard.course}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-2xl">
+                        <Users className="w-5 h-5 text-orange-600" />
+                        <div>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Guruh</p>
+                          <p className="text-xs font-bold text-gray-900 dark:text-white">{studentDashboard.group}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Passport & Documents */}
+              <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] p-8 border border-gray-100 dark:border-gray-700 shadow-sm">
+                <h3 className="text-lg font-black text-gray-900 dark:text-white mb-6">Hujjatlar</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl">
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-5 h-5 text-teal-600" />
+                      <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Passport</span>
+                    </div>
+                    <span className="text-xs font-black text-gray-900 dark:text-white">{studentDashboard.passport}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl">
+                    <div className="flex items-center gap-3">
+                      <ShieldCheck className="w-5 h-5 text-green-600" />
+                      <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Imtiyoz</span>
+                    </div>
+                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${studentDashboard.privilege ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}`}>
+                      {studentDashboard.privilege ? 'Mavjud' : 'Yo\'q'}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+                  <button 
+                    onClick={() => window.open(`${baseUrl}${studentDashboard.document}`, '_blank')}
+                    className="w-full flex items-center justify-center gap-2 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-black text-sm hover:opacity-90 transition-all"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Barcha hujjatlarni ko'rish
+                  </button>
+                </div>
+              </div>
+
+              {/* Application Status Widget */}
+              <div className="bg-gradient-to-br from-teal-500 to-emerald-600 rounded-[2.5rem] p-8 text-white shadow-lg shadow-teal-500/20">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 opacity-80">Ariza Holati</p>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
+                    <CheckCircle className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-black">{studentDashboard.application_info?.status}</h4>
+                    <p className="text-xs opacity-80">{formatDate(studentDashboard.application_info?.created_at || '')} yuborilgan</p>
+                  </div>
+                </div>
+                <div className="p-4 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/10">
+                  <p className="text-xs font-bold mb-1 opacity-80">Admin izohi:</p>
+                  <p className="text-sm font-medium italic">"{studentDashboard.application_info?.admin_comment}"</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Bottom Navigation - Sticky */}
+        <div className="fixed bottom-6 left-4 right-4 h-20 bg-white/80 dark:bg-gray-800/80 backdrop-blur-2xl rounded-[2.5rem] border border-white/20 dark:border-gray-700/50 shadow-2xl md:hidden z-50 flex items-center justify-around px-4">
+          {quickActions.map((action) => (
+            <button
+              key={action.label}
+              onClick={() => navigate(action.path || '#')}
+              className="flex flex-col items-center gap-1 p-2"
+            >
+              <div className={`p-2.5 rounded-2xl ${action.bg} ${action.color}`}>
+                <action.icon className="w-6 h-6" />
+              </div>
+              <span className="text-[10px] font-black text-gray-500 uppercase tracking-tighter">{action.label}</span>
+            </button>
+          ))}
         </div>
       </div>
     );
@@ -477,12 +662,87 @@ const DashboardPage: React.FC = () => {
             Xush kelibsiz, {firstName}! 👋
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Bu yerda sizning faoliyatingiz va arizalaringizni kuzatishingiz
-            mumkin
-          </p>
-        </motion.div>
+          Bu yerda sizning faoliyatingiz va arizalaringizni kuzatishingiz
+          mumkin
+        </p>
+      </motion.div>
 
-        {/* Stats Grid */}
+      {/* Tasdiqlangan Ariza Card */}
+      {approvedApplication && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-6 shadow-sm"
+        >
+          <div className="flex flex-col md:flex-row gap-6 items-start">
+            <div className="w-full md:w-32 h-32 rounded-xl overflow-hidden bg-gray-200 flex-shrink-0">
+              {approvedApplication.user_image ? (
+                <img 
+                  src={approvedApplication.user_image} 
+                  alt="User" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-teal-100 dark:bg-teal-900/30 text-teal-600">
+                  <User className="w-12 h-12" />
+                </div>
+              )}
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle className="w-6 h-6 text-green-600" />
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Arizangiz Tasdiqlandi! 🎉
+                </h2>
+              </div>
+              <p className="text-gray-700 dark:text-gray-300 mb-4">
+                Sizning <span className="font-semibold text-teal-700 dark:text-teal-400">{approvedApplication.dormitory_name}</span> uchun yuborgan arizangiz qabul qilindi.
+                {approvedApplication.admin_comment && (
+                  <span className="block mt-2 italic text-sm text-gray-600 dark:text-gray-400">
+                    Admin izohi: "{approvedApplication.admin_comment}"
+                  </span>
+                )}
+              </p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 text-sm">
+                <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                  <p className="text-gray-500 dark:text-gray-400 text-xs">Fakultet</p>
+                  <p className="font-medium text-gray-900 dark:text-white truncate">{approvedApplication.faculty}</p>
+                </div>
+                <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                  <p className="text-gray-500 dark:text-gray-400 text-xs">Yo'nalish</p>
+                  <p className="font-medium text-gray-900 dark:text-white truncate">{approvedApplication.direction}</p>
+                </div>
+                <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                  <p className="text-gray-500 dark:text-gray-400 text-xs">Kurs / Guruh</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{approvedApplication.course} / {approvedApplication.group}</p>
+                </div>
+                <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                  <p className="text-gray-500 dark:text-gray-400 text-xs">Hudud</p>
+                  <p className="font-medium text-gray-900 dark:text-white truncate">{approvedApplication.province_name}, {approvedApplication.district_name}</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 w-full md:w-auto">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => navigate(`/application/${approvedApplication.id}`)}
+                className="bg-teal-600 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-teal-700 transition-all shadow-sm"
+              >
+                Batafsil ma'lumot
+              </motion.button>
+              <div className="flex items-center justify-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-2">
+                <Clock className="w-3.5 h-3.5" />
+                {formatDate(approvedApplication.created_at)}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
             <motion.div
@@ -686,11 +946,13 @@ const DashboardPage: React.FC = () => {
                     key={action.label}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={action.action}
-                    className={`w-full flex items-center gap-3 p-3 bg-gradient-to-r ${action.color} text-white rounded-xl hover:shadow-lg transition-all duration-300`}
+                    onClick={() => navigate(action.path)}
+                    className={`w-full flex items-center gap-3 p-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 group`}
                   >
-                    <action.icon className="w-5 h-5" />
-                    <span className="font-medium">{action.label}</span>
+                    <div className={`p-2 rounded-lg ${action.bg} ${action.color} group-hover:scale-110 transition-transform`}>
+                      <action.icon className="w-5 h-5" />
+                    </div>
+                    <span className="font-medium text-gray-700 dark:text-gray-300">{action.label}</span>
                   </motion.button>
                 ))}
               </div>

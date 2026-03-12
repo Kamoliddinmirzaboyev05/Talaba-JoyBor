@@ -159,8 +159,14 @@ export const formatRelativeTime = (iso?: string): string => {
   }
 };
 
+export const formatPrice = (price: number): string => {
+  return new Intl.NumberFormat('uz-UZ', {
+    style: 'currency',
+    currency: 'UZS',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price);
+};
+
 // Legacy function for backward compatibility
 export const formatUiDate = formatDate;
-
-
-
