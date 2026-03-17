@@ -5,7 +5,7 @@ import { Pagination, Autoplay, Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
-import { MapPin, Users, Building2, Clock, CheckCircle, Share2, Heart } from 'lucide-react';
+import { MapPin, Users, Building2, Clock, CheckCircle, Share2, Heart, ShieldCheck } from 'lucide-react';
 import { formatCapacityBucket } from '../utils/format';
 import { shareOrCopy } from '../utils/share';
 import { useLikes } from '../contexts/LikesContext';
@@ -22,6 +22,27 @@ interface DormitoryCardProps {
   total_capacity: number;
   distance_to_university?: number;
   description?: string;
+  room_statistics?: {
+    total: {
+      rooms: number;
+      capacity: number;
+      occupied: number;
+      free: number;
+      occupancy_rate: number;
+    };
+    male: {
+      free: number;
+    };
+    female: {
+      free: number;
+    };
+    by_status?: {
+      available: number;
+      partially_occupied: number;
+      fully_occupied: number;
+    };
+  };
+  rules?: Array<{ id: number; rule: string; dormitory: number }>;
   onSelect: () => void;
   onApplicationStart?: () => void;
   canApply?: boolean;
@@ -40,11 +61,17 @@ const DormitoryCard: React.FC<DormitoryCardProps> = ({
   available_capacity,
   distance_to_university,
   description,
+  room_statistics,
+  rules,
   onSelect,
   onApplicationStart,
   canApply,
 }) => {
   const { toggleLike, isLiked } = useLikes();
+
+  const totalFreeSpaces = room_statistics 
+    ? (room_statistics.male.free + room_statistics.female.free)
+    : available_capacity;
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -159,20 +186,36 @@ const DormitoryCard: React.FC<DormitoryCardProps> = ({
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-gray-400" />
-            <span className="text-sm text-gray-600 dark:text-gray-300">
-              Bo'sh joylar: {formatCapacityBucket(available_capacity)}
+            <Users className="w-4 h-4 text-teal-600" />
+            <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">
+              Bo'sh joy: {totalFreeSpaces}
             </span>
           </div>
-          {typeof distance_to_university === 'number' && (
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-gray-400" />
-              <span className="text-sm text-gray-600 dark:text-gray-300">
-                {distance_to_university} km
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-blue-600" />
+            <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">
+              Xonalar: {room_statistics ? room_statistics.total.rooms : '?'}
+            </span>
+          </div>
         </div>
+
+        {/* Rules Summary */}
+        {rules && rules.length > 0 && (
+          <div className="mb-4 space-y-1">
+            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-bold uppercase tracking-wider">Asosiy Qoidalar</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              {rules.map((rule, idx) => (
+                <p key={rule.id || idx} className="text-xs text-gray-600 dark:text-gray-400 line-clamp-1 flex items-center gap-1">
+                  <span className="w-1 h-1 bg-teal-500 rounded-full flex-shrink-0"></span>
+                  {rule.rule}
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Amenities */}
         <div className="flex flex-wrap gap-2 mb-4">

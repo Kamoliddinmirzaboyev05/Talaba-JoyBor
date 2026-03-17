@@ -26,7 +26,7 @@ const AllListingsPage: React.FC = () => {
         const dormitoriesResponse = await authAPI.getDormitories().catch(() => ({ results: [] }));
         const dormitoriesData = dormitoriesResponse.results || dormitoriesResponse;
 
-        const convertedDormitories: Listing[] = (dormitoriesData || []).map((dormitory: {
+        const convertedDormitories: Listing[] = (dormitoriesData as any[] || []).map((dormitory: {
           id: number;
           name: string;
           month_price: number;
@@ -38,9 +38,20 @@ const AllListingsPage: React.FC = () => {
           total_capacity?: number;
           available_capacity?: number;
           rating?: number;
-          rules?: string[];
+          rules?: Array<{ rule: string } | string>;
           latitude?: number;
           longitude?: number;
+          room_statistics?: {
+            total: {
+              rooms: number;
+              capacity: number;
+              occupied: number;
+              free: number;
+              occupancy_rate: number;
+            };
+            male: { free: number };
+            female: { free: number };
+          };
         }) => {
           const images = Array.isArray(dormitory.images) && dormitory.images.length > 0
             ? dormitory.images.map((img: string | { image: string }) => typeof img === 'string' ? img : img?.image || '')
@@ -49,6 +60,14 @@ const AllListingsPage: React.FC = () => {
           const amenities = Array.isArray(dormitory.amenities_list) && dormitory.amenities_list.length > 0
             ? dormitory.amenities_list.map((a: { name: string }) => a?.name || '')
             : [];
+
+          const rules = Array.isArray(dormitory.rules)
+            ? dormitory.rules.map((r) => (typeof r === 'string' ? r : r.rule))
+            : [];
+
+          const freeSpaces = dormitory.room_statistics 
+            ? (dormitory.room_statistics.male.free + dormitory.room_statistics.female.free)
+            : (dormitory.available_capacity || 0);
 
           return {
             id: `dorm-${dormitory.id}`,
@@ -60,9 +79,9 @@ const AllListingsPage: React.FC = () => {
             images: images.filter(Boolean),
             amenities: amenities.filter(Boolean),
             description: dormitory.description || '',
-            capacity: dormitory.total_capacity || 0,
-            available_capacity: dormitory.available_capacity || 0,
-            available: (dormitory.available_capacity || 0) > 0,
+            capacity: dormitory.room_statistics?.total.capacity || dormitory.total_capacity || 0,
+            available_capacity: freeSpaces,
+            available: freeSpaces > 0,
             rating: dormitory.rating || 0,
             reviews: 0,
             features: {
@@ -71,8 +90,9 @@ const AllListingsPage: React.FC = () => {
               parking: amenities.some((a: string) => a.toLowerCase().includes('parking')),
               security: amenities.some((a: string) => a.toLowerCase().includes('security')),
             },
-            rules: dormitory.rules || [],
+            rules: rules,
             coordinates: { lat: dormitory.latitude || 0, lng: dormitory.longitude || 0 },
+            room_statistics: dormitory.room_statistics,
           };
         });
 

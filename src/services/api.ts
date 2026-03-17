@@ -468,57 +468,43 @@ export const authAPI = {
   },
 
   // Get notifications
-  getNotifications: async (): Promise<unknown[]> => {
+  getNotifications: async (): Promise<Notification[]> => {
     try {
-      const response = await api.get('/notifications/my/');
-      return response.data;
+      const response = await api.get('/notifications/');
+      // DRF typically returns { count, next, previous, results } or just an array
+      return response.data.results || response.data || [];
     } catch (error: unknown) {
-      const err = error as { response?: { status?: number } };
-      // If endpoint doesn't exist (404) or other errors, return mock data
-      if (err.response?.status === 404) {
-        console.warn('Notifications endpoint not available, using mock data');
-        // Mock notifications data
-        return [
-          {
-            id: 1,
-            title: "Arizangiz qabul qilindi",
-            message: "Sizning yotoqxona uchun arizangiz muvaffaqiyatli qabul qilindi va ko'rib chiqilmoqda.",
-            is_read: false,
-            created_at: new Date().toISOString(),
-            type: "application_update"
-          },
-          {
-            id: 2,
-            title: "Yangi yotoqxona qo'shildi",
-            message: "Toshkent shahrida yangi yotoqxona mavjud. Ko'rib chiqishingiz mumkin.",
-            is_read: false,
-            created_at: new Date(Date.now() - 3600000).toISOString(), // 1 soat oldin
-            type: "new_listing"
-          },
-          {
-            id: 3,
-            title: "Profilingizni to'ldiring",
-            message: "To'liq profil ko'proq imkoniyatlar beradi. Profilingizni to'ldiring.",
-            is_read: true,
-            created_at: new Date(Date.now() - 86400000).toISOString(), // 1 kun oldin
-            type: "profile_reminder"
-          }
-        ];
-      }
       console.error('Notifications fetch error:', error);
-      return []; // Return empty array for other errors
+      return [];
     }
   },
 
   // Mark notification as read
   markNotificationAsRead: async (notificationId: number): Promise<unknown> => {
     try {
-      const response = await api.post('/notifications/mark-read/', {
-        notification_id: notificationId
+      const response = await api.patch(`/notifications/${notificationId}/`, {
+        read: true
       });
       return response.data;
     } catch (error: unknown) {
       console.error('Mark notification as read error:', error);
+      // Fallback if PATCH not supported, try POST to common mark-read endpoint
+      try {
+        const response = await api.post(`/notifications/${notificationId}/mark-read/`);
+        return response.data;
+      } catch {
+        throw error;
+      }
+    }
+  },
+
+  // Mark all notifications as read
+  markAllNotificationsAsRead: async (): Promise<unknown> => {
+    try {
+      const response = await api.post('/notifications/mark-all-read/');
+      return response.data;
+    } catch (error: unknown) {
+      console.error('Mark all notifications as read error:', error);
       throw error;
     }
   },

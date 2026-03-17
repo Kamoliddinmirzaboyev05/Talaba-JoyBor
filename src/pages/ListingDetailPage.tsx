@@ -95,9 +95,20 @@ const ListingDetailPage: React.FC = () => {
             available_capacity?: number;
             rating?: number;
             admin_name?: string;
-            rules?: string[];
+            rules?: Array<{ rule: string } | string>;
             latitude?: number;
             longitude?: number;
+            room_statistics?: {
+              total: {
+                rooms: number;
+                capacity: number;
+                occupied: number;
+                free: number;
+                occupancy_rate: number;
+              };
+              male: { free: number };
+              female: { free: number };
+            };
           };
 
           // Convert API data to Listing format
@@ -118,6 +129,10 @@ const ListingDetailPage: React.FC = () => {
                     )
                   : [];
 
+              const rules = Array.isArray(dorm.rules)
+                ? dorm.rules.map((r) => (typeof r === "string" ? r : r.rule))
+                : [];
+
               return {
                 id: `dorm-${dorm.id}`,
                 title: dorm.name,
@@ -128,9 +143,13 @@ const ListingDetailPage: React.FC = () => {
                 images: images.filter(Boolean),
                 amenities: amenities.filter(Boolean),
                 description: dorm.description || "Tavsif mavjud emas",
-                capacity: dorm.total_capacity || 0,
-                available_capacity: dorm.available_capacity || 0,
-                available: (dorm.available_capacity || 0) > 0,
+                capacity: dorm.room_statistics?.total.capacity || dorm.total_capacity || 0,
+                available_capacity: dorm.room_statistics 
+                  ? (dorm.room_statistics.male.free + dorm.room_statistics.female.free) 
+                  : (dorm.available_capacity || 0),
+                available: (dorm.room_statistics 
+                  ? (dorm.room_statistics.male.free + dorm.room_statistics.female.free) 
+                  : (dorm.available_capacity || 0)) > 0,
                 rating: dorm.rating || 0,
                 reviews: 0,
                 admin: {
@@ -150,11 +169,12 @@ const ListingDetailPage: React.FC = () => {
                     a.toLowerCase().includes("security")
                   ),
                 },
-                rules: dorm.rules || [],
+                rules: rules,
                 coordinates: {
                   lat: dorm.latitude || 0,
                   lng: dorm.longitude || 0,
                 },
+                room_statistics: dorm.room_statistics,
               };
             }
           );
@@ -693,6 +713,46 @@ const ListingDetailPage: React.FC = () => {
                 {listing.location} • {listing.university}
               </p>
             </motion.div>
+
+            {/* Dormitory Capacity Details */}
+            {listing.type === 'dormitory' && listing.room_statistics && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl p-6"
+              >
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Bo'sh joylar statistikasi
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Erkaklar</span>
+                    </div>
+                    <p className="text-2xl font-black text-blue-900 dark:text-blue-100">
+                      {listing.room_statistics.male.free} <span className="text-xs font-medium opacity-70">joy</span>
+                    </p>
+                  </div>
+                  <div className="p-4 bg-pink-50 dark:bg-pink-900/20 rounded-xl border border-pink-100 dark:border-pink-800">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Users className="w-4 h-4 text-pink-600 dark:text-pink-400" />
+                      <span className="text-xs font-bold text-pink-600 dark:text-pink-400 uppercase tracking-wider">Ayollar</span>
+                    </div>
+                    <p className="text-2xl font-black text-pink-900 dark:text-pink-100">
+                      {listing.room_statistics.female.free} <span className="text-xs font-medium opacity-70">joy</span>
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 p-4 bg-teal-50 dark:bg-teal-900/20 rounded-xl border border-teal-100 dark:border-teal-800 flex justify-between items-center">
+                  <span className="text-sm font-bold text-teal-800 dark:text-teal-200">Umumiy bo'sh joy:</span>
+                  <span className="text-xl font-black text-teal-900 dark:text-teal-100">
+                    {listing.room_statistics.male.free + listing.room_statistics.female.free}
+                  </span>
+                </div>
+              </motion.div>
+            )}
           </div>
         </div>
       </div>

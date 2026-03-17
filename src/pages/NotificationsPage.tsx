@@ -7,7 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import Header from '../components/Header';
 import { useTheme } from '../contexts/ThemeContext';
-// import { authAPI } from '../services/api'; // API o'chirilgan
+import { authAPI } from '../services/api';
 import { formatTime } from "../utils/format";
 
 const NotificationsPage: React.FC = () => {
@@ -25,93 +25,53 @@ const NotificationsPage: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(1);
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 20;
 
   // Load notifications from API
   const loadNotifications = async (pageNum: number = 1, append: boolean = false) => {
     if (!user) return;
 
-    if (pageNum === 1) {
-      setLoading(true);
-    } else {
-      setLoadingMore(true);
-    }
-
-    // API o'chirilgan - faqat mock data ishlatamiz
-    const fallbackNotifications: Notification[] = [
-      {
-        id: 1,
-        title: 'Ariza tasdiqlandi! 🎉',
-        message: 'Tabriklaymiz! Sizning Toshkent Davlat Universiteti yotoqxonasiga arizangiz tasdiqlandi. Keyingi qadamlar haqida tez orada xabar beramiz.',
-        type: 'application',
-        timestamp: new Date().toISOString(),
-        read: false,
-        actionUrl: '/applications',
-        image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=100&h=100&fit=crop&crop=center',
-        priority: 'high'
-      },
-      {
-        id: 2,
-        title: 'Yangi xabar keldi',
-        message: 'Yotoqxona ma\'muriyatidan sizga yangi xabar keldi. Iltimos, xabarlar bo\'limini tekshiring.',
-        type: 'message',
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        read: false,
-        actionUrl: '/messages',
-        priority: 'medium'
-      },
-      {
-        id: 3,
-        title: 'Yangi yotoqxonalar qo\'shildi',
-        message: 'Samarqand viloyatida 5 ta yangi yotoqxona qo\'shildi. Ularni ko\'rib chiqing!',
-        type: 'system',
-        timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-        read: false,
-        actionUrl: '/dormitories',
-        image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=100&h=100&fit=crop&crop=center',
-        priority: 'medium'
-      },
-      {
-        id: 4,
-        title: 'Tizim yangilandi',
-        message: 'JoyBor platformasi yangi funksiyalar bilan yangilandi. Yangi imkoniyatlarni kashf eting!',
-        type: 'system',
-        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-        read: true,
-        actionUrl: '/about',
-        priority: 'low'
-      },
-      {
-        id: 5,
-        title: 'Eslatma: To\'lov muddati',
-        message: 'Yotoqxona to\'lovi muddati yaqinlashmoqda. 3 kun ichida to\'lovni amalga oshiring.',
-        type: 'reminder',
-        timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-        read: false,
-        actionUrl: '/payments',
-        priority: 'high'
+    try {
+      if (pageNum === 1) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
       }
-    ];
 
-    // Implement pagination for mock data
-    const startIndex = (pageNum - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    const paginatedNotifications = fallbackNotifications.slice(startIndex, endIndex);
+      const apiNotifications = await authAPI.getNotifications();
+      
+      // Transform API data to our Notification type if needed
+      const transformed: Notification[] = apiNotifications.map((n: any) => ({
+        id: n.id,
+        title: n.title || 'Bildirishnoma',
+        message: n.message || n.text || n.content || '',
+        type: n.type || 'system',
+        timestamp: n.created_at || n.timestamp || new Date().toISOString(),
+        read: n.read || n.is_read || false,
+        actionUrl: n.action_url || n.url || '',
+        image: n.image || null,
+        priority: n.priority || 'medium'
+      }));
 
-    if (append) {
-      setNotifications(prev => [...prev, ...paginatedNotifications]);
-    } else {
-      setNotifications(paginatedNotifications);
-    }
+      if (append) {
+        setNotifications(prev => [...prev, ...transformed]);
+      } else {
+        setNotifications(transformed);
+      }
 
-    // Check if there are more items
-    setHasMore(endIndex < fallbackNotifications.length);
-
-    if (pageNum === 1) {
+      // API typically handles pagination, but for now we'll assume it returns all or handle it simply
+      setHasMore(false); // Update this if API supports pagination
+      
+      if (pageNum === 1) {
+        setLoading(false);
+      } else {
+        setLoadingMore(false);
+      }
+    } catch (error) {
+      console.error('Failed to load notifications:', error);
       setLoading(false);
-    } else {
       setLoadingMore(false);
     }
   };
@@ -190,24 +150,29 @@ const NotificationsPage: React.FC = () => {
 
 
   const handleMarkAsRead = async (notificationId: number) => {
-    // API o'chirilgan - faqat local state yangilanadi
-    setNotifications(prev => prev.map(notif =>
-      notif.id === notificationId ? { ...notif, read: true } : notif
-    ));
+    try {
+      await authAPI.markNotificationAsRead(notificationId);
+      
+      setNotifications(prev => prev.map(notif =>
+        notif.id === notificationId ? { ...notif, read: true } : notif
+      ));
 
-    // Refresh unread count in header
-    refreshUnreadCount();
+      // Refresh unread count in header
+      refreshUnreadCount();
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
   };
 
   const handleMarkAllAsRead = async () => {
-    // API o'chirilgan - faqat local state yangilanadi
-    setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
-
-    // Refresh unread count in header
-    refreshUnreadCount();
+    try {
+      await authAPI.markAllNotificationsAsRead();
+      setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
+      refreshUnreadCount();
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
   };
-
-
 
   const handleNotificationClick = (notification: Notification) => {
     // If notification has image or is long, go to detail page

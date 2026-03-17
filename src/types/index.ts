@@ -61,6 +61,17 @@ export interface Listing {
     lat: number;
     lng: number;
   };
+  room_statistics?: {
+    total: {
+      rooms: number;
+      capacity: number;
+      occupied: number;
+      free: number;
+      occupancy_rate: number;
+    };
+    male: { free: number };
+    female: { free: number };
+  };
   // Apartment uchun qo'shimcha maydonlar
   rooms?: number;
   available_rooms?: number;
@@ -85,6 +96,38 @@ export interface Dormitory {
   longitude: number;
   rating: number;
   is_active: boolean;
+  distance?: number;
+  link?: string;
+  phone_numer?: string;
+  // Room Statistics from API
+  room_statistics?: {
+    total: {
+      rooms: number;
+      capacity: number;
+      occupied: number;
+      free: number;
+      occupancy_rate: number;
+    };
+    male: {
+      rooms: number;
+      capacity: number;
+      occupied: number;
+      free: number;
+      occupancy_rate: number;
+    };
+    female: {
+      rooms: number;
+      capacity: number;
+      occupied: number;
+      free: number;
+      occupancy_rate: number;
+    };
+    by_status: {
+      available: number;
+      partially_occupied: number;
+      fully_occupied: number;
+    };
+  };
   // Direct fields from API
   university: number;  // University ID
   university_name: string;
@@ -94,12 +137,17 @@ export interface Dormitory {
   images: Array<{ id?: number; image: string } | string>;  // Array of image objects or URLs
   amenities: number[];  // Array of amenity IDs
   amenities_list: Array<{ id?: number; name: string; is_active?: boolean; type?: string }>;  // Array of amenity objects
+  // Rules from API
+  rules?: Array<{
+    id: number;
+    rule: string;
+    dormitory: number;
+  }>;
   // Optional fields for compatibility
   total_capacity?: number;
   available_capacity?: number;
   total_rooms?: number;
   distance_to_university?: number;
-  rules?: string[];
   province?: {
     id: number;
     name: string;
@@ -239,6 +287,7 @@ export interface Notification {
   type: 'application' | 'message' | 'system' | 'reminder';
   timestamp: string;
   read: boolean;
+  is_read?: boolean;
   actionUrl?: string;
   image?: string;
   priority?: 'low' | 'medium' | 'high';
