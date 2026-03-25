@@ -89,16 +89,9 @@ const ApplicationPage: React.FC = () => {
         }, 150);
       } catch (scrollError) {
         // Ignore scroll errors
-        console.debug('Scroll error:', scrollError);
       }
     }
   }, [errors]);
-
-  // Debug logging (development only)
-  if (import.meta.env.DEV) {
-    console.log('ApplicationPage - isAuthenticated:', isAuthenticated);
-    console.log('ApplicationPage - selectedListing:', selectedListing);
-  }
 
   // Update form data when user changes
   useEffect(() => {
@@ -121,17 +114,12 @@ const ApplicationPage: React.FC = () => {
           authAPI.getDormitories()
         ]);
         
-        if (import.meta.env.DEV) {
-          console.log('Provinces loaded:', provincesData);
-          console.log('Dormitories response:', dormitoriesResponse);
-        }
-        
         setProvinces(provincesData);
         // Handle dormitories response (can be array or object with results)
-        const dormitoriesData = dormitoriesResponse.results || dormitoriesResponse;
+        const dormitoriesData = (dormitoriesResponse.results || dormitoriesResponse) as Dormitory[];
         setDormitories(dormitoriesData);
       } catch (error) {
-        console.error('Ma\'lumotlar yuklanmadi:', error);
+        // Handle error silently
       }
     };
     fetchData();
@@ -143,14 +131,8 @@ const ApplicationPage: React.FC = () => {
       const fetchDistricts = async () => {
         try {
           const data = await authAPI.getDistricts(selectedProvinceId);
-          
-          if (import.meta.env.DEV) {
-            console.log(`Districts for province ${selectedProvinceId}:`, data);
-          }
-          
           setDistricts(data);
         } catch (error) {
-          console.error('Tumanlar yuklanmadi:', error);
           setDistricts([]);
         }
       };
@@ -444,25 +426,8 @@ const ApplicationPage: React.FC = () => {
         passport_image_second: formData.passport_image_second || undefined,
       };
 
-      if (import.meta.env.DEV) {
-        console.log('=== ARIZA MA\'LUMOTLARI ===');
-        console.log('User ID:', user?.id, typeof user?.id);
-        console.log('Dormitory ID:', dormitoryId, typeof dormitoryId);
-        console.log('Name:', applicationData.name, typeof applicationData.name);
-        console.log('Province ID:', selectedProvince.id, typeof selectedProvince.id);
-        console.log('District ID:', selectedDistrict.id, typeof selectedDistrict.id);
-        console.log('Course:', applicationData.course, typeof applicationData.course);
-        console.log('Phone:', applicationData.phone, typeof applicationData.phone);
-        console.log('\nTo\'liq ma\'lumotlar:', applicationData);
-        console.log('=== END ===\n');
-      }
-
       // API orqali ariza yuborish
-      const response = await authAPI.submitApplication(applicationData);
-
-      if (import.meta.env.DEV) {
-        console.log('Ariza muvaffaqiyatli yuborildi:', response);
-      }
+      await authAPI.submitApplication(applicationData);
 
       setSubmitSuccess(true);
       // Clear selected listing after successful submission
@@ -472,9 +437,6 @@ const ApplicationPage: React.FC = () => {
       }, 3000);
 
     } catch (error: unknown) {
-      console.error('=== ARIZA YUBORISH XATOSI ===');
-      console.error('Error:', error);
-      
       let errorMessage = 'Ariza yuborishda xatolik yuz berdi. Qaytadan urinib ko\'ring.';
       const fieldErrors: Record<string, string> = {};
 
@@ -486,11 +448,6 @@ const ApplicationPage: React.FC = () => {
           }; 
           message?: string;
         };
-        
-        if (axiosError.response) {
-          console.error('Response Status:', axiosError.response.status);
-          console.error('Response Data:', axiosError.response.data);
-        }
         
         if (axiosError.response?.data) {
           const errorData = axiosError.response.data;
@@ -536,7 +493,6 @@ const ApplicationPage: React.FC = () => {
           errorMessage = axiosError.message;
         }
       } catch (parseError) {
-        console.error('Error parsing error response:', parseError);
         const axiosError = error as { message?: string };
         errorMessage = axiosError.message || errorMessage;
       }

@@ -46,7 +46,6 @@ const ApplicationsPage: React.FC = () => {
         setApplications(applicationsData);
         setFilteredApplications(applicationsData);
       } catch (error) {
-        console.error("Arizalar yuklanmadi:", error);
         setApplications([]);
         setFilteredApplications([]);
       } finally {

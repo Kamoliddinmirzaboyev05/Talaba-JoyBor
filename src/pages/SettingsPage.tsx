@@ -38,6 +38,7 @@ const SettingsPage: React.FC = () => {
     new: '',
     confirm: ''
   });
+  const [isSaving, setIsSaving] = useState(false);
 
   if (!user) {
     return (
@@ -76,18 +77,22 @@ const SettingsPage: React.FC = () => {
     setPasswordData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSaveSettings = () => {
-    // Here you would typically save settings to backend
-    console.log('Saving settings...');
+  const handleSaveSettings = async () => {
+    setIsSaving(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setIsSaving(false);
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     if (passwordData.new !== passwordData.confirm) {
       alert('Yangi parollar mos kelmaydi');
       return;
     }
-    // Here you would typically change password
-    console.log('Changing password...');
+    setIsSaving(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setIsSaving(false);
     setPasswordData({ current: '', new: '', confirm: '' });
   };
 

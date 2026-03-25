@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
+  CalendarCheck,
   Home,
   MessageCircle,
   Calendar,
@@ -65,27 +66,21 @@ const DashboardPage: React.FC = () => {
             totalRooms: stats.rooms_total || 0,
             freeRooms: stats.rooms_free || 0
           });
-          console.log('✅ Platform statistikalari yuklandi:', stats);
         } catch (error) {
-          console.error('❌ Platform statistikalari yuklanmadi:', error);
+          // Handle error silently
         }
         
         // Try to get student dashboard first
         try {
           const studentData = await authAPI.getStudentDashboard();
           setStudentDashboard(studentData as StudentDashboard);
-          
-          if (import.meta.env.DEV) {
-            console.log('Student Dashboard Data:', studentData);
-          }
         } catch (err) {
-          console.log('Student dashboard not available, fetching applications instead', err);
           // Fallback to applications if dashboard not available
           const applicationsData = await authAPI.getApplications();
           setApplications(applicationsData as Application[]);
         }
       } catch (error) {
-        console.error("Ma'lumotlar yuklanmadi:", error);
+        // Handle error silently
         setApplications([]);
       } finally {
         setLoading(false);
@@ -211,9 +206,9 @@ const DashboardPage: React.FC = () => {
       case "INTERVIEW":
         return "Suhbat";
       case "COMPLETED":
-        return "Yakunlangan";
+        return "Bajarilgan";
       default:
-        return status || "Noma'lum";
+        return status;
     }
   };
 
@@ -223,423 +218,330 @@ const DashboardPage: React.FC = () => {
       case "APPROVED":
       case "TASDIQLANDI":
       case "TASDIQLANGAN":
-        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
+      case "COMPLETED":
+        return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
       case "PENDING":
       case "KUTILMOQDA":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300";
+        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
       case "REJECTED":
       case "RAD ETILGAN":
-        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+        return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
       case "INTERVIEW":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
-      case "COMPLETED":
-        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300";
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400";
     }
   };
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center max-w-sm"
-        >
-          <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl">
-            <div className="w-20 h-20 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center mx-auto mb-6 text-teal-600">
-              <ShieldCheck className="w-10 h-10" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Tizimga kiring
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">
-              Dashboardingizga kirish uchun tizimga login qilishingiz kerak.
-            </p>
-            <button
-              onClick={() => navigate("/login")}
-              className="w-full bg-teal-600 text-white px-6 py-4 rounded-2xl font-bold hover:bg-teal-700 transition-all shadow-lg shadow-teal-500/30"
-            >
-              Tizimga kirish
-            </button>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
 
   // Student Dashboard mavjud bo'lsa (yotoqxonaga qabul qilingan talaba)
   if (studentDashboard) {
     const baseUrl = "https://joyborv1.pythonanywhere.com";
     const userImage = studentDashboard.picture ? (studentDashboard.picture.startsWith('http') ? studentDashboard.picture : `${baseUrl}${studentDashboard.picture}`) : null;
 
+    const totalPaid = studentDashboard.recent_payments?.reduce((sum, p) => sum + p.amount, 0) || 0;
+    const annualPrice = studentDashboard.dormitory_info?.year_price || 1;
+    const paymentPercentage = Math.min(Math.round((totalPaid / annualPrice) * 100), 100);
+
     return (
-      <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0F172A] pb-24 md:pb-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-12">
         <Header />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
-          {/* Mobile Header / Profile */}
-          <div className="flex items-center justify-between mb-8 md:hidden">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-teal-500 bg-white shadow-sm">
-                {userImage ? (
-                  <img src={userImage} alt="Profile" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-teal-600 font-bold bg-teal-50">
-                    {studentDashboard.name?.charAt(0)}
-                  </div>
-                )}
-              </div>
-              <div>
-                <h2 className="font-bold text-gray-900 dark:text-white leading-tight">
-                  {studentDashboard.name}
-                </h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {studentDashboard.placement_status}
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-sm text-gray-500">
-                <Bell className="w-5 h-5" />
-              </button>
-              <button 
-                onClick={logout}
-                className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-sm text-red-500"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Desktop Welcome Section */}
-          <div className="hidden md:flex justify-between items-center mb-10">
-            <div>
-              <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">
-                Xush kelibsiz, {studentDashboard.name}! 🎉
+          {/* Top Welcome Section */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+            >
+              <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">
+                Xush kelibsiz, {studentDashboard.name}! 👋
               </h1>
-              <p className="text-gray-500 dark:text-gray-400 text-lg">
-                Bugungi kuningiz xayrli o'tsin
+              <p className="text-gray-500 dark:text-gray-400 text-base md:text-lg">
+                Yotoqxonangizdagi so'nggi ma'lumotlarni kuzatib boring
               </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {studentDashboard.placement_status}
-                </p>
-                <p className="text-xs text-teal-600 dark:text-teal-400 font-bold uppercase tracking-wider">
-                  {studentDashboard.status}
-                </p>
-              </div>
-              <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-teal-500 bg-white shadow-md">
-                {userImage ? (
-                  <img src={userImage} alt="Profile" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-teal-600 font-bold text-xl bg-teal-50">
-                    {studentDashboard.name?.charAt(0)}
-                  </div>
-                )}
-              </div>
-            </div>
+            </motion.div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
-            {/* Left Column - Main Info */}
+            {/* Left Column - Main Content */}
             <div className="lg:col-span-8 space-y-6 md:space-y-8">
               
-              {/* Quick Info Grid - Mobile Optimized */}
+              {/* Status Quick Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
-                  <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 mb-3">
-                    <Layers className="w-5 h-5" />
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Qavat</p>
-                  <p className="font-bold text-gray-900 dark:text-white">{studentDashboard.floor_info?.name}</p>
-                </div>
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
-                  <div className="w-10 h-10 bg-teal-50 dark:bg-teal-900/30 rounded-2xl flex items-center justify-center text-teal-600 mb-3">
-                    <Home className="w-5 h-5" />
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Xona</p>
-                  <p className="font-bold text-gray-900 dark:text-white">{studentDashboard.room_info?.name}</p>
-                </div>
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
-                  <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center text-purple-600 mb-3">
-                    <Users className="w-5 h-5" />
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Xonadoshlar</p>
-                  <p className="font-bold text-gray-900 dark:text-white">{studentDashboard.room_info?.current_occupancy}/{studentDashboard.room_info?.capacity}</p>
-                </div>
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
-                  <div className="w-10 h-10 bg-green-50 dark:bg-green-900/30 rounded-2xl flex items-center justify-center text-green-600 mb-3">
-                    <CreditCard className="w-5 h-5" />
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Status</p>
-                  <p className="font-bold text-green-600">{studentDashboard.room_info?.status}</p>
-                </div>
+                {[
+                  { label: "Qavat", value: studentDashboard.floor_info?.name, icon: Layers, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-900/20" },
+                  { label: "Xona", value: studentDashboard.room_info?.name, icon: Home, color: "text-teal-600", bg: "bg-teal-50 dark:bg-teal-900/20" },
+                  { label: "Xonadoshlar", value: `${studentDashboard.room_info?.current_occupancy}/${studentDashboard.room_info?.capacity}`, icon: Users, color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-900/20" },
+                  { label: "Davomat", value: "98%", icon: CalendarCheck, color: "text-green-600", bg: "bg-green-50 dark:bg-green-900/20" },
+                ].map((item, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 hover:border-teal-500/30 transition-all group"
+                  >
+                    <div className={`w-10 h-10 ${item.bg} rounded-xl flex items-center justify-center ${item.color} mb-3 group-hover:scale-110 transition-transform`}>
+                      <item.icon className="w-5 h-5" />
+                    </div>
+                    <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">{item.label}</p>
+                    <p className="font-black text-gray-900 dark:text-white text-base truncate">{item.value}</p>
+                  </motion.div>
+                ))}
               </div>
 
-              {/* Dormitory Details Card */}
+              {/* Payment Info & Progress Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-6 bg-gradient-to-br from-teal-600 to-teal-700 rounded-2xl text-white shadow-lg shadow-teal-500/20 group hover:scale-[1.02] transition-transform"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <p className="text-[10px] font-bold text-teal-100 uppercase tracking-widest">Oylik to'lov</p>
+                    <CreditCard className="w-5 h-5 text-teal-200 opacity-50" />
+                  </div>
+                  <p className="text-3xl font-black">
+                    {new Intl.NumberFormat('uz-UZ').format(studentDashboard.dormitory_info?.month_price || 0)}
+                    <span className="text-sm font-medium ml-1.5 opacity-80">so'm</span>
+                  </p>
+                  <button className="mt-4 w-full py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl text-xs font-bold transition-colors">
+                    To'lov qilish
+                  </button>
+                </motion.div>
+                
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-6 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm group hover:border-teal-500/30 transition-all"
+                >
+                  <div className="flex justify-between items-center mb-4">
+                    <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">To'lovlar Holati</p>
+                    <span className="text-xs font-black text-teal-600 bg-teal-50 dark:bg-teal-900/20 px-2 py-1 rounded-lg">
+                      {paymentPercentage}%
+                    </span>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${paymentPercentage}%` }}
+                        className="h-full bg-teal-500"
+                      />
+                    </div>
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-0.5">To'landi</p>
+                        <p className="text-lg font-black text-gray-900 dark:text-white">
+                          {new Intl.NumberFormat('uz-UZ').format(totalPaid)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-0.5">Yillik jami</p>
+                        <p className="text-sm font-bold text-gray-500 dark:text-gray-400">
+                          {new Intl.NumberFormat('uz-UZ').format(studentDashboard.dormitory_info?.year_price || 0)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Compact Dormitory Info Card */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700 overflow-hidden"
+                className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex items-center justify-between gap-4"
               >
-                <div className="p-6 md:p-10">
-                  <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3">
-                      <div className="w-2 h-8 bg-teal-500 rounded-full"></div>
-                      Yotoqxona Ma'lumotlari
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="w-12 h-12 bg-teal-50 dark:bg-teal-900/20 rounded-xl flex items-center justify-center text-teal-600 flex-shrink-0">
+                    <Building className="w-6 h-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Yotoqxona</p>
+                    <h2 className="font-black text-gray-900 dark:text-white text-base truncate">
+                      {studentDashboard.dormitory_info?.name}
                     </h2>
-                    <span className="hidden md:block px-4 py-1.5 bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 rounded-full text-xs font-bold uppercase tracking-widest">
-                      ID: {studentDashboard.dormitory_info?.id}
-                    </span>
                   </div>
-                  
-                  <div className="space-y-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between p-4 md:p-6 bg-gray-50 dark:bg-gray-900/50 rounded-3xl transition-all hover:bg-gray-100 dark:hover:bg-gray-900">
-                      <div className="flex items-center gap-4 mb-2 md:mb-0">
-                        <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-2xl flex items-center justify-center text-teal-600 shadow-sm">
-                          <Building className="w-6 h-6" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Yotoqxona</p>
-                          <p className="font-black text-gray-900 dark:text-white text-lg">{studentDashboard.dormitory_info?.name}</p>
-                        </div>
-                      </div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 md:text-right flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-red-500" />
-                        {studentDashboard.dormitory_info?.address}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-6 bg-teal-600 rounded-3xl text-white shadow-lg shadow-teal-500/20">
-                        <p className="text-xs font-bold text-teal-100 uppercase tracking-widest mb-1">Oylik to'lov</p>
-                        <p className="text-3xl font-black">
-                          {new Intl.NumberFormat('uz-UZ').format(studentDashboard.dormitory_info?.month_price || 0)} <span className="text-sm font-medium">so'm</span>
-                        </p>
-                      </div>
-                      <div className="p-6 bg-white dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 rounded-3xl shadow-sm">
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Yillik to'lov</p>
-                        <p className="text-3xl font-black text-gray-900 dark:text-white">
-                          {new Intl.NumberFormat('uz-UZ').format(studentDashboard.dormitory_info?.year_price || 0)} <span className="text-sm font-medium">so'm</span>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                </div>
+                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-800 rounded-lg text-[11px] font-bold text-gray-500 max-w-[200px]">
+                  <MapPin className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
+                  <span className="truncate">{studentDashboard.dormitory_info?.address}</span>
                 </div>
               </motion.div>
 
-              {/* Roommates Section */}
+              {/* Roommates Grid */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-2">
-                  <h2 className="text-2xl font-black text-gray-900 dark:text-white">Xonadoshlar</h2>
-                  <span className="text-sm font-bold text-teal-600 bg-teal-50 dark:bg-teal-900/30 px-3 py-1 rounded-full">
-                    {studentDashboard.roommates?.length || 0} kishi
-                  </span>
+                  <h2 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+                    <Users className="w-6 h-6 text-teal-500" />
+                    Xonadoshlar
+                  </h2>
+                  <div className="px-3 py-1 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-full shadow-sm">
+                    <span className="text-xs font-black text-teal-600">
+                      {studentDashboard.roommates?.length || 0} nafar
+                    </span>
+                  </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {studentDashboard.roommates?.map((mate: any) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {studentDashboard.roommates?.map((mate: any, i: number) => (
                     <motion.div
                       key={mate.id}
-                      whileHover={{ scale: 1.02 }}
-                      className="bg-white dark:bg-gray-800 p-5 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex items-center gap-4"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all flex items-center gap-4 group"
                     >
-                      <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
+                      <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-800 flex-shrink-0 shadow-inner">
                         {mate.picture ? (
-                          <img src={`${baseUrl}${mate.picture}`} alt={mate.name} className="w-full h-full object-cover" />
+                          <img src={`${baseUrl}${mate.picture}`} alt={mate.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-xl">
+                          <div className="w-full h-full flex items-center justify-center text-gray-300 font-black text-xl">
                             {mate.name?.charAt(0)}
                           </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-black text-gray-900 dark:text-white truncate">{mate.name} {mate.last_name}</h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <GraduationCap className="w-3.5 h-3.5 text-teal-500" />
-                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{mate.faculty} • {mate.course}</p>
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Phone className="w-3.5 h-3.5 text-blue-500" />
-                          <p className="text-xs text-gray-500 dark:text-gray-400">+{mate.phone}</p>
+                        <h3 className="font-black text-gray-900 dark:text-white truncate group-hover:text-teal-600 transition-colors">
+                          {mate.name} {mate.last_name}
+                        </h3>
+                        <div className="space-y-1 mt-1.5">
+                          <div className="flex items-center gap-2">
+                            <GraduationCap className="w-3.5 h-3.5 text-gray-400" />
+                            <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400 truncate">
+                              {mate.faculty} • {mate.course}-kurs
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Phone className="w-3.5 h-3.5 text-gray-400" />
+                            <a href={`tel:+${mate.phone}`} className="text-[11px] font-bold text-blue-600 hover:underline">
+                              +{mate.phone}
+                            </a>
+                          </div>
                         </div>
                       </div>
                     </motion.div>
                   ))}
                   {(!studentDashboard.roommates || studentDashboard.roommates.length === 0) && (
-                    <div className="col-span-full py-12 text-center bg-gray-50 dark:bg-gray-900/30 rounded-[2rem] border-2 border-dashed border-gray-200 dark:border-gray-700">
+                    <div className="col-span-full py-12 text-center bg-gray-50 dark:bg-gray-900/20 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800">
                       <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-500 font-medium">Hozircha xonadoshlar yo'q</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Recent Payments - Mobile Style Scroll */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between px-2">
-                  <h2 className="text-2xl font-black text-gray-900 dark:text-white">Oxirgi To'lovlar</h2>
-                  <button className="text-teal-600 font-bold text-sm hover:underline">Hammasi</button>
-                </div>
-                
-                <div className="space-y-3">
-                  {studentDashboard.recent_payments?.map((payment: any) => (
-                    <div key={payment.id} className="bg-white dark:bg-gray-800 p-5 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-green-50 dark:bg-green-900/30 rounded-2xl flex items-center justify-center text-green-600">
-                          <CreditCard className="w-6 h-6" />
-                        </div>
-                        <div>
-                          <p className="font-black text-gray-900 dark:text-white">{new Intl.NumberFormat('uz-UZ').format(payment.amount)} so'm</p>
-                          <p className="text-xs text-gray-500">{formatDateTime(payment.paid_date)} • {payment.method}</p>
-                        </div>
-                      </div>
-                      <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-[10px] font-black uppercase tracking-widest">
-                        {payment.status}
-                      </span>
-                    </div>
-                  ))}
-                  {(!studentDashboard.recent_payments || studentDashboard.recent_payments.length === 0) && (
-                    <div className="py-8 text-center bg-gray-50 dark:bg-gray-900/30 rounded-3xl border border-dashed border-gray-200">
-                      <p className="text-gray-400 font-medium">To'lovlar tarixi mavjud emas</p>
+                      <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Hozircha xonadoshlar yo'q</p>
                     </div>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Right Column - Sidebar */}
+            {/* Right Column - Sidebar Widgets */}
             <div className="lg:col-span-4 space-y-6 md:space-y-8">
               
-              {/* Profile Card */}
-              <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-                <div className="h-24 bg-gradient-to-r from-teal-500 to-blue-600"></div>
+              {/* Profile Card Refined */}
+              <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+                <div className="h-24 bg-gradient-to-br from-teal-500 to-blue-600"></div>
                 <div className="px-6 pb-8 -mt-12">
-                  <div className="flex justify-center mb-4">
-                    <div className="w-24 h-24 rounded-[2rem] overflow-hidden border-4 border-white dark:border-gray-800 bg-white shadow-lg">
+                  <div className="flex justify-center mb-5">
+                    <div className="w-24 h-24 rounded-2xl overflow-hidden border-4 border-white dark:border-gray-900 bg-white dark:bg-gray-800 shadow-xl">
                       {userImage ? (
                         <img src={userImage} alt="Profile" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-teal-600 font-black text-3xl bg-teal-50">
+                        <div className="w-full h-full flex items-center justify-center text-teal-600 font-black text-3xl bg-teal-50 dark:bg-teal-900/20">
                           {studentDashboard.name?.charAt(0)}
                         </div>
                       )}
                     </div>
                   </div>
-                  <div className="text-center mb-6">
-                    <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight">
+                  <div className="text-center mb-8">
+                    <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight mb-1">
                       {studentDashboard.last_name} {studentDashboard.name}
                     </h3>
-                    <p className="text-gray-500 text-sm">{studentDashboard.middle_name}</p>
+                    <p className="text-gray-400 dark:text-gray-500 text-xs font-medium italic">
+                      {studentDashboard.middle_name}
+                    </p>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-2xl">
-                      <GraduationCap className="w-5 h-5 text-teal-600" />
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Fakultet</p>
-                        <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{studentDashboard.faculty}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-2xl">
-                      <Briefcase className="w-5 h-5 text-blue-600" />
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Yo'nalish</p>
-                        <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{studentDashboard.direction}</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-2xl">
-                        <Clock className="w-5 h-5 text-purple-600" />
-                        <div>
-                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Kurs</p>
-                          <p className="text-xs font-bold text-gray-900 dark:text-white">{studentDashboard.course}</p>
+                  <div className="grid grid-cols-1 gap-3">
+                    {[
+                      { label: "Fakultet", value: studentDashboard.faculty, icon: GraduationCap, color: "text-teal-500" },
+                      { label: "Yo'nalish", value: studentDashboard.direction, icon: Briefcase, color: "text-blue-500" },
+                      { label: "Kurs / Guruh", value: `${studentDashboard.course}-kurs • ${studentDashboard.group}-guruh`, icon: Clock, color: "text-purple-500" },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all">
+                        <div className={`w-10 h-10 bg-white dark:bg-gray-900 rounded-lg flex items-center justify-center ${item.color} shadow-sm`}>
+                          <item.icon className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{item.label}</p>
+                          <p className="text-xs font-black text-gray-900 dark:text-white truncate leading-tight">{item.value}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-2xl">
-                        <Users className="w-5 h-5 text-orange-600" />
-                        <div>
-                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Guruh</p>
-                          <p className="text-xs font-bold text-gray-900 dark:text-white">{studentDashboard.group}</p>
-                        </div>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
               </div>
 
-              {/* Passport & Documents */}
-              <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] p-8 border border-gray-100 dark:border-gray-700 shadow-sm">
-                <h3 className="text-lg font-black text-gray-900 dark:text-white mb-6">Hujjatlar</h3>
+              {/* Documents Card */}
+              <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 border border-gray-100 dark:border-gray-800 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-black text-gray-900 dark:text-white">Hujjatlar</h3>
+                  <FileText className="w-5 h-5 text-gray-300" />
+                </div>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
                     <div className="flex items-center gap-3">
-                      <FileText className="w-5 h-5 text-teal-600" />
-                      <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Passport</span>
+                      <div className="w-8 h-8 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center text-teal-600">
+                        <User className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Passport</span>
                     </div>
                     <span className="text-xs font-black text-gray-900 dark:text-white">{studentDashboard.passport}</span>
                   </div>
-                  <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
                     <div className="flex items-center gap-3">
-                      <ShieldCheck className="w-5 h-5 text-green-600" />
-                      <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Imtiyoz</span>
+                      <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center text-green-600">
+                        <ShieldCheck className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Imtiyoz</span>
                     </div>
-                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${studentDashboard.privilege ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}`}>
+                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${studentDashboard.privilege ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}`}>
                       {studentDashboard.privilege ? 'Mavjud' : 'Yo\'q'}
                     </span>
                   </div>
                 </div>
                 
-                <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
-                  <button 
-                    onClick={() => window.open(`${baseUrl}${studentDashboard.document}`, '_blank')}
-                    className="w-full flex items-center justify-center gap-2 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-black text-sm hover:opacity-90 transition-all"
-                  >
-                    <FileText className="w-4 h-4" />
-                    Barcha hujjatlarni ko'rish
-                  </button>
-                </div>
+                <button 
+                  onClick={() => window.open(`${baseUrl}${studentDashboard.document}`, '_blank')}
+                  className="mt-6 w-full flex items-center justify-center gap-2 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-black text-sm hover:opacity-90 transition-all shadow-lg shadow-gray-200 dark:shadow-none"
+                >
+                  <FileText className="w-4 h-4" />
+                  Hujjatni yuklab olish
+                </button>
               </div>
 
-              {/* Application Status Widget */}
-              <div className="bg-gradient-to-br from-teal-500 to-emerald-600 rounded-[2.5rem] p-8 text-white shadow-lg shadow-teal-500/20">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 opacity-80">Ariza Holati</p>
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
-                    <CheckCircle className="w-8 h-8" />
+              {/* Application Status Refined */}
+              <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+                <div className="relative z-10">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6">Ariza Holati</p>
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-14 h-14 bg-teal-50 dark:bg-teal-900/20 rounded-2xl flex items-center justify-center text-teal-600">
+                      <CheckCircle className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-black text-gray-900 dark:text-white">{studentDashboard.application_info?.status || "Tasdiqlangan"}</h4>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{formatDate(studentDashboard.application_info?.created_at || '')} yuborilgan</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-xl font-black">{studentDashboard.application_info?.status}</h4>
-                    <p className="text-xs opacity-80">{formatDate(studentDashboard.application_info?.created_at || '')} yuborilgan</p>
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800">
+                    <p className="text-[10px] font-black text-gray-400 uppercase mb-2">Admin izohi:</p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300 italic leading-relaxed">
+                      "{studentDashboard.application_info?.admin_comment || "Sizning arizangiz muvaffaqiyatli qabul qilindi."}"
+                    </p>
                   </div>
-                </div>
-                <div className="p-4 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/10">
-                  <p className="text-xs font-bold mb-1 opacity-80">Admin izohi:</p>
-                  <p className="text-sm font-medium italic">"{studentDashboard.application_info?.admin_comment}"</p>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Mobile Bottom Navigation - Sticky */}
-        <div className="fixed bottom-6 left-4 right-4 h-20 bg-white/80 dark:bg-gray-800/80 backdrop-blur-2xl rounded-[2.5rem] border border-white/20 dark:border-gray-700/50 shadow-2xl md:hidden z-50 flex items-center justify-around px-4">
-          {quickActions.map((action) => (
-            <button
-              key={action.label}
-              onClick={() => navigate(action.path || '#')}
-              className="flex flex-col items-center gap-1 p-2"
-            >
-              <div className={`p-2.5 rounded-2xl ${action.bg} ${action.color}`}>
-                <action.icon className="w-6 h-6" />
-              </div>
-              <span className="text-[10px] font-black text-gray-500 uppercase tracking-tighter">{action.label}</span>
-            </button>
-          ))}
         </div>
       </div>
     );
@@ -647,496 +549,211 @@ const DashboardPage: React.FC = () => {
 
   // Oddiy dashboard (ariza yuborgan, lekin hali qabul qilinmagan)
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 md:pb-12">
       <Header />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
         {/* Welcome Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-8"
-        >
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Xush kelibsiz, {firstName}! 👋
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-          Bu yerda sizning faoliyatingiz va arizalaringizni kuzatishingiz
-          mumkin
-        </p>
-      </motion.div>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+          >
+            {/* <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">
+              Xush kelibsiz, {firstName}! 👋
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 text-base md:text-lg">
+              Arizalaringiz holatini shu yerdan kuzatib boring
+            </p> */}
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-3"
+          >
+            <button className="p-3 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 text-gray-500 hover:text-teal-600 transition-colors shadow-sm">
+              <Bell className="w-6 h-6" />
+            </button>
+            <button 
+              onClick={logout}
+              className="p-3 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all shadow-sm"
+            >
+              <LogOut className="w-6 h-6" />
+            </button>
+          </motion.div>
+        </div>
 
-      {/* Tasdiqlangan Ariza Card */}
-      {approvedApplication && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-6 shadow-sm"
-        >
-          <div className="flex flex-col md:flex-row gap-6 items-start">
-            <div className="w-full md:w-32 h-32 rounded-xl overflow-hidden bg-gray-200 flex-shrink-0">
-              {approvedApplication.user_image ? (
-                <img 
-                  src={approvedApplication.user_image} 
-                  alt="User" 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-teal-100 dark:bg-teal-900/30 text-teal-600">
-                  <User className="w-12 h-12" />
-                </div>
-              )}
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Arizangiz Tasdiqlandi! 🎉
-                </h2>
-              </div>
-              <p className="text-gray-700 dark:text-gray-300 mb-4">
-                Sizning <span className="font-semibold text-teal-700 dark:text-teal-400">{approvedApplication.dormitory_name}</span> uchun yuborgan arizangiz qabul qilindi.
-                {approvedApplication.admin_comment && (
-                  <span className="block mt-2 italic text-sm text-gray-600 dark:text-gray-400">
-                    Admin izohi: "{approvedApplication.admin_comment}"
-                  </span>
-                )}
-              </p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 text-sm">
-                <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
-                  <p className="text-gray-500 dark:text-gray-400 text-xs">Fakultet</p>
-                  <p className="font-medium text-gray-900 dark:text-white truncate">{approvedApplication.faculty}</p>
-                </div>
-                <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
-                  <p className="text-gray-500 dark:text-gray-400 text-xs">Yo'nalish</p>
-                  <p className="font-medium text-gray-900 dark:text-white truncate">{approvedApplication.direction}</p>
-                </div>
-                <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
-                  <p className="text-gray-500 dark:text-gray-400 text-xs">Kurs / Guruh</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{approvedApplication.course} / {approvedApplication.group}</p>
-                </div>
-                <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
-                  <p className="text-gray-500 dark:text-gray-400 text-xs">Hudud</p>
-                  <p className="font-medium text-gray-900 dark:text-white truncate">{approvedApplication.province_name}, {approvedApplication.district_name}</p>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2 w-full md:w-auto">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => navigate(`/application/${approvedApplication.id}`)}
-                className="bg-teal-600 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-teal-700 transition-all shadow-sm"
-              >
-                Batafsil ma'lumot
-              </motion.button>
-              <div className="flex items-center justify-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-2">
-                <Clock className="w-3.5 h-3.5" />
-                {formatDate(approvedApplication.created_at)}
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
+              transition={{ delay: index * 0.1 }}
+              className="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 group hover:border-teal-500/30 transition-all"
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
-                    {stat.label}
-                  </p>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {stat.value}
-                  </p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                <div className={`w-10 h-10 ${stat.bg} rounded-xl flex items-center justify-center ${stat.color} group-hover:scale-110 transition-transform`}>
+                  <stat.icon className="w-5 h-5" />
                 </div>
-                <div
-                  className={`w-12 h-12 ${stat.bg} rounded-xl flex items-center justify-center`}
-                >
-                  <stat.icon className={`w-6 h-6 ${stat.color}`} />
-                </div>
+                <p className="text-2xl font-black text-gray-900 dark:text-white leading-none">{stat.value}</p>
               </div>
+              <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{stat.label}</p>
             </motion.div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Recent Applications */}
-          <div className="lg:col-span-2">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-teal-600" />
-                  So'nggi Arizalar
-                </h2>
-                {applications.length > 3 && (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => navigate("/applications")}
-                    className="text-teal-600 hover:text-teal-700 text-sm font-medium transition-colors duration-200 flex items-center gap-1"
-                  >
-                    Barchasini ko'rish
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </motion.button>
-                )}
-              </div>
-
-              {loading ? (
-                <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    Arizalar yuklanmoqda...
-                  </p>
-                </div>
-              ) : applications.length === 0 ? (
-                <div className="text-center py-12">
-                  <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    Hali arizalar yo'q
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300 mb-6">
-                    Yotoqxona topib, birinchi arizangizni yuboring
-                  </p>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => navigate("/dormitories")}
-                    className="bg-gradient-to-r from-teal-600 to-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
-                  >
-                    Yotoqxona Qidirish
-                  </motion.button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {(Array.isArray(applications) ? applications : []).slice(0, 3).map((application, index) => (
-                    <motion.div
-                      key={application.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.4, delay: index * 0.1 }}
-                      className="group border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-lg hover:border-teal-300 dark:hover:border-teal-600 transition-all duration-300 cursor-pointer"
-                      onClick={() => navigate(`/application/${application.id}`)}
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Home className="w-4 h-4 text-teal-600" />
-                            <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-teal-600 transition-colors">
-                              {application.dormitory_name || application.dormitory?.name || 'Yotoqxona nomi'}
-                            </h3>
-                          </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 ml-6">
-                            {application.dormitory?.university?.name || application.university || 'Universitet'}
-                          </p>
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <div className="flex items-center gap-2">
-                            {getStatusIcon(application.status)}
-                            <span
-                              className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                                application.status
-                              )}`}
-                            >
-                              {getStatusText(application.status)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between text-sm mb-2">
-                        <div className="flex items-center gap-4 text-gray-600 dark:text-gray-400">
-                          <div className="flex items-center gap-1">
-                            <Users className="w-4 h-4" />
-                            <span>{application.name} {application.last_name}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4" />
-                            <span>{application.province_name || application.city || 'Shahar'}</span>
-                          </div>
-                        </div>
-                        {application.created_at && (
-                          <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
-                            <Clock className="w-4 h-4" />
-                            <span>
-                              {formatDate(application.created_at)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Additional info */}
-                      {(application.faculty || application.course) && (
-                        <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mb-2">
-                          {application.faculty && (
-                            <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                              {application.faculty}
-                            </span>
-                          )}
-                          {application.direction && (
-                            <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                              {application.direction}
-                            </span>
-                          )}
-                          {application.course && (
-                            <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                              {application.course}
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Progress indicator */}
-                      <div className="mt-3 flex items-center gap-2">
-                        <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                          <div
-                            className={`h-1.5 rounded-full transition-all duration-300 ${
-                              application.status?.toUpperCase() === 'PENDING' ? 'bg-yellow-500 w-1/3' :
-                              application.status?.toUpperCase() === 'INTERVIEW' ? 'bg-blue-500 w-2/3' :
-                              application.status?.toUpperCase() === 'APPROVED' ? 'bg-green-500 w-full' :
-                              application.status?.toUpperCase() === 'REJECTED' ? 'bg-red-500 w-full' :
-                              'bg-gray-400 w-1/4'
-                            }`}
-                          />
-                        </div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 min-w-fit">
-                          {getStatusText(application.status)}
-                        </span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </motion.div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Quick Actions */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
-            >
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Tezkor Harakatlar
-              </h3>
-              <div className="space-y-3">
-                {quickActions.map((action) => (
-                  <motion.button
-                    key={action.label}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => navigate(action.path)}
-                    className={`w-full flex items-center gap-3 p-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 group`}
-                  >
-                    <div className={`p-2 rounded-lg ${action.bg} ${action.color} group-hover:scale-110 transition-transform`}>
-                      <action.icon className="w-5 h-5" />
-                    </div>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">{action.label}</span>
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Latest Application Details */}
-            {applications.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Main Column */}
+          <div className="lg:col-span-8 space-y-8">
+            
+            {/* Approved Application Banner */}
+            {approvedApplication && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.35 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="relative overflow-hidden bg-gradient-to-br from-teal-600 to-emerald-700 rounded-3xl p-1 shadow-xl shadow-teal-500/20"
               >
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  So'nggi Ariza
-                </h3>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Yotoqxona:</p>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {applications[0].dormitory_name || applications[0].dormitory?.name || 'Noma\'lum'}
-                    </p>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32"></div>
+                <div className="relative bg-white/5 backdrop-blur-sm p-6 md:p-8 rounded-[1.4rem] border border-white/10 flex flex-col md:flex-row items-center gap-8 text-white">
+                  <div className="w-24 h-24 rounded-2xl overflow-hidden border-4 border-white/20 bg-white/10 flex-shrink-0 flex items-center justify-center">
+                    {approvedApplication.user_image ? (
+                      <img src={approvedApplication.user_image} alt="User" className="w-full h-full object-cover" />
+                    ) : (
+                      <CheckCircle className="w-12 h-12 text-white" />
+                    )}
                   </div>
-                  {applications[0].faculty && (
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Fakultet:</p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {applications[0].faculty}
-                      </p>
-                    </div>
-                  )}
-                  {applications[0].direction && (
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Yo'nalish:</p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {applications[0].direction}
-                      </p>
-                    </div>
-                  )}
-                  {applications[0].course && (
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Kurs:</p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {applications[0].course}
-                      </p>
-                    </div>
-                  )}
-                  {applications[0].group && (
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Guruh:</p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {applications[0].group}
-                      </p>
-                    </div>
-                  )}
-                  <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Holat:</span>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(applications[0].status)}`}>
-                        {getStatusText(applications[0].status)}
-                      </span>
-                    </div>
+                  <div className="flex-1 text-center md:text-left">
+                    <h2 className="text-2xl font-black mb-2">Tabriklaymiz! 🎉</h2>
+                    <p className="text-teal-50 font-medium mb-6 leading-relaxed">
+                      Sizning <span className="font-black underline underline-offset-4">{approvedApplication.dormitory_name}</span> uchun arizangiz muvaffaqiyatli tasdiqlandi.
+                    </p>
+                    <button
+                      onClick={() => navigate(`/application/${approvedApplication.id}`)}
+                      className="px-8 py-3 bg-white text-teal-700 rounded-xl font-black text-sm hover:bg-teal-50 transition-colors shadow-lg shadow-black/10 uppercase tracking-widest"
+                    >
+                      Batafsil ko'rish
+                    </button>
                   </div>
                 </div>
               </motion.div>
             )}
 
-            {/* Profile Summary */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
-            >
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Profil Ma'lumotlari
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">
-                    Universitet:
-                  </span>
-                  <span className="font-medium text-gray-900 dark:text-white text-right">
-                    {user?.university || 'Belgilanmagan'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">
-                    Talaba ID:
-                  </span>
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {user?.studentId || user?.student_id || 'Belgilanmagan'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">
-                    Holat:
-                  </span>
-                  <div className="flex items-center gap-1">
-                    {user?.isVerified || user?.is_verified ? (
-                      <>
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        <span className="text-green-600 dark:text-green-400 text-sm">
-                          Tasdiqlangan
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <AlertCircle className="w-4 h-4 text-yellow-500" />
-                        <span className="text-yellow-600 dark:text-yellow-400 text-sm">
-                          Tasdiqlanmagan
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
+            {/* Recent Applications List */}
+            <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 md:p-8">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-3">
+                  <div className="w-1.5 h-6 bg-teal-500 rounded-full"></div>
+                  So'nggi Arizalar
+                </h2>
+                {applications.length > 0 && (
+                  <button onClick={() => navigate("/applications")} className="text-xs font-black text-teal-600 uppercase tracking-widest hover:underline">
+                    Hammasi
+                  </button>
+                )}
               </div>
 
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => navigate("/profile")}
-                className="w-full mt-4 border-2 border-teal-600 text-teal-600 py-2 rounded-xl font-medium hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all duration-300"
-              >
-                Profilni Ko'rish
-              </motion.button>
-            </motion.div>
+              {loading ? (
+                <div className="py-20 flex flex-col items-center gap-4">
+                  <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Yuklanmoqda...</p>
+                </div>
+              ) : applications.length === 0 ? (
+                <div className="py-20 text-center flex flex-col items-center">
+                  <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center text-gray-300 mb-6">
+                    <FileText className="w-10 h-10" />
+                  </div>
+                  <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2">Arizalar mavjud emas</h3>
+                  <p className="text-gray-500 text-sm mb-8 max-w-xs mx-auto">Siz hali birorta ham yotoqxonaga ariza yubormagansiz.</p>
+                  <button
+                    onClick={() => navigate("/dormitories")}
+                    className="px-8 py-4 bg-teal-600 text-white rounded-2xl font-black text-sm hover:bg-teal-700 transition-all shadow-lg shadow-teal-500/30 uppercase tracking-widest"
+                  >
+                    Yotoqxona qidirish
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {applications.slice(0, 5).map((app, i) => (
+                    <motion.div
+                      key={app.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      onClick={() => navigate(`/application/${app.id}`)}
+                      className="group p-5 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-transparent hover:border-teal-500/30 transition-all cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4"
+                    >
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className="w-12 h-12 bg-white dark:bg-gray-900 rounded-xl flex items-center justify-center text-teal-600 shadow-sm border border-gray-50 dark:border-gray-800 flex-shrink-0">
+                          <Home className="w-6 h-6" />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="font-black text-gray-900 dark:text-white truncate leading-tight mb-1 group-hover:text-teal-600 transition-colors">
+                            {app.dormitory_name || app.dormitory?.name}
+                          </h4>
+                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 truncate">
+                            {app.university || app.dormitory?.university?.name}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between md:justify-end gap-6">
+                        <div className="text-right hidden sm:block">
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Yuborilgan sana</p>
+                          <p className="text-xs font-bold text-gray-700 dark:text-gray-300">{formatDate(app.created_at)}</p>
+                        </div>
+                        <div className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm ${getStatusColor(app.status)}`}>
+                          {getStatusText(app.status)}
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-teal-500 transition-colors hidden md:block" />
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
 
-            {/* Quick Tips */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-              className="bg-gradient-to-br from-teal-50 via-blue-50 to-green-50 dark:from-teal-900/20 dark:via-blue-900/20 dark:to-green-900/20 border border-teal-200 dark:border-teal-800 rounded-2xl shadow-lg p-6"
-            >
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <span className="text-xl">💡</span>
-                Foydali Maslahatlar
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-teal-500 rounded-full mt-2"></div>
-                  <div>
-                    <p className="text-sm text-gray-900 dark:text-white font-medium">
-                      Arizangizni kuzatib boring
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      Ariza holatini muntazam tekshiring
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                  <div>
-                    <p className="text-sm text-gray-900 dark:text-white font-medium">
-                      Profilingizni to'ldiring
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      To'liq profil ko'proq imkoniyat beradi
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                  <div>
-                    <p className="text-sm text-gray-900 dark:text-white font-medium">
-                      Yotoqxonalarni taqqoslang
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      Eng yaxshi variantni tanlang
-                    </p>
-                  </div>
-                </div>
+          {/* Sidebar Widgets */}
+          <div className="lg:col-span-4 space-y-8">
+            
+            {/* Quick Actions Widget */}
+            <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 border border-gray-100 dark:border-gray-800 shadow-sm">
+              <h3 className="text-lg font-black text-gray-900 dark:text-white mb-6">Tezkor Harakatlar</h3>
+              <div className="grid grid-cols-1 gap-3">
+                {quickActions.map((action) => (
+                  <button
+                    key={action.label}
+                    onClick={() => navigate(action.path)}
+                    className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all group"
+                  >
+                    <div className={`w-10 h-10 bg-white dark:bg-gray-900 rounded-xl flex items-center justify-center ${action.color} shadow-sm group-hover:scale-110 transition-transform`}>
+                      <action.icon className="w-5 h-5" />
+                    </div>
+                    <span className="text-sm font-black text-gray-700 dark:text-gray-300 uppercase tracking-widest">{action.label}</span>
+                  </button>
+                ))}
               </div>
+            </div>
 
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => navigate("/help")}
-                className="w-full mt-4 bg-gradient-to-r from-teal-600 to-blue-600 text-white py-2 rounded-xl font-medium hover:shadow-lg transition-all duration-300"
-              >
-                Ko'proq maslahat
-              </motion.button>
-            </motion.div>
+            {/* Help Widget */}
+            <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-3xl p-8 text-white shadow-xl shadow-blue-500/20 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+              <div className="relative z-10">
+                <MessageCircle className="w-10 h-10 text-blue-200 mb-6" />
+                <h3 className="text-xl font-black mb-2">Yordam kerakmi?</h3>
+                <p className="text-blue-100 text-sm font-medium mb-8 leading-relaxed">
+                  Savollaringiz bormi yoki muammoga duch keldingizmi? Bizning qo'llab-quvvatlash markazimizga murojaat qiling.
+                </p>
+                <button 
+                  onClick={() => navigate('/help')}
+                  className="w-full py-4 bg-white text-blue-700 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-blue-50 transition-colors shadow-lg"
+                >
+                  Bog'lanish
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

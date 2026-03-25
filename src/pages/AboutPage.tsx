@@ -30,7 +30,7 @@ const AboutPage: React.FC = () => {
         const stats = await authAPI.getStatistics();
         setStatistics(stats);
       } catch (error) {
-        console.error('Statistikalar yuklanmadi:', error);
+        // Handle error silently
       }
     };
 

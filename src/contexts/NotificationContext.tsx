@@ -37,7 +37,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       const count = notifications.filter(n => !(n as any).read && !(n as any).is_read).length;
       setUnreadCount(count);
     } catch (error) {
-      console.error('Failed to fetch notifications count:', error);
+      // Handle error silently
     }
   }, [isAuthenticated, user]);
 

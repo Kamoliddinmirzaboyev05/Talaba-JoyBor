@@ -36,14 +36,14 @@ export const setGlobalSelectedListing = (listing: Listing | null) => {
     try {
       sessionStorage.setItem(SELECTED_LISTING_KEY, JSON.stringify(listing));
     } catch (error) {
-      console.error('Error saving listing to sessionStorage:', error);
+      // Ignore error
     }
   } else {
     // Clear from sessionStorage
     try {
       sessionStorage.removeItem(SELECTED_LISTING_KEY);
     } catch (error) {
-      console.error('Error removing listing from sessionStorage:', error);
+      // Ignore error
     }
   }
 };
@@ -55,7 +55,7 @@ export const getGlobalSelectedListing = (): Listing | null => {
       return JSON.parse(stored) as Listing;
     }
   } catch (error) {
-    console.error('Error reading listing from sessionStorage:', error);
+    // Ignore error
   }
   return null;
 };
@@ -64,7 +64,7 @@ export const clearGlobalSelectedListing = () => {
   try {
     sessionStorage.removeItem(SELECTED_LISTING_KEY);
   } catch (error) {
-    console.error('Error clearing listing from sessionStorage:', error);
+    // Ignore error
   }
 };
 
@@ -72,8 +72,6 @@ export const clearGlobalSelectedListing = () => {
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
-
-  console.log('ProtectedRoute: isAuthenticated =', isAuthenticated, 'isLoading =', isLoading);
 
   if (isLoading) {
     return (
@@ -87,7 +85,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!isAuthenticated) {
-    console.log('ProtectedRoute: Foydalanuvchi autentifikatsiya qilinmagan, login sahifasiga yo\'naltirilmoqda');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

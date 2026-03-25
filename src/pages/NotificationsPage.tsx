@@ -70,7 +70,7 @@ const NotificationsPage: React.FC = () => {
         setLoadingMore(false);
       }
     } catch (error) {
-      console.error('Failed to load notifications:', error);
+      // Handle error silently
       setLoading(false);
       setLoadingMore(false);
     }
@@ -160,7 +160,7 @@ const NotificationsPage: React.FC = () => {
       // Refresh unread count in header
       refreshUnreadCount();
     } catch (error) {
-      console.error('Failed to mark notification as read:', error);
+      // Handle error silently
     }
   };
 
@@ -170,7 +170,7 @@ const NotificationsPage: React.FC = () => {
       setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
       refreshUnreadCount();
     } catch (error) {
-      console.error('Failed to mark all notifications as read:', error);
+      // Handle error silently
     }
   };
 
@@ -190,7 +190,7 @@ const NotificationsPage: React.FC = () => {
       try {
         navigate(notification.actionUrl);
       } catch (error) {
-        console.error('Navigation failed:', error);
+        // Handle error silently
       }
     }
   };

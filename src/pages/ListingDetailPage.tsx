@@ -185,7 +185,7 @@ const ListingDetailPage: React.FC = () => {
             setGlobalSelectedListing(foundListing);
           }
         } catch (error) {
-          console.error("Listing yuklanmadi:", error);
+          // Handle error silently
         } finally {
           setLoading(false);
         }

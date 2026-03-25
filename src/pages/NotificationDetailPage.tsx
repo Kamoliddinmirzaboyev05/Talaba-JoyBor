@@ -96,7 +96,6 @@ const NotificationDetailPage: React.FC = () => {
           navigate('/notifications');
         }
       } catch (error) {
-        console.error('Failed to load notification:', error);
         navigate('/notifications');
       } finally {
         setLoading(false);
@@ -113,7 +112,7 @@ const NotificationDetailPage: React.FC = () => {
       setNotification(prev => prev ? { ...prev, read: true } : null);
       refreshUnreadCount();
     } catch (error) {
-      console.error('Failed to mark notification as read:', error);
+      // Handle error silently
     }
   };
 

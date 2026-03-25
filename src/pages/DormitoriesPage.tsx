@@ -81,7 +81,7 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
         setDormitories(dormitoriesData);
         setFilteredDormitories(dormitoriesData);
       } catch (error) {
-        console.error('Ma\'lumotlar yuklanmadi:', error);
+        // Handle error silently
       } finally {
         setLoading(false);
       }

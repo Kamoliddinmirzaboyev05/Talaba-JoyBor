@@ -67,7 +67,7 @@ const RegisterPage: React.FC = () => {
           });
         }
       } catch (error) {
-        console.error('Username check error:', error);
+        // Silent error
       } finally {
         setIsCheckingUsername(false);
       }
@@ -156,35 +156,24 @@ const RegisterPage: React.FC = () => {
         role: 'student',
       });
 
-      console.log('✅ Ro\'yxatdan o\'tish muvaffaqiyatli');
-      
       // 2-qadam: Darhol login qilish
-      console.log('🔄 Avtomatik login qilinmoqda...');
-      
       try {
         const loginData = await authAPI.login({
           username: formData.username.trim(),
           password: formData.password,
         });
 
-        console.log('✅ Login muvaffaqiyatli:', loginData);
-        
         // Login funksiyasini chaqirish - bu user ma'lumotlarini yuklaydi
         // AuthContext already handles sessionStorage inside login, but we can pass it directly
         login(loginData.access, loginData.refresh);
         
-        console.log('✅ Tizimga muvaffaqiyatli kirildi, dashboard ga yo\'naltirilmoqda...');
-        
         // Dashboard ga yo'naltirish
         navigate(from, { replace: true });
       } catch (loginError) {
-        console.error('❌ Avtomatik login xatosi:', loginError);
         setGeneralError('Ro\'yxatdan o\'tish muvaffaqiyatli, lekin tizimga kirishda xatolik yuz berdi. Iltimos, login sahifasidan kiring.');
       }
 
     } catch (error: any) {
-      console.error('Register API xatosi:', error);
-      
       if (error.response?.data) {
         const errorData = error.response.data;
         

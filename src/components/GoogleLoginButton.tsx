@@ -31,7 +31,6 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ text = "continue_
         setError('Google ma\'lumotlari olinmadi');
       }
     } catch (err: any) {
-      console.error('Google auth error:', err);
       setError(err.response?.data?.error || 'Google orqali kirishda xatolik yuz berdi');
     } finally {
       setIsLoading(false);

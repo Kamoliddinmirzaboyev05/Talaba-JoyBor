@@ -30,6 +30,7 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onListingSelect }) => {
   const [sortBy, setSortBy] = useState('rating');
   const [provinces, setProvinces] = useState<{ id: number; name: string }[]>([]);
   const [apartments, setApartments] = useState<Listing[]>([]);
+  const [filteredApartments, setFilteredApartments] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -40,7 +41,6 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onListingSelect }) => {
         const data = await authAPI.getProvinces();
         setProvinces(data);
       } catch (error) {
-        console.error('Shaharlar yuklanmadi:', error);
         // Fallback shaharlar ro'yxati
         setProvinces([
           { id: 1, name: 'Toshkent' },
@@ -70,19 +70,19 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onListingSelect }) => {
         const apartmentsData = await authAPI.getApartments();
 
         // API strukturasiga mos apartments mapping
-        const convertedListings: Listing[] = apartmentsData.map((apartment: Record<string, unknown>) => ({
+        const convertedListings: Listing[] = (apartmentsData as any[]).map((apartment: any) => ({
           id: `apt-${apartment.id}`,
-          title: apartment.title || 'Ijara Xonadon',
+          title: String(apartment.title || 'Ijara Xonadon'),
           type: 'rental' as const,
-          price: apartment.monthly_price || 0,
-          location: apartment.exact_address || 'Manzil ko\'rsatilmagan',
+          price: Number(apartment.monthly_price || 0),
+          location: String(apartment.exact_address || 'Manzil ko\'rsatilmagan'),
           university: `${apartment.room_type || 'Xona'} - ${apartment.gender || 'Aralash'}`,
           images: (apartment.images as { image: string }[] | undefined)?.map((img) => img.image) || ['/placeholder-apartment.jpg'],
           amenities: (apartment.amenities as { name: string }[] | undefined)?.map((amenity) => amenity.name) || [],
-          description: apartment.description || 'Tavsif mavjud emas',
-          capacity: apartment.total_rooms || 1,
-          available_capacity: apartment.available_rooms || 0,
-          available: apartment.available_rooms > 0 && apartment.is_active,
+          description: String(apartment.description || 'Tavsif mavjud emas'),
+          capacity: Number(apartment.total_rooms || 1),
+          available_capacity: Number(apartment.available_rooms || 0),
+          available: Boolean(Number(apartment.available_rooms || 0) > 0 && apartment.is_active),
           rating: 4.2, // Default rating
           reviews: Math.floor(Math.random() * 20) + 5, // Random reviews 5-25
           features: {
@@ -110,30 +110,31 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onListingSelect }) => {
             lng: 71.7833
           },
           // Qo'shimcha apartment ma'lumotlari
-          rooms: apartment.total_rooms || 1,
-          available_rooms: apartment.available_rooms || 0,
-          room_type: apartment.room_type || 'Xona',
-          gender: apartment.gender || 'Aralash',
-          owner: apartment.user?.username || 'Egasi ko\'rsatilmagan',
-          phone_number: apartment.phone_number || apartment.user_phone_number || '',
-          user_phone_number: apartment.user_phone_number || '',
-          province: apartment.province || 3, // Farg'ona province ID
-          created_at: apartment.created_at || new Date().toISOString(),
+          rooms: Number(apartment.total_rooms || 1),
+          available_rooms: Number(apartment.available_rooms || 0),
+          room_type: String(apartment.room_type || 'Xona'),
+          gender: String(apartment.gender || 'Aralash'),
+          owner: String(apartment.user?.username || 'Egasi ko\'rsatilmagan'),
+          phone_number: String(apartment.phone_number || apartment.user_phone_number || ''),
+          user_phone_number: String(apartment.user_phone_number || ''),
+          province: Number(apartment.province || 3), // Farg'ona province ID
+          created_at: String(apartment.created_at || new Date().toISOString()),
           is_active: apartment.is_active !== false,
           // Landlord ma'lumotlari
           landlord: {
-            name: (apartment.user as { username?: string } | undefined)?.username || 'Egasi',
-            phone: (apartment.phone_number as string | undefined) || (apartment.user_phone_number as string | undefined) || '',
-            email: (apartment.user as { email?: string } | undefined)?.email || '',
+            name: String((apartment.user as { username?: string } | undefined)?.username || 'Egasi'),
+            phone: String((apartment.phone_number as string | undefined) || (apartment.user_phone_number as string | undefined) || ''),
+            email: String((apartment.user as { email?: string } | undefined)?.email || ''),
             verified: true,
             rating: 4.5
           }
         }));
 
         setApartments(convertedListings);
+        setFilteredApartments(convertedListings);
       } catch (error) {
-        console.error('Apartments yuklanmadi:', error);
         setApartments([]);
+        setFilteredApartments([]);
       } finally {
         setLoading(false);
       }
@@ -141,6 +142,60 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onListingSelect }) => {
 
     fetchApartments();
   }, []);
+
+  // Qidiruv va filtrlash
+  useEffect(() => {
+    let filtered = [...apartments];
+
+    // Qidiruv bo'yicha
+    if (searchQuery) {
+      filtered = filtered.filter(apt =>
+        apt.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        apt.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        apt.description.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Viloyat bo'yicha
+    if (selectedFilters.location) {
+      filtered = filtered.filter(apt => 
+        apt.location.toLowerCase().includes(selectedFilters.location.toLowerCase())
+      );
+    }
+
+    // Narx oralig'i bo'yicha
+    if (selectedFilters.priceRange) {
+      const [min, max] = selectedFilters.priceRange.split('-').map(Number);
+      filtered = filtered.filter(apt => {
+        if (max) return apt.price >= min && apt.price <= max;
+        return apt.price >= min;
+      });
+    }
+
+    // Xonalar soni bo'yicha
+    if (selectedFilters.roomType) {
+      filtered = filtered.filter(apt => 
+        apt.room_type?.toLowerCase().includes(selectedFilters.roomType.toLowerCase())
+      );
+    }
+
+    // Saralash
+    if (sortBy === 'price-low') {
+      filtered.sort((a, b) => a.price - b.price);
+    } else if (sortBy === 'price-high') {
+      filtered.sort((a, b) => b.price - a.price);
+    } else if (sortBy === 'rating') {
+      filtered.sort((a, b) => b.rating - a.rating);
+    } else if (sortBy === 'newest') {
+      filtered.sort((a, b) => {
+        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return dateB - dateA;
+      });
+    }
+
+    setFilteredApartments(filtered);
+  }, [apartments, searchQuery, selectedFilters, sortBy]);
 
   const priceRanges = [
     { label: '500,000 - 1,000,000', value: '500000-1000000' },
@@ -311,7 +366,7 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onListingSelect }) => {
         {/* Results */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-gray-600 dark:text-gray-300">
-            {loading ? 'Yuklanmoqda...' : `${apartments.length} ta ijara xonadoni topildi`}
+            {loading ? 'Yuklanmoqda...' : `${filteredApartments.length} ta ijara xonadoni topildi`}
           </p>
         </div>
 
@@ -323,7 +378,7 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onListingSelect }) => {
               <p className="text-gray-600 dark:text-gray-300">Ijara xonadonlar yuklanmoqda...</p>
             </div>
           </div>
-        ) : apartments.length === 0 ? (
+        ) : filteredApartments.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -339,7 +394,7 @@ const RentalsPage: React.FC<RentalsPageProps> = ({ onListingSelect }) => {
           </motion.div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            {apartments.map((apartment, index) => (
+            {filteredApartments.map((apartment, index) => (
               <motion.div
                 key={apartment.id}
                 initial={{ opacity: 0, y: 30 }}

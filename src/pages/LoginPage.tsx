@@ -62,7 +62,6 @@ const LoginPage: React.FC = () => {
       await login(data.access, data.refresh);
       navigate('/dashboard', { replace: true });
     } catch (error: any) {
-      console.error('Login error:', error);
       if (error.response?.data?.detail) {
         setGeneralError(error.response.data.detail);
       } else {

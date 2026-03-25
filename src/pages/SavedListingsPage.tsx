@@ -57,7 +57,6 @@ const SavedListingsPage: React.FC<SavedListingsPageProps> = ({ onListingSelect }
 
   const handleRemoveFromSaved = (listingId: string) => {
     // Here you would typically update the user's saved listings
-    console.log('Removing from saved:', listingId);
   };
 
   const handleShare = async (listing: Listing) => {

@@ -51,16 +51,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const initializeAuth = async () => {
       const token = sessionStorage.getItem('access');
-      console.log('AuthContext: Token mavjudmi?', !!token);
       
       if (token) {
         try {
           const decoded: any = jwtDecode(token);
-          console.log('AuthContext: Token decode qilindi', decoded);
           
           // Token muddati tugaganmi tekshirish
           if (decoded.exp * 1000 < Date.now()) {
-            console.log('AuthContext: Token muddati tugagan');
             sessionStorage.removeItem('access');
             sessionStorage.removeItem('refresh');
             setUser(null);
@@ -72,21 +69,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           try {
             // API dan to'liq profile ma'lumotlarini yuklash
             const profileData = await authAPI.getProfile();
-            console.log('AuthContext: Profile ma\'lumotlari yuklandi', profileData);
             setUser({ ...profileData, id: decoded.user_id });
             setIsAuthenticated(true);
           } catch (error: any) {
-            console.error('AuthContext: Profile yuklashda xatolik', error);
-            
             if (error.response?.status === 401) {
-                console.log('AuthContext: 401 xatosi, token yaroqsiz');
                 sessionStorage.removeItem('access');
                 sessionStorage.removeItem('refresh');
                 setUser(null);
                 setIsAuthenticated(false);
             } else {
                 // API xatosi bo'lsa ham JWT ma'lumotlari bilan davom etamiz
-                console.log('AuthContext: API xatosi, JWT ma\'lumotlarini ishlatish');
                 setUser({
                   id: decoded.user_id,
                   username: decoded.username || '',
@@ -99,7 +91,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             }
           }
         } catch (error) {
-          console.error('AuthContext: Token decode xatosi', error);
           sessionStorage.removeItem('access');
           sessionStorage.removeItem('refresh');
           setUser(null);
@@ -125,7 +116,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const profileData = await authAPI.getProfile();
         setUser({ ...profileData, id: decoded.user_id });
       } catch (error) {
-        console.error('AuthContext: Login profile fetch error', error);
         // Fallback to decoded token data
         setUser({
           id: decoded.user_id,
@@ -138,7 +128,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       setIsAuthenticated(true);
     } catch (error) {
-      console.error('AuthContext: Login error', error);
       setUser(null);
       setIsAuthenticated(false);
     }

@@ -49,13 +49,11 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      console.log('ProfilePage: fetchProfile boshlandi');
       setLoading(true);
       setError('');
       
       try {
         const data = await authAPI.getProfile();
-        console.log('ProfilePage: Profile ma\'lumotlari yuklandi', data);
         // Format phone for display
         const hydrated = { ...data, phone: data.phone ? formatPhoneNumber(data.phone) : '' };
         setProfile(hydrated);
@@ -63,7 +61,6 @@ const ProfilePage: React.FC = () => {
         setImageFile(null);
         setPassword('');
       } catch (error: any) {
-        console.error('ProfilePage: Xatolik yuz berdi', error);
         if (error.response?.status === 401) {
             navigate('/login');
             return;
@@ -73,6 +70,7 @@ const ProfilePage: React.FC = () => {
         setLoading(false);
       }
     };
+
     fetchProfile();
     // eslint-disable-next-line
   }, []);

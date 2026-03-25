@@ -26,7 +26,7 @@ export interface User {
 export interface Listing {
   id: string;
   title: string;
-  type: 'dormitory';
+  type: 'dormitory' | 'rental';
   price: number;
   location: string;
   university: string;

@@ -62,7 +62,6 @@ const ApplicationDetailPage: React.FC = () => {
                     setError("Ariza topilmadi");
                 }
             } catch (error) {
-                console.error("Ariza yuklanmadi:", error);
                 setError("Ariza yuklanishda xatolik yuz berdi");
             } finally {
                 setLoading(false);

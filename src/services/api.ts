@@ -21,11 +21,6 @@ api.interceptors.request.use(
     if (config.data instanceof FormData) {
       // For FormData, delete Content-Type to let browser set it with boundary
       delete config.headers['Content-Type'];
-      
-      if (import.meta.env.DEV) {
-        console.log('📤 FormData request detected, Content-Type removed');
-        console.log('Headers:', config.headers);
-      }
     } else {
       // For other requests, use application/json
       config.headers['Content-Type'] = 'application/json';
@@ -304,26 +299,6 @@ export const authAPI = {
         formData.append('passport_image_second', applicationData.passport_image_second);
       }
       
-      // Debug logging
-      if (import.meta.env.DEV) {
-        console.log('=== ARIZA YUBORISH DEBUG ===');
-        console.log('Original data:', applicationData);
-        console.log('\n📋 FormData entries:');
-        const formDataEntries: Record<string, string> = {};
-        for (const [key, value] of formData.entries()) {
-          if (value instanceof File) {
-            const fileInfo = `File(${value.name}, ${value.size} bytes, ${value.type})`;
-            console.log(`  ✓ ${key}: ${fileInfo}`);
-            formDataEntries[key] = fileInfo;
-          } else {
-            console.log(`  ✓ ${key}: ${value}`);
-            formDataEntries[key] = String(value);
-          }
-        }
-        console.log('\n📊 FormData summary:', formDataEntries);
-        console.log('=== END DEBUG ===\n');
-      }
-      
       // Send request
       const response = await api.post('/applications/create/', formData, {
         timeout: 30000, // 30 seconds timeout
@@ -332,39 +307,8 @@ export const authAPI = {
         }
       });
       
-      if (import.meta.env.DEV) {
-        console.log('✅ Ariza muvaffaqiyatli yuborildi:', response.data);
-      }
-      
       return response.data;
     } catch (error: unknown) {
-      const err = error as { response?: { status?: number; statusText?: string; data?: unknown }; message?: string; config?: { url?: string; method?: string; headers?: unknown } };
-      console.error('=== ❌ ARIZA YUBORISH XATOSI ===');
-      console.error('Status:', err.response?.status);
-      console.error('Status Text:', err.response?.statusText);
-      console.error('Error Message:', err.message);
-      
-      if (err.response?.data) {
-        console.error('Server Response:', err.response.data);
-        
-        // Parse HTML error if present
-        if (typeof err.response.data === 'string' && err.response.data.includes('<!doctype html>')) {
-          console.error('⚠️ Server returned HTML error page');
-          const titleMatch = err.response.data.match(/<title>(.*?)<\/title>/);
-          if (titleMatch) {
-            console.error('Error Title:', titleMatch[1]);
-          }
-        }
-      }
-      
-      if (err.config) {
-        console.error('Request URL:', err.config.url);
-        console.error('Request Method:', err.config.method);
-        console.error('Request Headers:', err.config.headers);
-      }
-      
-      console.error('=== END XATO ===\n');
-      
       throw error;
     }
   },
@@ -379,7 +323,6 @@ export const authAPI = {
       }
       return response.data || [];
     } catch (error: unknown) {
-      console.error('Applications fetch error:', error);
       throw error;
     }
   },
@@ -390,7 +333,6 @@ export const authAPI = {
       const response = await api.get('/student/dashboard/');
       return response.data;
     } catch (error: unknown) {
-      console.error('Student dashboard fetch error:', error);
       throw error;
     }
   },
@@ -401,7 +343,6 @@ export const authAPI = {
       const response = await api.get('/universities/');
       return response.data;
     } catch (error: unknown) {
-      console.error('Universities fetch error:', error);
       // Fallback universitetlar ro'yxati
       return [
         { id: 1, name: 'Toshkent Davlat Universiteti' },
@@ -445,14 +386,6 @@ export const authAPI = {
         rooms_free: Number(data.rooms?.free) || 0,
       };
     } catch (error: unknown) {
-      const err = error as { response?: { status?: number } };
-      // 401 yoki 404 xatosi uchun console.warn ishlatamiz (bu normal holat)
-      if (err.response?.status === 401 || err.response?.status === 404) {
-        console.warn('Statistics API not available, using fallback data');
-      } else {
-        console.warn('Statistics fetch error, using fallback data');
-      }
-      
       // Fallback: eski usul orqali taxminiy qiymatlar
       try {
         const [dormitories, apartments] = await Promise.all([
@@ -467,7 +400,7 @@ export const authAPI = {
           universities_count: 1,
         };
       } catch {
-        // Eng oxirgi fallback - statik qiymatlar (console.warn ni olib tashlaymiz)
+        // Eng oxirgi fallback - statik qiymatlar
         return {
           dormitories_count: 2,
           apartments_count: 0,
@@ -486,7 +419,6 @@ export const authAPI = {
       // DRF typically returns { count, next, previous, results } or just an array
       return response.data.results || response.data || [];
     } catch (error: unknown) {
-      console.error('Notifications fetch error:', error);
       return [];
     }
   },
@@ -499,7 +431,6 @@ export const authAPI = {
       });
       return response.data;
     } catch (error: unknown) {
-      console.error('Mark notification as read error:', error);
       // Fallback if PATCH not supported, try POST to common mark-read endpoint
       try {
         const response = await api.post(`/notifications/${notificationId}/mark-read/`);
@@ -516,7 +447,6 @@ export const authAPI = {
       const response = await api.post('/notifications/mark-all-read/');
       return response.data;
     } catch (error: unknown) {
-      console.error('Mark all notifications as read error:', error);
       throw error;
     }
   },

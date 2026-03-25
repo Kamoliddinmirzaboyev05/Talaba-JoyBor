@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search } from 'lucide-react';
-import { useTheme } from '../contexts/ThemeContext';
+import { Search, MapPin, Building2, SlidersHorizontal, ChevronRight } from 'lucide-react';
 
 interface SearchBarProps {
   onSearch: (searchData: {
@@ -16,7 +15,6 @@ interface SearchBarProps {
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
-  const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = () => {
@@ -37,52 +35,82 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     }
   };
 
-
-
-
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.4 }}
-      className="w-full max-w-4xl mx-auto"
+      transition={{ duration: 0.6, delay: 0.2 }}
+      className="w-full max-w-5xl mx-auto px-4"
     >
-      {/* Simplified Search Container */}
-      <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 dark:border-gray-700/50 overflow-hidden">
-        <div className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
+      <div className="relative group">
+        {/* Glow effect on hover */}
+        <div className="absolute -inset-1 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200" />
+        
+        <div className="relative bg-white dark:bg-gray-900 rounded-[2rem] shadow-2xl border border-gray-100 dark:border-gray-800 p-2 md:p-3">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2">
             
-            {/* Search Input - Takes most space */}
-            <div className="flex-1 relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-teal-500/20 to-green-500/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-hover:text-teal-500 transition-colors duration-200 z-10" />
+            {/* Main Input Section */}
+            <div className="flex-1 relative flex items-center min-w-0">
+              <div className="absolute left-5 text-teal-500">
+                <Search size={22} strokeWidth={2.5} />
+              </div>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Yotoqxona, kvartira yoki joylashuvni qidiring..."
-                className={`relative w-full pl-14 pr-6 py-5 border-0 rounded-2xl focus:ring-2 focus:ring-teal-500 transition-all duration-300 text-lg ${
-                  theme === 'dark' 
-                    ? 'bg-gray-700 focus:bg-gray-600 text-white placeholder-gray-400' 
-                    : 'bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500'
-                }`}
+                placeholder="Yotoqxona yoki manzil..."
+                className="w-full pl-14 pr-4 py-4 md:py-5 bg-transparent border-none focus:ring-0 text-gray-900 dark:text-white text-base md:text-lg font-medium placeholder-gray-400 dark:placeholder-gray-500"
               />
             </div>
 
-            {/* Search Button */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleSearch}
-              className="bg-gradient-to-r from-teal-600 via-teal-600 to-green-600 text-white px-10 py-5 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3 min-w-[160px] hover:from-teal-700 hover:to-green-700"
-            >
-              <Search className="w-5 h-5" />
-              Qidirish
-            </motion.button>
+            {/* Divider (Desktop Only) */}
+            <div className="hidden md:block w-px h-10 bg-gray-100 dark:bg-gray-800 mx-2" />
+
+            {/* Quick Filter Section (Simulated) */}
+            <div className="hidden lg:flex items-center gap-4 px-4 whitespace-nowrap">
+              <div className="flex items-center gap-2 text-gray-400 hover:text-teal-500 cursor-pointer transition-colors">
+                <MapPin size={18} />
+                <span className="text-sm font-bold uppercase tracking-widest">Hudud</span>
+              </div>
+              <div className="flex items-center gap-2 text-gray-400 hover:text-teal-500 cursor-pointer transition-colors">
+                <Building2 size={18} />
+                <span className="text-sm font-bold uppercase tracking-widest">OTM</span>
+              </div>
+            </div>
+
+            {/* Search Button Section */}
+            <div className="flex items-center gap-2 mt-2 md:mt-0">
+              <button className="md:hidden flex-1 flex items-center justify-center gap-2 py-4 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-2xl font-bold text-sm uppercase tracking-widest active:scale-95 transition-transform">
+                <SlidersHorizontal size={18} />
+                Filtrlar
+              </button>
+              
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleSearch}
+                className="flex-[2] md:flex-none px-8 md:px-12 py-4 md:py-5 bg-teal-600 hover:bg-teal-700 text-white rounded-2xl font-black text-sm md:text-base uppercase tracking-[0.1em] shadow-lg shadow-teal-500/25 transition-all flex items-center justify-center gap-3"
+              >
+                <span>Qidirish</span>
+                <ChevronRight className="hidden md:block w-5 h-5" />
+              </motion.button>
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* Popular Tags (Optional UX Improvement) */}
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-2 px-4">
+        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mr-2">Ommabop:</span>
+        {['Chilonzor', 'Yunusobod', 'Tashkent City', 'Arzon'].map((tag) => (
+          <button 
+            key={tag}
+            className="px-4 py-1.5 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-full text-[11px] font-bold text-gray-500 dark:text-gray-400 hover:border-teal-500 hover:text-teal-600 transition-all shadow-sm"
+          >
+            {tag}
+          </button>
+        ))}
       </div>
     </motion.div>
   );
