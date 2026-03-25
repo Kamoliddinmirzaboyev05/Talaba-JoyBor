@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { Application, StudentDashboard } from '../types';
 
 // API base URL
-const API_BASE_URL = 'https://joyborv1.pythonanywhere.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://joyborv1.pythonanywhere.com/api';
 
 // Create axios instance
 const api: AxiosInstance = axios.create({
@@ -123,6 +123,18 @@ export const authAPI = {
   // Register user
   register: async (data: RegisterRequest): Promise<RegisterResponse> => {
     const response = await api.post('/register/', data);
+    return response.data;
+  },
+
+  // Check username availability
+  checkUsername: async (username: string): Promise<{ username: string; available: boolean; message: string }> => {
+    const response = await api.post('/check-username/', { username });
+    return response.data;
+  },
+
+  // Google Sign-In / Register
+  googleAuth: async (token: string): Promise<LoginResponse> => {
+    const response = await api.post('/auth/google/register/', { token });
     return response.data;
   },
 

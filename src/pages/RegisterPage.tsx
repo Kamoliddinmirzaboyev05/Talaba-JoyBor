@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, UserPlus } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, UserPlus, Check, X, Loader2 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { authAPI } from '../services/api';
+import GoogleLoginButton from '../components/GoogleLoginButton';
 
 const RegisterPage: React.FC = () => {
   const { theme } = useTheme();
@@ -30,9 +31,54 @@ const RegisterPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [usernameAvailability, setUsernameAvailability] = useState<{
+    available: boolean;
+    message: string;
+  } | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState('');
 
+  // Username mavjudligini tekshirish
+  useEffect(() => {
+    const checkUsernameAvailability = async () => {
+      const username = formData.username.trim();
+      
+      if (username.length < 3) {
+        setUsernameAvailability(null);
+        return;
+      }
+
+      setIsCheckingUsername(true);
+      try {
+        const result = await authAPI.checkUsername(username);
+        setUsernameAvailability({
+          available: result.available,
+          message: result.message
+        });
+        
+        if (!result.available) {
+          setErrors(prev => ({ ...prev, username: result.message }));
+        } else {
+          setErrors(prev => {
+            const newErrors = { ...prev };
+            delete newErrors.username;
+            return newErrors;
+          });
+        }
+      } catch (error) {
+        console.error('Username check error:', error);
+      } finally {
+        setIsCheckingUsername(false);
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      checkUsernameAvailability();
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.username]);
 
   // Email formatini tekshirish
   const isValidEmail = (email: string): boolean => {
@@ -67,6 +113,8 @@ const RegisterPage: React.FC = () => {
       newErrors.username = 'Foydalanuvchi nomi kiritilishi shart';
     } else if (formData.username.trim().length < 3) {
       newErrors.username = 'Foydalanuvchi nomi kamida 3 ta belgidan iborat bo\'lishi kerak';
+    } else if (usernameAvailability && !usernameAvailability.available) {
+      newErrors.username = usernameAvailability.message;
     }
     
     // Email validatsiyasi
@@ -206,6 +254,8 @@ const RegisterPage: React.FC = () => {
         step1Errors.username = 'Foydalanuvchi nomi kiritilishi shart';
       } else if (formData.username.trim().length < 3) {
         step1Errors.username = 'Foydalanuvchi nomi kamida 3 ta belgidan iborat bo\'lishi kerak';
+      } else if (usernameAvailability && !usernameAvailability.available) {
+        step1Errors.username = usernameAvailability.message;
       }
       
       if (!formData.email.trim()) {
@@ -381,15 +431,41 @@ const RegisterPage: React.FC = () => {
                       type="text"
                       value={formData.username}
                       onChange={(e) => handleInputChange('username', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                      className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
                         theme === 'dark' 
                           ? 'bg-gray-700 border-gray-600 text-white' 
                           : 'bg-white border-gray-300 text-gray-900'
-                      } ${errors.username ? 'border-red-500' : ''}`}
+                      } ${
+                        errors.username 
+                          ? 'border-red-500' 
+                          : usernameAvailability?.available 
+                            ? 'border-green-500' 
+                            : ''
+                      }`}
                       placeholder="aziz_karimov"
                     />
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      {isCheckingUsername ? (
+                        <Loader2 className="w-5 h-5 text-teal-500 animate-spin" />
+                      ) : usernameAvailability ? (
+                        usernameAvailability.available ? (
+                          <Check className="w-5 h-5 text-green-500" />
+                        ) : (
+                          <X className="w-5 h-5 text-red-500" />
+                        )
+                      ) : null}
+                    </div>
                   </div>
-                  {errors.username && (
+                  {usernameAvailability && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`text-sm mt-1 ${usernameAvailability.available ? 'text-green-500' : 'text-red-500'}`}
+                    >
+                      {usernameAvailability.message}
+                    </motion.p>
+                  )}
+                  {errors.username && !usernameAvailability && (
                     <motion.p
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -551,6 +627,19 @@ const RegisterPage: React.FC = () => {
                     )}
                   </motion.button>
                 </div>
+
+                {/* Divider */}
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">Yoki</span>
+                  </div>
+                </div>
+
+                {/* Google Login */}
+                <GoogleLoginButton />
               </motion.div>
             )}
           </form>

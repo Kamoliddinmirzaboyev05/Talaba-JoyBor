@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { LikesProvider } from './contexts/LikesContext';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import ErrorBoundary from './components/ErrorBoundary';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -177,19 +178,23 @@ function AppContent() {
 }
 
 function App() {
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+
   return (
     <ErrorBoundary>
-      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <ThemeProvider>
-          <AuthProvider>
-            <NotificationProvider>
-              <LikesProvider>
-                <AppContent />
-              </LikesProvider>
-            </NotificationProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </Router>
+      <GoogleOAuthProvider clientId={googleClientId}>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <ThemeProvider>
+            <AuthProvider>
+              <NotificationProvider>
+                <LikesProvider>
+                  <AppContent />
+                </LikesProvider>
+              </NotificationProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </Router>
+      </GoogleOAuthProvider>
     </ErrorBoundary>
   );
 }

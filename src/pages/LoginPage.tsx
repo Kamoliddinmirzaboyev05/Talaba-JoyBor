@@ -5,6 +5,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowLeft, LogIn } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { authAPI } from '../services/api';
+import GoogleLoginButton from '../components/GoogleLoginButton';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -240,6 +241,19 @@ const LoginPage: React.FC = () => {
                 </>
               )}
             </motion.button>
+
+            {/* Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">Yoki</span>
+              </div>
+            </div>
+
+            {/* Google Login */}
+            <GoogleLoginButton />
           </form>
 
           {/* Register Link */}
