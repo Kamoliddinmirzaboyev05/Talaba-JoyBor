@@ -4,7 +4,11 @@ import { authAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const GoogleLoginButton: React.FC = () => {
+interface GoogleLoginButtonProps {
+  text?: "signin_with" | "signup_with" | "continue_with" | "signin";
+}
+
+const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ text = "continue_with" }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
@@ -46,15 +50,16 @@ const GoogleLoginButton: React.FC = () => {
         </p>
       )}
       
-      <div className="w-full flex justify-center">
+      <div className="w-full flex justify-center overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-colors duration-200">
         <GoogleLogin
           onSuccess={handleSuccess}
           onError={handleError}
           useOneTap
           theme="outline"
-          shape="circle"
+          shape="rectangular"
           size="large"
           width="100%"
+          text={text}
         />
       </div>
 

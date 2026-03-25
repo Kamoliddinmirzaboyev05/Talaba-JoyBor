@@ -43,7 +43,7 @@ import { Listing } from "../types";
 import { formatCapacityBucket, formatPhoneNumber } from "../utils/format";
 import { useAuth } from "../contexts/AuthContext";
 import Header from "../components/Header";
-import YandexMap from "../components/YandexMap";
+import DormitoryLocationMap from "../components/DormitoryLocationMap";
 import { getGlobalSelectedListing, setGlobalSelectedListing } from "../App";
 import { authAPI } from "../services/api";
 import { shareOrCopy } from "../utils/share";
@@ -700,13 +700,13 @@ const ListingDetailPage: React.FC = () => {
                 Joylashuv
               </h3>
               <div className="rounded-xl overflow-hidden">
-                <YandexMap
-                  center={{
-                    lat: listing.coordinates?.lat || 0,
-                    lng: listing.coordinates?.lng || 0,
-                  }}
-                  balloonContent={listing.title}
-                  height="220px"
+                <DormitoryLocationMap
+                  name={listing.title}
+                  address={listing.location}
+                  latitude={listing.coordinates?.lat || 0}
+                  longitude={listing.coordinates?.lng || 0}
+                  month_price={listing.price}
+                  phone_number={listing.admin?.phone || "998889563848"}
                 />
               </div>
               <p className="text-gray-600 dark:text-gray-300 mt-3 text-sm">

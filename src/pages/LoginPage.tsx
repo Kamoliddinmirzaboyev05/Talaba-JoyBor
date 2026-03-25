@@ -81,7 +81,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-green-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -94,7 +94,7 @@ const LoginPage: React.FC = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/')}
-            className="inline-flex items-center gap-2 text-teal-600 hover:text-teal-700 mb-6 transition-colors duration-200"
+            className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 mb-6 transition-colors duration-200"
           >
             <ArrowLeft className="w-5 h-5" />
             Orqaga
@@ -104,15 +104,15 @@ const LoginPage: React.FC = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="w-16 h-16 bg-gradient-to-r from-teal-600 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4"
+            className="w-16 h-16 bg-slate-900 dark:bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg"
           >
-            <LogIn className="w-8 h-8 text-white" />
+            <LogIn className="w-8 h-8 text-white dark:text-slate-900" />
           </motion.div>
           
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
             Xush Kelibsiz!
           </h1>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-slate-600 dark:text-slate-400">
             Hisobingizga kiring va yashash joyingizni toping
           </p>
         </div>
@@ -122,7 +122,7 @@ const LoginPage: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8"
+          className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl shadow-slate-200/50 dark:shadow-none p-8 border border-slate-100 dark:border-slate-700"
         >
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Success Message */}
@@ -130,7 +130,7 @@ const LoginPage: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-green-600 dark:text-green-400 text-sm"
+                className="p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl text-emerald-600 dark:text-emerald-400 text-sm"
               >
                 {successMessage}
               </motion.div>
@@ -141,7 +141,7 @@ const LoginPage: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm"
+                className="p-3 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-xl text-rose-600 dark:text-rose-400 text-sm"
               >
                 {generalError}
               </motion.div>
@@ -149,20 +149,20 @@ const LoginPage: React.FC = () => {
 
             {/* Username Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                 Foydalanuvchi Nomi
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="text"
                   value={formData.username}
                   onChange={(e) => handleInputChange('username', e.target.value)}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                  className={`w-full pl-10 pr-4 py-3.5 border rounded-xl focus:ring-2 focus:ring-slate-900 dark:focus:ring-white focus:border-transparent transition-all duration-200 ${
                     theme === 'dark' 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
-                  } ${errors.username ? 'border-red-500' : ''}`}
+                      ? 'bg-slate-900 border-slate-700 text-white' 
+                      : 'bg-slate-50 border-slate-200 text-slate-900'
+                  } ${errors.username ? 'border-rose-500' : ''}`}
                   placeholder="foydalanuvchi_nomi"
                 />
               </div>
@@ -170,7 +170,7 @@ const LoginPage: React.FC = () => {
                 <motion.p
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-red-500 text-sm mt-1"
+                  className="text-rose-500 text-xs mt-1 font-medium"
                 >
                   {errors.username}
                 </motion.p>
@@ -179,26 +179,26 @@ const LoginPage: React.FC = () => {
 
             {/* Password Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                 Parol
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
-                  className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 ${
+                  className={`w-full pl-10 pr-12 py-3.5 border rounded-xl focus:ring-2 focus:ring-slate-900 dark:focus:ring-white focus:border-transparent transition-all duration-200 ${
                     theme === 'dark' 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
-                  } ${errors.password ? 'border-red-500' : ''}`}
+                      ? 'bg-slate-900 border-slate-700 text-white' 
+                      : 'bg-slate-50 border-slate-200 text-slate-900'
+                  } ${errors.password ? 'border-rose-500' : ''}`}
                   placeholder="Parolingizni kiriting"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors duration-200"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -207,7 +207,7 @@ const LoginPage: React.FC = () => {
                 <motion.p
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-red-500 text-sm mt-1"
+                  className="text-rose-500 text-xs mt-1 font-medium"
                 >
                   {errors.password}
                 </motion.p>
@@ -218,7 +218,7 @@ const LoginPage: React.FC = () => {
             <div className="text-right">
               <button
                 type="button"
-                className="text-teal-600 hover:text-teal-700 text-sm font-medium transition-colors duration-200"
+                className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm font-medium transition-colors duration-200"
               >
                 Parolni unutdingizmi?
               </button>
@@ -226,14 +226,14 @@ const LoginPage: React.FC = () => {
 
             {/* Submit Button */}
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-teal-600 to-green-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3.5 rounded-xl font-bold hover:bg-slate-800 dark:hover:bg-slate-100 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-xl shadow-slate-200 dark:shadow-none"
             >
               {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <LogIn className="w-5 h-5" />
@@ -243,17 +243,17 @@ const LoginPage: React.FC = () => {
             </motion.button>
 
             {/* Divider */}
-            <div className="relative my-6">
+            <div className="relative my-8">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+                <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">Yoki</span>
+              <div className="relative flex justify-center text-xs uppercase tracking-widest font-semibold">
+                <span className="px-4 bg-white dark:bg-gray-800 text-gray-400">Yoki</span>
               </div>
             </div>
 
             {/* Google Login */}
-            <GoogleLoginButton />
+            <GoogleLoginButton text="signin_with" />
           </form>
 
           {/* Register Link */}

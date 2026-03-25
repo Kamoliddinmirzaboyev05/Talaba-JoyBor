@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Phone, MapPin, Clock, MessageCircle, Facebook, Instagram } from 'lucide-react';
 import Header from '../components/Header';
-import YandexMap from '../components/YandexMap';
+import DormitoryMap from '../components/DormitoryMap';
 import ContactForm from '../components/ContactForm';
 
 const ContactPage: React.FC = () => {
@@ -186,9 +186,19 @@ const ContactPage: React.FC = () => {
 								Bizning Joylashuvimiz
 							</h3>
 							<div className="rounded-xl overflow-hidden">
-								<YandexMap
+								<DormitoryMap
 									height="240px"
-									balloonContent="Codial Academy"
+									dormitories={[{
+										id: 'codial',
+										name: 'Codial Academy',
+										address: "Toshkent sh., Chilonzor t., Bunyodkor ko'chasi, 12-uy",
+										price: "Codial markazi",
+										phone: "+998 71 123 45 67",
+										latitude: 41.2778, // Example coords for Chilonzor
+										longitude: 69.2028
+									}]}
+									center={[41.2778, 69.2028]}
+									zoom={15}
 								/>
 							</div>
 							<p className="text-gray-600 dark:text-gray-300 mt-4 text-sm">

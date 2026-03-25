@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-import { Search, SlidersHorizontal, Building2 } from 'lucide-react';
-import { Listing, Dormitory } from '../types';
+import { Search, SlidersHorizontal, Building2, Map as MapIcon, LayoutGrid } from 'lucide-react';
+import { Listing, Dormitory as DormitoryType } from '../types';
 import DormitoryCard from '../components/DormitoryCard';
+import DormitoryMap from '../components/DormitoryMap';
+import { Dormitory as MapDormitory } from '../components/DormitoryMap';
 import Header from '../components/Header';
 import { authAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -17,9 +19,10 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
   const { user } = useAuth();
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
-  const [dormitories, setDormitories] = useState<Dormitory[]>([]);
-  const [filteredDormitories, setFilteredDormitories] = useState<Dormitory[]>([]);
+  const [dormitories, setDormitories] = useState<DormitoryType[]>([]);
+  const [filteredDormitories, setFilteredDormitories] = useState<DormitoryType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>(location.state?.viewMode || 'grid');
   const [selectedFilters, setSelectedFilters] = useState({
     location: '',
     university: '',
@@ -73,7 +76,7 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
         const response = await authAPI.getDormitories();
         
         // API returns { count, next, previous, results }
-        const dormitoriesData = (response.results || response) as Dormitory[];
+        const dormitoriesData = (response.results || response) as DormitoryType[];
         
         setDormitories(dormitoriesData);
         setFilteredDormitories(dormitoriesData);
@@ -89,7 +92,7 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
 
   // Qidiruv va filtrlash
   useEffect(() => {
-    let filtered = dormitories;
+    let filtered = [...dormitories];
 
     // Qidiruv bo'yicha filtrlash
     if (searchQuery) {
@@ -146,15 +149,15 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
   }, [dormitories, searchQuery, selectedFilters, sortBy]);
 
   // Yotoqxonani Listing formatiga o'tkazish
-  const convertDormitoryToListing = (dormitory: Dormitory): Listing => {
+  const convertDormitoryToListing = (dormitory: DormitoryType): Listing => {
     // Handle images - can be empty array
     const images = Array.isArray(dormitory.images) && dormitory.images.length > 0
-      ? dormitory.images.map(img => typeof img === 'string' ? img : img?.image || '')
+      ? (dormitory.images as any[]).map(img => typeof img === 'string' ? img : img?.image || '')
       : ['/placeholder-dormitory.svg'];
     
     // Handle amenities - can be empty array
     const amenities = Array.isArray(dormitory.amenities_list) && dormitory.amenities_list.length > 0
-      ? dormitory.amenities_list.map(amenity => amenity?.name || '')
+      ? (dormitory.amenities_list as any[]).map(amenity => amenity?.name || '')
       : [];
 
     return {
@@ -178,11 +181,11 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
       reviews: 0,
       features: {
         furnished: true,
-        wifi: amenities.some(a => a.toLowerCase().includes('wifi')),
-        parking: amenities.some(a => a.toLowerCase().includes('parking')),
-        security: amenities.some(a => a.toLowerCase().includes('security'))
+        wifi: amenities.some((a: string) => a.toLowerCase().includes('wifi')),
+        parking: amenities.some((a: string) => a.toLowerCase().includes('parking')),
+        security: amenities.some((a: string) => a.toLowerCase().includes('security'))
       },
-      rules: (dormitory.rules || []).map(r => typeof r === 'string' ? r : r.rule),
+      rules: (dormitory.rules || []).map((r: any) => typeof r === 'string' ? r : r.rule),
       coordinates: {
         lat: dormitory.latitude,
         lng: dormitory.longitude
@@ -191,7 +194,7 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
     };
   };
 
-  const renderDormitoryCard = (dormitory: Dormitory) => {
+  const renderDormitoryCard = (dormitory: DormitoryType) => {
     const listing = convertDormitoryToListing(dormitory);
     return (
       <DormitoryCard
@@ -384,27 +387,73 @@ const DormitoriesPage: React.FC<DormitoriesPageProps> = ({ onListingSelect, onAp
           <p className="text-gray-600 dark:text-gray-300">
             <span className="font-semibold text-gray-900 dark:text-white">{filteredDormitories.length}</span> ta yotoqxona topildi
           </p>
+
+          <div className="flex bg-white dark:bg-gray-800 rounded-xl p-1 shadow-sm border border-gray-200 dark:border-gray-700">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-lg transition-all ${
+                viewMode === 'grid' 
+                  ? 'bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400' 
+                  : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+              }`}
+            >
+              <LayoutGrid className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`p-2 rounded-lg transition-all ${
+                viewMode === 'map' 
+                  ? 'bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400' 
+                  : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+              }`}
+            >
+              <MapIcon className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        {/* Dormitories Grid */}
-        {filteredDormitories.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-12"
-          >
-            <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              Yotoqxona topilmadi
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300">
-              Qidiruv shartlarini o'zgartirib qaytadan urinib ko'ring
-            </p>
-          </motion.div>
+        {/* View Content */}
+        {viewMode === 'grid' ? (
+          filteredDormitories.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-12"
+            >
+              <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                Yotoqxona topilmadi
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Qidiruv shartlarini o'zgartirib qaytadan urinib ko'ring
+              </p>
+            </motion.div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredDormitories.map((dormitory) => renderDormitoryCard(dormitory))}
+            </div>
+          )
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredDormitories.map((dormitory) => renderDormitoryCard(dormitory))}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full"
+          >
+            <DormitoryMap 
+              height="600px"
+              dormitories={filteredDormitories.map(dorm => ({
+                id: dorm.id,
+                name: dorm.name,
+                address: dorm.address,
+                price: `${dorm.month_price.toLocaleString()} so'm / oy`,
+                phone: String(dorm.phone || dorm.phone_number || dorm.phone_numer || "+998 90 123 45 67"),
+                latitude: dorm.latitude,
+                longitude: dorm.longitude,
+                availableSpots: dorm.available_capacity,
+                university: dorm.university_name
+              }))} 
+            />
+          </motion.div>
         )}
       </div>
     </div>

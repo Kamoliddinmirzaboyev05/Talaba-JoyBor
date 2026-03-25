@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
 import SearchBar from '../components/SearchBar';
 import DormitoryCard from '../components/DormitoryCard';
+import DormitoryMap from '../components/DormitoryMap';
 import { authAPI } from '../services/api';
 
 interface Statistics {
@@ -443,6 +444,53 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
               </motion.button>
             </motion.div>
           )}
+        </div>
+      </section>
+
+      {/* Map Section */}
+      <section className="py-16 bg-white dark:bg-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4"
+          >
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                Xaritada ko'rish
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300">
+                Yotoqxonalar joylashuvini interaktiv xarita orqali osonroq toping
+              </p>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate('/dormitories', { state: { viewMode: 'map' } })}
+              className="text-teal-600 dark:text-teal-400 font-bold flex items-center gap-2 hover:gap-3 transition-all"
+            >
+              To'liq xaritani ochish
+              <ChevronRight className="w-5 h-5" />
+            </motion.button>
+          </motion.div>
+
+          <DormitoryMap 
+            height="500px"
+            dormitories={featuredListings
+              .filter(l => (l as any).coordinates?.lat && (l as any).coordinates?.lng)
+              .map(listing => ({
+                id: listing.id,
+                name: listing.title,
+                address: listing.location,
+                price: `${listing.price.toLocaleString()} so'm / oy`,
+                phone: String((listing as any).landlord?.phone || (listing as any).phone_number || "+998 90 123 45 67"),
+                latitude: (listing as any).coordinates.lat,
+                longitude: (listing as any).coordinates.lng,
+                availableSpots: (listing as any).available_capacity,
+                university: listing.university
+              }))}
+          />
         </div>
       </section>
 

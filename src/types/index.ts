@@ -98,6 +98,8 @@ export interface Dormitory {
   is_active: boolean;
   distance?: number;
   link?: string;
+  phone?: string;
+  phone_number?: string;
   phone_numer?: string;
   // Room Statistics from API
   room_statistics?: {
