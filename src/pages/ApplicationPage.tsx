@@ -13,6 +13,7 @@ interface ApplicationFormData {
   name: string;
   middle_name: string;
   familiya: string;
+  gender: string;
   city: string;
   village: string;
   phone: string;
@@ -43,6 +44,7 @@ const ApplicationPage: React.FC = () => {
     name: user?.first_name || '',
     middle_name: '',
     familiya: user?.last_name || '',
+    gender: '',
     city: '',
     village: '',
     phone: user?.phone || '',
@@ -602,6 +604,20 @@ const ApplicationPage: React.FC = () => {
               )}
 
               <div className="space-y-6">
+                {/* Progress Bar */}
+                <div className="mb-6">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Form to'ldirish jarayoni</span>
+                    <span className="text-sm font-bold text-teal-600">{Math.round(((formData.name ? 1 : 0) + (formData.familiya ? 1 : 0) + (formData.gender ? 1 : 0) + (formData.city ? 1 : 0) + (formData.village ? 1 : 0) + (formData.course ? 1 : 0) + (formData.phone ? 1 : 0)) / 7 * 100)}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                    <div 
+                      className="bg-gradient-to-r from-teal-500 to-green-500 h-3 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.round(((formData.name ? 1 : 0) + (formData.familiya ? 1 : 0) + (formData.gender ? 1 : 0) + (formData.city ? 1 : 0) + (formData.village ? 1 : 0) + (formData.course ? 1 : 0) + (formData.phone ? 1 : 0)) / 7 * 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+
                 {/* Selected Dormitory Display */}
                 {selectedListing ? (
                   <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-xl p-4">
@@ -641,8 +657,8 @@ const ApplicationPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Familiya, Name and Middle Name */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Familiya, Name, Middle Name and Gender */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                       Familiya
@@ -717,6 +733,34 @@ const ApplicationPage: React.FC = () => {
                       <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
                         <AlertCircle className="w-4 h-4" />
                         {errors.middle_name}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Jins
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <select
+                        value={formData.gender}
+                        onChange={(e) => handleInputChange('gender', e.target.value)}
+                        ref={registerFieldRef('gender')}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
+                          ? 'bg-gray-700 border-gray-600 text-white'
+                          : 'bg-white border-gray-300 text-gray-900'
+                          } ${errors.gender ? 'border-red-500' : ''}`}
+                      >
+                        <option value="">Tanlang</option>
+                        <option value="male">Erkak</option>
+                        <option value="female">Ayol</option>
+                      </select>
+                    </div>
+                    {errors.gender && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.gender}
                       </p>
                     )}
                   </div>

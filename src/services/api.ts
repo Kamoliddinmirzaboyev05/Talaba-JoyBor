@@ -129,7 +129,7 @@ export const authAPI = {
 
   // Google Sign-In / Register
   googleAuth: async (token: string): Promise<LoginResponse> => {
-    const response = await api.post('/auth/google/register/', { token });
+    const response = await api.post('/auth/google/', { token });
     return response.data;
   },
 

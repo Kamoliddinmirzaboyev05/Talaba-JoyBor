@@ -89,16 +89,6 @@ const LoginPage: React.FC = () => {
       >
         {/* Header */}
         <div className="text-center mb-8">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate('/')}
-            className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 mb-6 transition-colors duration-200"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Orqaga
-          </motion.button>
-          
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -252,7 +242,7 @@ const LoginPage: React.FC = () => {
             </div>
 
             {/* Google Login */}
-            <GoogleLoginButton text="signin_with" />
+            <GoogleLoginButton text="Google orqali kirish" />
           </form>
 
           {/* Register Link */}

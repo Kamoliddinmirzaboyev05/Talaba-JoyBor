@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, UserPlus, Check, X, Loader2 } from 'lucide-react';
+import { User, Phone, Lock, Eye, EyeOff, ArrowLeft, UserPlus, Check, X, Loader2 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { authAPI } from '../services/api';
@@ -24,7 +24,7 @@ const RegisterPage: React.FC = () => {
     first_name: '',
     last_name: '',
     username: '',
-    email: '',
+    phone: '+998',
     password: '',
     password2: ''
   });
@@ -80,10 +80,10 @@ const RegisterPage: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [formData.username]);
 
-  // Email formatini tekshirish
-  const isValidEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  // Telefon raqami formatini tekshirish
+  const isValidPhone = (phone: string): boolean => {
+    const phoneRegex = /^\+998[0-9]{9}$/;
+    return phoneRegex.test(phone);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -117,11 +117,11 @@ const RegisterPage: React.FC = () => {
       newErrors.username = usernameAvailability.message;
     }
     
-    // Email validatsiyasi
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email manzil kiritilishi shart';
-    } else if (!isValidEmail(formData.email)) {
-      newErrors.email = 'Noto\'g\'ri email format';
+    // Telefon validatsiyasi
+    if (!formData.phone.trim() || formData.phone === '+998') {
+      newErrors.phone = 'Telefon raqami kiritilishi shart';
+    } else if (!isValidPhone(formData.phone)) {
+      newErrors.phone = 'Noto\'g\'ri telefon raqami format (+998XXXXXXXXX)';
     }
     
     // Parol validatsiyasi
@@ -150,7 +150,7 @@ const RegisterPage: React.FC = () => {
         username: formData.username.trim(),
         password: formData.password,
         password2: formData.password2,
-        email: formData.email.trim(),
+        email: formData.phone.trim(), // API email maydonida telefon raqamini kutmoqda
         first_name: formData.first_name.trim(),
         last_name: formData.last_name.trim(),
         role: 'student',
@@ -247,10 +247,10 @@ const RegisterPage: React.FC = () => {
         step1Errors.username = usernameAvailability.message;
       }
       
-      if (!formData.email.trim()) {
-        step1Errors.email = 'Email manzil kiritilishi shart';
-      } else if (!isValidEmail(formData.email)) {
-        step1Errors.email = 'Noto\'g\'ri email format';
+      if (!formData.phone.trim() || formData.phone === '+998') {
+        step1Errors.phone = 'Telefon raqami kiritilishi shart';
+      } else if (!isValidPhone(formData.phone)) {
+        step1Errors.phone = 'Noto\'g\'ri telefon raqami format (+998XXXXXXXXX)';
       }
       
       if (Object.keys(step1Errors).length > 0) {
@@ -277,16 +277,6 @@ const RegisterPage: React.FC = () => {
       >
         {/* Header */}
         <div className="text-center mb-8">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate('/')}
-            className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 mb-6 transition-colors duration-200"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Orqaga
-          </motion.button>
-          
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -465,32 +455,39 @@ const RegisterPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* Email Field */}
+                {/* Phone Field */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                    Email Manzil
+                    Telefon raqami
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val.startsWith('+998')) {
+                          handleInputChange('phone', val);
+                        } else if (val === '' || val === '+') {
+                          handleInputChange('phone', '+998');
+                        }
+                      }}
                       className={`w-full pl-10 pr-4 py-3.5 border rounded-xl focus:ring-2 focus:ring-slate-900 dark:focus:ring-white focus:border-transparent transition-all duration-200 ${
                         theme === 'dark' 
                           ? 'bg-slate-900 border-slate-700 text-white' 
                           : 'bg-slate-50 border-slate-200 text-slate-900'
-                      } ${errors.email ? 'border-rose-500' : ''}`}
-                      placeholder="aziz@student.tatu.uz"
+                      } ${errors.phone ? 'border-rose-500' : ''}`}
+                      placeholder="+998901234567"
                     />
                   </div>
-                  {errors.email && (
+                  {errors.phone && (
                     <motion.p
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="text-rose-500 text-xs mt-1 font-medium"
                     >
-                      {errors.email}
+                      {errors.phone}
                     </motion.p>
                   )}
                 </div>
@@ -504,6 +501,19 @@ const RegisterPage: React.FC = () => {
                 >
                   Keyingi Qadam
                 </motion.button>
+
+                {/* Divider */}
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase tracking-widest font-semibold">
+                    <span className="px-4 bg-white dark:bg-slate-800 text-gray-400">Yoki</span>
+                  </div>
+                </div>
+
+                {/* Google Login */}
+                <GoogleLoginButton text="Google orqali ro'yxatdan o'tish" />
               </motion.div>
             )}
 
@@ -589,22 +599,14 @@ const RegisterPage: React.FC = () => {
                   )}
                 </div>
 
-                <div className="flex gap-4">
-                  <motion.button
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    type="button"
-                    onClick={prevStep}
-                    className="flex-1 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 py-3 rounded-xl font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-300"
-                  >
-                    Orqaga
-                  </motion.button>
+                <div className="flex flex-col gap-4">
+                  {/* Orqaga button removed from here as per request */}
                   <motion.button
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                     type="submit"
                     disabled={isLoading}
-                    className="flex-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3 rounded-xl font-bold hover:bg-slate-800 dark:hover:bg-slate-100 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-xl shadow-slate-200 dark:shadow-none"
+                    className="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-bold hover:bg-emerald-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-xl shadow-emerald-200 dark:shadow-none"
                   >
                     {isLoading ? (
                       <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -616,19 +618,6 @@ const RegisterPage: React.FC = () => {
                     )}
                   </motion.button>
                 </div>
-
-                {/* Divider */}
-                <div className="relative my-8">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase tracking-widest font-semibold">
-                    <span className="px-4 bg-white dark:bg-gray-800 text-gray-400">Yoki</span>
-                  </div>
-                </div>
-
-                {/* Google Login */}
-                <GoogleLoginButton text="signup_with" />
               </motion.div>
             )}
           </form>
