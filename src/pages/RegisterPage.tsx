@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, Phone, Lock, Eye, EyeOff, ArrowLeft, UserPlus, Check, X, Loader2 } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, UserPlus, Check, X, Loader2 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { authAPI } from '../services/api';
@@ -24,7 +24,7 @@ const RegisterPage: React.FC = () => {
     first_name: '',
     last_name: '',
     username: '',
-    phone: '+998',
+    email: '',
     password: '',
     password2: ''
   });
@@ -80,10 +80,10 @@ const RegisterPage: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [formData.username]);
 
-  // Telefon raqami formatini tekshirish
-  const isValidPhone = (phone: string): boolean => {
-    const phoneRegex = /^\+998[0-9]{9}$/;
-    return phoneRegex.test(phone);
+  // Email formatini tekshirish
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -117,11 +117,11 @@ const RegisterPage: React.FC = () => {
       newErrors.username = usernameAvailability.message;
     }
     
-    // Telefon validatsiyasi
-    if (!formData.phone.trim() || formData.phone === '+998') {
-      newErrors.phone = 'Telefon raqami kiritilishi shart';
-    } else if (!isValidPhone(formData.phone)) {
-      newErrors.phone = 'Noto\'g\'ri telefon raqami format (+998XXXXXXXXX)';
+    // Email validatsiyasi
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email manzil kiritilishi shart';
+    } else if (!isValidEmail(formData.email)) {
+      newErrors.email = 'Noto\'g\'ri email formati';
     }
     
     // Parol validatsiyasi
@@ -150,7 +150,7 @@ const RegisterPage: React.FC = () => {
         username: formData.username.trim(),
         password: formData.password,
         password2: formData.password2,
-        email: formData.phone.trim(), // API email maydonida telefon raqamini kutmoqda
+        email: formData.email.trim(),
         first_name: formData.first_name.trim(),
         last_name: formData.last_name.trim(),
         role: 'student',
@@ -247,10 +247,10 @@ const RegisterPage: React.FC = () => {
         step1Errors.username = usernameAvailability.message;
       }
       
-      if (!formData.phone.trim() || formData.phone === '+998') {
-        step1Errors.phone = 'Telefon raqami kiritilishi shart';
-      } else if (!isValidPhone(formData.phone)) {
-        step1Errors.phone = 'Noto\'g\'ri telefon raqami format (+998XXXXXXXXX)';
+      if (!formData.email.trim()) {
+        step1Errors.email = 'Email manzil kiritilishi shart';
+      } else if (!isValidEmail(formData.email)) {
+        step1Errors.email = 'Noto\'g\'ri email formati';
       }
       
       if (Object.keys(step1Errors).length > 0) {
@@ -455,39 +455,32 @@ const RegisterPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* Phone Field */}
+                {/* Email Field */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                    Telefon raqami
+                    Email manzil
                   </label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (val.startsWith('+998')) {
-                          handleInputChange('phone', val);
-                        } else if (val === '' || val === '+') {
-                          handleInputChange('phone', '+998');
-                        }
-                      }}
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
                       className={`w-full pl-10 pr-4 py-3.5 border rounded-xl focus:ring-2 focus:ring-slate-900 dark:focus:ring-white focus:border-transparent transition-all duration-200 ${
                         theme === 'dark' 
                           ? 'bg-slate-900 border-slate-700 text-white' 
                           : 'bg-slate-50 border-slate-200 text-slate-900'
-                      } ${errors.phone ? 'border-rose-500' : ''}`}
-                      placeholder="+998901234567"
+                      } ${errors.email ? 'border-rose-500' : ''}`}
+                      placeholder="misol@mail.com"
                     />
                   </div>
-                  {errors.phone && (
+                  {errors.email && (
                     <motion.p
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="text-rose-500 text-xs mt-1 font-medium"
                     >
-                      {errors.phone}
+                      {errors.email}
                     </motion.p>
                   )}
                 </div>

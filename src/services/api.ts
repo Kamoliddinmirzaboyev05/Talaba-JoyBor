@@ -205,6 +205,7 @@ export const authAPI = {
     faculty?: string;
     direction?: string;
     course: string;
+    gender: string;
     group?: string;
     phone?: string;  // string formatida (API da string)
     passport?: string;
@@ -236,6 +237,9 @@ export const authAPI = {
       
       // 6. course (string, required)
       formData.append('course', applicationData.course.trim());
+      
+      // 7. gender (string, required)
+      formData.append('gender', applicationData.gender.trim());
       
       // IXTIYORIY MAYDONLAR (nullable=true)
       // last_name (string, maxLength: 128, nullable)

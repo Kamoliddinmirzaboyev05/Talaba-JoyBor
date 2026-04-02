@@ -77,7 +77,7 @@ const ApplicationPage: React.FC = () => {
 
   // When errors change, scroll to the first errored field
   useEffect(() => {
-    const order = ['name', 'city', 'village', 'course', 'phone', 'passport', 'faculty', 'direction', 'group'];
+    const order = ['gender', 'name', 'familiya', 'city', 'village', 'course', 'phone', 'passport', 'faculty', 'direction', 'group'];
     const firstKey = order.find((k) => !!errors[k]);
     if (firstKey && fieldRefs.current[firstKey]) {
       const el = fieldRefs.current[firstKey]!;
@@ -280,12 +280,18 @@ const ApplicationPage: React.FC = () => {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    // Required fields validation (schema bo'yicha faqat name, dormitory, province, district, course majburiy)
+    // Required fields validation (schema bo'yicha gender, name, last_name, dormitory, province, district, course majburiy)
     if (!selectedListing) {
       newErrors.general = 'Yotoqxona tanlanmagan. Iltimos, yotoqxona sahifasiga qayting va ariza yuborish tugmasini bosing.';
     }
+    if (!formData.gender?.trim()) {
+      newErrors.gender = 'Jins tanlanishi shart';
+    }
     if (!formData.name?.trim()) {
       newErrors.name = 'Ism kiritilishi shart';
+    }
+    if (!formData.familiya?.trim()) {
+      newErrors.familiya = 'Familiya kiritilishi shart';
     }
     if (!formData.city?.trim()) {
       newErrors.city = 'Viloyat tanlanishi shart';
@@ -418,6 +424,7 @@ const ApplicationPage: React.FC = () => {
         faculty: formData.faculty?.trim() || undefined,
         direction: formData.direction?.trim() || undefined,
         course: formData.course.trim(),
+        gender: formData.gender.trim(),
         group: formData.group?.trim() || undefined,
         phone: phoneInt ? phoneInt.toString() : undefined,  // Convert to string
         passport: formData.passport?.trim() || undefined,
@@ -608,12 +615,12 @@ const ApplicationPage: React.FC = () => {
                 <div className="mb-6">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Form to'ldirish jarayoni</span>
-                    <span className="text-sm font-bold text-teal-600">{Math.round(((formData.name ? 1 : 0) + (formData.familiya ? 1 : 0) + (formData.gender ? 1 : 0) + (formData.city ? 1 : 0) + (formData.village ? 1 : 0) + (formData.course ? 1 : 0) + (formData.phone ? 1 : 0)) / 7 * 100)}%</span>
+                    <span className="text-sm font-bold text-teal-600">{Math.round(((formData.gender ? 1 : 0) + (formData.name ? 1 : 0) + (formData.familiya ? 1 : 0) + (formData.city ? 1 : 0) + (formData.village ? 1 : 0) + (formData.course ? 1 : 0) + (formData.phone ? 1 : 0)) / 7 * 100)}%</span>
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
                     <div 
                       className="bg-gradient-to-r from-teal-500 to-green-500 h-3 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.round(((formData.name ? 1 : 0) + (formData.familiya ? 1 : 0) + (formData.gender ? 1 : 0) + (formData.city ? 1 : 0) + (formData.village ? 1 : 0) + (formData.course ? 1 : 0) + (formData.phone ? 1 : 0)) / 7 * 100)}%` }}
+                      style={{ width: `${Math.round(((formData.gender ? 1 : 0) + (formData.name ? 1 : 0) + (formData.familiya ? 1 : 0) + (formData.city ? 1 : 0) + (formData.village ? 1 : 0) + (formData.course ? 1 : 0) + (formData.phone ? 1 : 0)) / 7 * 100)}%` }}
                     ></div>
                   </div>
                 </div>
@@ -657,34 +664,8 @@ const ApplicationPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Familiya, Name, Middle Name and Gender */}
+                {/* Name, Familiya, Middle Name, Gender - Ism familiyadan keyin jins */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Familiya
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="text"
-                        value={formData.familiya}
-                        onChange={(e) => handleInputChange('familiya', e.target.value)}
-                        ref={registerFieldRef('familiya')}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
-                          ? 'bg-gray-700 border-gray-600 text-white'
-                          : 'bg-white border-gray-300 text-gray-900'
-                          } ${errors.familiya ? 'border-red-500' : ''}`}
-                        placeholder="Karimov"
-                      />
-                    </div>
-                    {errors.familiya && (
-                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" />
-                        {errors.familiya}
-                      </p>
-                    )}
-                  </div>
-
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                       Ism <span className="text-red-500">*</span>
@@ -707,6 +688,32 @@ const ApplicationPage: React.FC = () => {
                       <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
                         <AlertCircle className="w-4 h-4" />
                         {errors.name}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Familiya <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        value={formData.familiya}
+                        onChange={(e) => handleInputChange('familiya', e.target.value)}
+                        ref={registerFieldRef('familiya')}
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
+                          ? 'bg-gray-700 border-gray-600 text-white'
+                          : 'bg-white border-gray-300 text-gray-900'
+                          } ${errors.familiya ? 'border-red-500' : ''}`}
+                        placeholder="Karimov"
+                      />
+                    </div>
+                    {errors.familiya && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.familiya}
                       </p>
                     )}
                   </div>
@@ -739,13 +746,20 @@ const ApplicationPage: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Jins
+                      Jins <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <select
                         value={formData.gender}
-                        onChange={(e) => handleInputChange('gender', e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setFormData(prev => ({ ...prev, gender: value }));
+                          // Clear error immediately when user selects
+                          if (errors.gender) {
+                            setErrors(prev => ({ ...prev, gender: '' }));
+                          }
+                        }}
                         ref={registerFieldRef('gender')}
                         className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 ${theme === 'dark'
                           ? 'bg-gray-700 border-gray-600 text-white'
@@ -753,8 +767,8 @@ const ApplicationPage: React.FC = () => {
                           } ${errors.gender ? 'border-red-500' : ''}`}
                       >
                         <option value="">Tanlang</option>
-                        <option value="male">Erkak</option>
-                        <option value="female">Ayol</option>
+                        <option value="Erkak">Erkak</option>
+                        <option value="Ayol">Ayol</option>
                       </select>
                     </div>
                     {errors.gender && (
