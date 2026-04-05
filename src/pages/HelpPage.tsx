@@ -47,17 +47,17 @@ const HelpPage: React.FC = () => {
       {
         id: 'how-to-register',
         question: 'Qanday ro\'yhatdan o\'tish mumkin?',
-        answer: 'Ro\'yhatdan o\'tish uchun "Ro\'yhatdan o\'tish" tugmasini bosing va kerakli ma\'lumotlarni kiriting: ism-familiya, email, telefon raqam, universitet va talaba ID raqami.'
+        answer: 'Ro\'yhatdan o\'tish uchun "Ro\'yhatdan o\'tish" tugmasini bosing va kerakli ma\'lumotlarni kiriting: ism-familiya, foydalanuvchi nomi, telefon raqam va parol.'
       },
       {
         id: 'verification',
         question: 'Hisobni tasdiqlash kerakmi?',
-        answer: 'Ha, xavfsizlik uchun email manzilingizni tasdiqlashingiz kerak. Shuningdek, talaba ekanligingizni tasdiqlash uchun talaba guvohnomangizni yuklashingiz mumkin.'
+        answer: 'Ha, xavfsizlik uchun telefon raqamingizni tasdiqlashingiz kerak. Shuningdek, talaba ekanligingizni tasdiqlash uchun talaba guvohnomangizni yuklashingiz mumkin.'
       },
       {
         id: 'forgot-password',
         question: 'Parolni unutsam nima qilish kerak?',
-        answer: 'Kirish sahifasida "Parolni unutdingizmi?" havolasini bosing. Sizga email orqali parolni tiklash havolasi yuboriladi.'
+        answer: 'Kirish sahifasida "Parolni unutdingizmi?" havolasini bosing. Sizga telefon raqamingiz orqali parolni tiklash kodi yuboriladi.'
       }
     ],
     search: [

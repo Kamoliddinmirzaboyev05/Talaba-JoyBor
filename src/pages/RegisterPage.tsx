@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, UserPlus, Check, X, Loader2 } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, ArrowLeft, UserPlus, Check, X, Loader2, Phone } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { authAPI } from '../services/api';
@@ -24,7 +24,7 @@ const RegisterPage: React.FC = () => {
     first_name: '',
     last_name: '',
     username: '',
-    email: '',
+    phone: '+998 ',
     password: '',
     password2: ''
   });
@@ -80,11 +80,6 @@ const RegisterPage: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [formData.username]);
 
-  // Email formatini tekshirish
-  const isValidEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,11 +112,12 @@ const RegisterPage: React.FC = () => {
       newErrors.username = usernameAvailability.message;
     }
     
-    // Email validatsiyasi
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email manzil kiritilishi shart';
-    } else if (!isValidEmail(formData.email)) {
-      newErrors.email = 'Noto\'g\'ri email formati';
+    // Telefon raqami validatsiyasi
+    const phoneDigits = formData.phone.replace(/\D/g, '');
+    if (!formData.phone.trim() || formData.phone === '+998') {
+      newErrors.phone = 'Telefon raqami kiritilishi shart';
+    } else if (phoneDigits.length < 12) {
+      newErrors.phone = 'Telefon raqami to\'liq kiritilmagan';
     }
     
     // Parol validatsiyasi
@@ -150,7 +146,7 @@ const RegisterPage: React.FC = () => {
         username: formData.username.trim(),
         password: formData.password,
         password2: formData.password2,
-        email: formData.email.trim(),
+        phone: formData.phone.replace(/\s/g, ''),
         first_name: formData.first_name.trim(),
         last_name: formData.last_name.trim(),
         role: 'student',
@@ -187,8 +183,8 @@ const RegisterPage: React.FC = () => {
               if (errorMsg.includes('already exists')) {
                 fieldErrors[key] = key === 'username' 
                   ? 'Bu foydalanuvchi nomi band' 
-                  : key === 'email' 
-                  ? 'Bu email manzil allaqachon ro\'yxatdan o\'tgan' 
+                  : key === 'phone' 
+                  ? 'Bu telefon raqami allaqachon ro\'yxatdan o\'tgan' 
                   : errorMsg;
               } else {
                 fieldErrors[key] = errorMsg;
@@ -216,8 +212,51 @@ const RegisterPage: React.FC = () => {
     }
   };
 
+  // Telefon raqamini formatlash (+998 00 000 00 00)
+  const formatPhoneNumber = (value: string) => {
+    // Faqat raqamlarni qoldirish
+    const numbers = value.replace(/\D/g, '');
+    
+    // Agar +998 bilan boshlanmasa, qo'shish
+    let formatted = '';
+    if (numbers.startsWith('998')) {
+      const parts = [
+        '+998',
+        numbers.substring(3, 5),
+        numbers.substring(5, 8),
+        numbers.substring(8, 10),
+        numbers.substring(10, 12)
+      ].filter(Boolean);
+      
+      if (parts.length > 1) {
+        formatted = parts[0] + ' ' + parts.slice(1).join(' ');
+      } else {
+        formatted = parts[0] + ' ';
+      }
+    } else {
+      formatted = '+998 ';
+    }
+    
+    return formatted.trimEnd();
+  };
+
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    if (field === 'phone') {
+      // Faqat raqamlar va bo'shliqlarni qoldirish
+      let val = value;
+      if (!val.startsWith('+998')) {
+        val = '+998 ' + val.replace(/\D/g, '');
+      }
+      
+      const numbers = val.replace(/\D/g, '');
+      
+      // Maksimal uzunlikni cheklash (998 + 9 ta raqam)
+      if (numbers.length <= 12) {
+        setFormData(prev => ({ ...prev, [field]: formatPhoneNumber(val) }));
+      }
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
     
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
@@ -247,10 +286,12 @@ const RegisterPage: React.FC = () => {
         step1Errors.username = usernameAvailability.message;
       }
       
-      if (!formData.email.trim()) {
-        step1Errors.email = 'Email manzil kiritilishi shart';
-      } else if (!isValidEmail(formData.email)) {
-        step1Errors.email = 'Noto\'g\'ri email formati';
+      // Telefon raqami validatsiyasi
+      const phoneDigits = formData.phone.replace(/\D/g, '');
+      if (!formData.phone.trim() || formData.phone === '+998') {
+        step1Errors.phone = 'Telefon raqami kiritilishi shart';
+      } else if (phoneDigits.length < 12) {
+        step1Errors.phone = 'Telefon raqami to\'liq kiritilmagan';
       }
       
       if (Object.keys(step1Errors).length > 0) {
@@ -455,32 +496,32 @@ const RegisterPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* Email Field */}
+                {/* Phone Field */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                    Email manzil
+                    Telefon raqami
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => handleInputChange('phone', e.target.value)}
                       className={`w-full pl-10 pr-4 py-3.5 border rounded-xl focus:ring-2 focus:ring-slate-900 dark:focus:ring-white focus:border-transparent transition-all duration-200 ${
                         theme === 'dark' 
                           ? 'bg-slate-900 border-slate-700 text-white' 
                           : 'bg-slate-50 border-slate-200 text-slate-900'
-                      } ${errors.email ? 'border-rose-500' : ''}`}
-                      placeholder="misol@mail.com"
+                      } ${errors.phone ? 'border-rose-500' : ''}`}
+                      placeholder="+998 00 000 00 00"
                     />
                   </div>
-                  {errors.email && (
+                  {errors.phone && (
                     <motion.p
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="text-rose-500 text-xs mt-1 font-medium"
                     >
-                      {errors.email}
+                      {errors.phone}
                     </motion.p>
                   )}
                 </div>
