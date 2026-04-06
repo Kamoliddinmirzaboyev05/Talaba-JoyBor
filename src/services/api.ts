@@ -210,6 +210,7 @@ export const authAPI = {
     group?: string;
     phone?: string;  // string formatida (API da string)
     passport?: string;
+    pinfl?: string;
     comment?: string;
     user_image?: File | null;
     document?: File | null;
@@ -276,6 +277,11 @@ export const authAPI = {
       // passport (string, maxLength: 128, nullable)
       if (applicationData.passport && applicationData.passport.trim()) {
         formData.append('passport', applicationData.passport.trim());
+      }
+      
+      // pinfl (string, maxLength: 14, nullable)
+      if (applicationData.pinfl && applicationData.pinfl.trim()) {
+        formData.append('pinfl', applicationData.pinfl.trim());
       }
       
       // comment (string, nullable)
