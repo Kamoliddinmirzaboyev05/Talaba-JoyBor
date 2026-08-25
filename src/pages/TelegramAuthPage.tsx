@@ -17,10 +17,12 @@ const TelegramAuthPage: React.FC = () => {
     openBot,
   } = useAuth();
 
-  // Agar allaqachon login qilgan bo'lsa, dashboard yoki oldingi sahifaga yo'naltirish
+  // Agar allaqachon login qilgan bo'lsa, oldingi sahifaga (yoki asosiy sahifaga)
+  // yo'naltirish — yotoqxonaga joylashgan talabani dashboardga o'tkazish
+  // ishini HomePage o'zi TMA-ochilish tekshiruvida bajaradi.
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/dashboard';
+      const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/';
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, isLoading, navigate, location]);

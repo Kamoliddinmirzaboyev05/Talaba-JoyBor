@@ -9,7 +9,6 @@ import {
   X,
   MessageCircle,
   Heart,
-  Settings,
   LogOut,
   Building2,
   HelpCircle,
@@ -57,7 +56,6 @@ const Header: React.FC = () => {
     { label: "Shikoyat va takliflar", path: "/messages", icon: MessageCircle },
     { label: "Saqlangan", path: "/saved", icon: Heart },
     { label: "Bildirishnomalar", path: "/notifications", icon: Bell },
-    { label: "Sozlamalar", path: "/settings", icon: Settings },
   ];
 
   const handleLogout = () => {
@@ -268,35 +266,61 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Sidebar Menu — o'ng tarafdan chiqadi */}
       <AnimatePresence>
         {isMenuOpen && (
-          <motion.div
-            ref={mobileMenuRef}
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="md:hidden bg-white dark:bg-surface-900 border-t border-surface-200 dark:border-surface-800"
-          >
-            <div className="px-4 py-4 space-y-2">
-              {menuItems.map((item) => (
+          <>
+            <motion.div
+              key="mobile-menu-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              onClick={() => setIsMenuOpen(false)}
+              className="md:hidden fixed inset-0 bg-surface-900/50 backdrop-blur-sm z-[60]"
+            />
+            <motion.div
+              key="mobile-menu-drawer"
+              ref={mobileMenuRef}
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
+              className="md:hidden fixed inset-y-0 right-0 z-[70] w-[80%] max-w-xs bg-white dark:bg-surface-900 shadow-sm flex flex-col"
+            >
+              <div className="flex items-center justify-between h-16 px-5 border-b border-surface-200 dark:border-surface-800 shrink-0">
+                <span className="text-base font-bold text-surface-900 dark:text-white">Menyu</span>
                 <button
-                  key={item.path}
-                  onClick={() => {
-                    navigate(item.path);
-                    setIsMenuOpen(false);
-                  }}
-                  className={`w-full relative flex items-center gap-3 px-3 py-2 rounded-xl transition-colors duration-150 ${isActive(item.path) ? "bg-surface-100 dark:bg-surface-700 text-brand-600 dark:text-brand-400 font-semibold before:w-1" : "text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 before:w-0"} before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-6 before:bg-brand-500 before:rounded-full before:transition-all before:duration-300`}
+                  onClick={() => setIsMenuOpen(false)}
+                  aria-label="Menyuni yopish"
+                  className="p-2 rounded-xl text-surface-500 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-brand-600 dark:hover:text-brand-400 transition-colors duration-150"
                 >
-                  <item.icon className="w-5 h-5" />
-                  {item.label}
+                  <X className="w-5 h-5" />
                 </button>
-              ))}
+              </div>
+
+              <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+                {menuItems.map((item) => (
+                  <button
+                    key={item.path}
+                    onClick={() => {
+                      navigate(item.path);
+                      setIsMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm transition-colors duration-150 ${
+                      isActive(item.path)
+                        ? "bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 font-semibold"
+                        : "text-surface-700 dark:text-surface-300 font-medium hover:bg-surface-100 dark:hover:bg-surface-800"
+                    }`}
+                  >
+                    <item.icon className="w-5 h-5 shrink-0" />
+                    {item.label}
+                  </button>
+                ))}
+              </nav>
 
               {!isAuthenticated && (
-                <>
-                  <hr className="my-3 border-surface-200 dark:border-surface-800" />
+                <div className="p-4 border-t border-surface-200 dark:border-surface-800 shrink-0">
                   <button
                     onClick={() => {
                       navigate("/login");
@@ -306,10 +330,10 @@ const Header: React.FC = () => {
                   >
                     Kirish
                   </button>
-                </>
+                </div>
               )}
-            </div>
-          </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </header>

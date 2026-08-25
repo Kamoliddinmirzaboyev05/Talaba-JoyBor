@@ -76,3 +76,24 @@ export const statusStep = (raw?: string | null): number => STEP[statusTone(raw)]
 export const isApproved = (raw?: string | null): boolean => statusTone(raw) === 'approved';
 export const isPending = (raw?: string | null): boolean => statusTone(raw) === 'pending';
 export const isRejected = (raw?: string | null): boolean => statusTone(raw) === 'rejected';
+
+// Talaba yotoqxonaga joylashganmi — StudentDashboard javobidan aniqlaydi.
+// DashboardPage va TMA-ochilish yo'naltirishi ikkalasi ham shu yerdan foydalanadi.
+interface PlacementLike {
+  placement_status?: string | null;
+  room_info?: { id?: number | string } | null;
+  floor_info?: { id?: number | string } | null;
+  room?: number | null;
+  floor?: number | null;
+}
+
+export function isPlacedStudent(data: PlacementLike | null | undefined): boolean {
+  if (!data) return false;
+  const placement = (data.placement_status || '').toLowerCase();
+  if (placement.includes('joylash')) return true;
+  if (data.room_info?.id && data.floor_info?.id) return true;
+  if (typeof data.room === 'number' && data.room > 0 && typeof data.floor === 'number' && data.floor > 0) {
+    return true;
+  }
+  return false;
+}

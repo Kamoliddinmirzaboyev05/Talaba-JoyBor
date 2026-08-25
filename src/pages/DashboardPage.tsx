@@ -21,9 +21,12 @@ import {
   Settings,
   Building,
   Phone,
+  MessageSquareWarning,
 } from "lucide-react";
 import { Application, StudentDashboard } from "../types";
-import { statusTone, statusLabel, isApproved, isPending, isRejected } from "../utils/applicationStatus";
+import { Complaint } from "../services/api";
+import { statusTone, statusLabel, isApproved, isPending, isRejected, isPlacedStudent } from "../utils/applicationStatus";
+import { complaintStatusLabel, complaintStatusClassName } from "../utils/complaintStatus";
 import { useAuth } from "../contexts/AuthContext";
 import Header from "../components/Header";
 import Skeleton from "../components/Skeleton";
@@ -36,22 +39,12 @@ function displayValue(value: string | number | null | undefined): string {
   return String(value);
 }
 
-function isPlacedStudent(data: StudentDashboard | null): boolean {
-  if (!data) return false;
-  const placement = (data.placement_status || '').toLowerCase();
-  if (placement.includes('joylash')) return true;
-  if (data.room_info?.id && data.floor_info?.id) return true;
-  if (typeof data.room === 'number' && data.room > 0 && typeof data.floor === 'number' && data.floor > 0) {
-    return true;
-  }
-  return false;
-}
-
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
   const [studentDashboard, setStudentDashboard] = useState<StudentDashboard | null>(null);
+  const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -64,14 +57,16 @@ const DashboardPage: React.FC = () => {
 
     const fetchDashboardData = async () => {
       setLoading(true);
-      const [dashResult, appsResult] = await Promise.allSettled([
+      const [dashResult, appsResult, complaintsResult] = await Promise.allSettled([
         authAPI.getStudentDashboard(),
         authAPI.getApplications(),
+        authAPI.getMyComplaints(),
       ]);
       if (cancelled) return;
 
       setStudentDashboard(dashResult.status === 'fulfilled' ? dashResult.value : null);
       setApplications(appsResult.status === 'fulfilled' ? appsResult.value : []);
+      setComplaints(complaintsResult.status === 'fulfilled' ? complaintsResult.value : []);
       setLoading(false);
     };
 
@@ -258,26 +253,43 @@ const DashboardPage: React.FC = () => {
                 ))}
               </div>
 
-              {/* Payment Info & Progress Section */}
+              {/* Shikoyatlar & To'lovlar Holati */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-6 bg-gradient-to-br from-brand-600 to-brand-700 rounded-2xl text-white shadow-sm group hover:scale-[1.02] transition-transform"
+                  className="p-6 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-2xl shadow-sm flex flex-col"
                 >
                   <div className="flex justify-between items-start mb-4">
-                    <p className="text-[10px] font-bold text-brand-100 uppercase tracking-widest">Oylik to'lov</p>
-                    <CreditCard className="w-5 h-5 text-brand-200 opacity-50" />
+                    <p className="text-[10px] font-bold text-surface-400 dark:text-surface-500 uppercase tracking-widest">Shikoyat va takliflar</p>
+                    <MessageSquareWarning className="w-5 h-5 text-brand-500" />
                   </div>
-                  <p className="text-3xl font-black">
-                    {new Intl.NumberFormat('uz-UZ').format(studentDashboard.dormitory_info?.month_price || 0)}
-                    <span className="text-sm font-medium ml-1.5 opacity-80">so'm</span>
-                  </p>
-                  <button className="mt-4 w-full py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl text-xs font-bold transition-colors duration-150">
-                    To'lov qilish
+
+                  {complaints.length === 0 ? (
+                    <p className="text-sm text-surface-500 dark:text-surface-400 flex-1">
+                      Hali murojaat yubormagansiz.
+                    </p>
+                  ) : (
+                    <div className="space-y-2 flex-1">
+                      {complaints.slice(0, 2).map((c) => (
+                        <div key={c.id} className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-medium text-surface-800 dark:text-surface-200 truncate">{c.title}</span>
+                          <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${complaintStatusClassName(c.status)}`}>
+                            {complaintStatusLabel(c.status)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => navigate('/messages')}
+                    className="mt-4 w-full py-2 bg-brand-50 dark:bg-brand-900/20 hover:bg-brand-100 dark:hover:bg-brand-900/40 text-brand-700 dark:text-brand-300 rounded-xl text-xs font-bold transition-colors duration-150"
+                  >
+                    Murojaat yuborish / ko'rish
                   </button>
                 </motion.div>
-                
+
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}

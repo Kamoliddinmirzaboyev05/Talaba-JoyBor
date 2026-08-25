@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   Calendar,
   Home,
-  Users,
   MapPin,
   Clock,
   CheckCircle,
@@ -14,6 +13,7 @@ import {
   Search,
   Filter,
   Eye,
+  MessageSquareText,
 } from "lucide-react";
 import { Application } from "../types";
 import { statusTone, statusLabel } from "../utils/applicationStatus";
@@ -276,18 +276,16 @@ const ApplicationsPage: React.FC = () => {
                         {application.dormitory?.university?.name || application.university || 'Universitet'}
                       </p>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 ml-8">
-                        <div className="flex items-center gap-2 text-sm text-surface-600 dark:text-surface-400">
-                          <Users className="w-4 h-4" />
-                          <span>{application.name}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-surface-600 dark:text-surface-400">
-                          <MapPin className="w-4 h-4" />
-                          <span>{application.city}</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 ml-8">
+                        <div className="flex items-center gap-2 text-sm text-surface-600 dark:text-surface-400 min-w-0">
+                          <MapPin className="w-4 h-4 shrink-0 text-danger-500" />
+                          <span className="truncate">
+                            {application.dormitory?.address || application.city || "Joylashuv ko'rsatilmagan"}
+                          </span>
                         </div>
                         {application.created_at && (
                           <div className="flex items-center gap-2 text-sm text-surface-600 dark:text-surface-400">
-                            <Calendar className="w-4 h-4" />
+                            <Calendar className="w-4 h-4 shrink-0" />
                             <span>{formatUiDate(application.created_at)}</span>
                           </div>
                         )}
@@ -337,13 +335,11 @@ const ApplicationsPage: React.FC = () => {
                   </div>
 
                   {application.comment && (
-                    <div className="mt-4 ml-8">
-                      <p className={`text-sm p-3 rounded-xl border-l-4 border-brand-500 ${
-                        theme === "dark"
-                          ? "text-surface-300 bg-surface-700"
-                          : "text-surface-700 bg-surface-50"
-                      }`}>
-                        <span className="font-medium">Izoh:</span> {application.comment}
+                    <div className="mt-4 ml-8 flex items-start gap-2.5 p-3.5 rounded-xl bg-brand-50 dark:bg-brand-900/20 border border-brand-100 dark:border-brand-800/50">
+                      <MessageSquareText className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
+                      <p className="text-sm text-surface-700 dark:text-surface-300">
+                        <span className="font-semibold text-surface-900 dark:text-white">Izoh: </span>
+                        {application.comment}
                       </p>
                     </div>
                   )}

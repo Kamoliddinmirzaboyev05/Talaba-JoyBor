@@ -10,6 +10,7 @@ import EmptyState from '../components/EmptyState';
 import DormitoryCard from '../components/DormitoryCard';
 import DormitoryMap from '../components/DormitoryMap';
 import { authAPI } from '../services/api';
+import { isPlacedStudent } from '../utils/applicationStatus';
 
 interface Statistics {
   dormitories_count: number;
@@ -25,7 +26,7 @@ interface HomePageProps {
 }
 
 const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
-  const { user } = useAuth();
+  const { user, isAuthenticated, isTelegram } = useAuth();
   const navigate = useNavigate();
   const [featuredListings, setFeaturedListings] = useState<Listing[]>([]);
 
@@ -42,6 +43,27 @@ const HomePage: React.FC<HomePageProps> = ({ onListingSelect }) => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
+
+  // TMA (Telegram Mini App) ochilganda: yotoqxonaga joylashgan talaba
+  // to'g'ridan-to'g'ri dashboardga o'tadi. Hali joylashmagan/yangi ro'yxatdan
+  // o'tgan talaba shu — asosiy sahifada qoladi.
+  useEffect(() => {
+    if (!isTelegram || !isAuthenticated) return;
+    let cancelled = false;
+    authAPI
+      .getStudentDashboard()
+      .then((data) => {
+        if (!cancelled && isPlacedStudent(data)) {
+          navigate('/dashboard', { replace: true });
+        }
+      })
+      .catch(() => {
+        // joylashuv holatini bilmasak, asosiy sahifada qoldiramiz
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isTelegram, isAuthenticated, navigate]);
 
   // API dan faqat yotoqxonalarni yuklash
   useEffect(() => {

@@ -139,34 +139,34 @@ const MessagesPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
       <Header />
-      <main className="max-w-3xl mx-auto px-4 py-8 pt-24">
-        <div className="flex items-center justify-between mb-6 gap-3">
-          <div className="flex items-center gap-3">
+      <main className="max-w-3xl mx-auto px-4 py-6 sm:py-8 pt-20 sm:pt-24">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 rounded-xl border border-surface-200 dark:border-surface-700 hover:bg-surface-100 dark:hover:bg-surface-800"
+              className="p-2 rounded-xl border border-surface-200 dark:border-surface-700 hover:bg-surface-100 dark:hover:bg-surface-800 shrink-0"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <div>
-              <h1 className="text-2xl font-bold text-surface-900 dark:text-white flex items-center gap-2">
-                <MessageCircle className="w-7 h-7 text-brand-500" />
-                Shikoyat va takliflar
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-2xl font-bold text-surface-900 dark:text-white flex items-center gap-2 truncate">
+                <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7 text-brand-500 shrink-0" />
+                <span className="truncate">Shikoyat va takliflar</span>
               </h1>
-              <p className="text-sm text-surface-500">Yotoqxona adminiga yoki platforma bo&apos;yicha superadminga murojaat yuboring</p>
+              <p className="text-xs sm:text-sm text-surface-500 mt-0.5">Yotoqxona adminiga yoki platforma bo&apos;yicha superadminga murojaat yuboring</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0">
             <button
               onClick={load}
-              className="p-2 rounded-xl border border-surface-200 dark:border-surface-700"
+              className="p-2 rounded-xl border border-surface-200 dark:border-surface-700 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors duration-150"
               title="Yangilash"
             >
               <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
             </button>
             <button
               onClick={() => setShowForm((v) => !v)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-600 text-white text-sm font-semibold hover:bg-brand-700"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-brand-600 text-white text-sm font-semibold hover:bg-brand-700 transition-colors duration-150"
             >
               <Plus className="w-4 h-4" />
               Yangi
@@ -185,7 +185,7 @@ const MessagesPage: React.FC = () => {
             onSubmit={handleSubmit}
             className="mb-6 p-4 rounded-2xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 space-y-3 shadow-sm"
           >
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label className="text-sm">
                 <span className="text-surface-500 dark:text-surface-400">Kimga</span>
                 <select
@@ -218,7 +218,7 @@ const MessagesPage: React.FC = () => {
               required
             />
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as ComplaintCategory)}
