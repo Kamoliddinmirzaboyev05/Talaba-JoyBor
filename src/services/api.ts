@@ -177,6 +177,49 @@ export interface FullProfile {
   payment_summary: PaymentSummary | null;
 }
 
+// Shikoyat/taklif (student -> admin | superadmin)
+export type ComplaintType = 'complaint' | 'suggestion';
+export type ComplaintTargetRole = 'admin' | 'superadmin';
+export type ComplaintCategory =
+  | 'room'
+  | 'food'
+  | 'staff'
+  | 'noise'
+  | 'cleanliness'
+  | 'wifi'
+  | 'equipment'
+  | 'security'
+  | 'tariff'
+  | 'system'
+  | 'other';
+export type ComplaintStatus = 'pending' | 'in_progress' | 'resolved' | 'rejected';
+
+export interface Complaint {
+  id: number;
+  type: ComplaintType;
+  type_display?: string;
+  target_role: ComplaintTargetRole;
+  target_role_display?: string;
+  sender_role?: string;
+  sender_role_display?: string;
+  dormitory?: number | null;
+  dormitory_name?: string | null;
+  floor?: number | null;
+  floor_name?: string | null;
+  category?: ComplaintCategory | null;
+  category_display?: string | null;
+  title: string;
+  description: string;
+  image?: string | null;
+  status: ComplaintStatus;
+  status_display?: string;
+  admin_response?: string | null;
+  responded_by_username?: string | null;
+  responded_at?: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
 // API functions
 export const authAPI = {
   // Register user
@@ -499,23 +542,40 @@ export const authAPI = {
     return response.data?.results || response.data || [];
   },
 
-  // Complaints (shikoyat)
-  getComplaints: async (params?: { status?: string; category?: string; page?: number }): Promise<unknown[]> => {
-    const response = await api.get('/complaints/', { params });
+  // Shikoyat/taklif: talaba -> admin (yotoqxona) yoki -> superadmin (platforma)
+  getMyComplaints: async (params?: {
+    search?: string;
+    ordering?: string;
+    type?: ComplaintType;
+    target_role?: ComplaintTargetRole;
+    status?: ComplaintStatus;
+    category?: ComplaintCategory;
+    page?: number;
+  }): Promise<Complaint[]> => {
+    const response = await api.get('/student/my-complaints/', { params });
     return response.data?.results || response.data || [];
   },
 
-  createComplaint: async (data: {
-    title: string;
-    description: string;
-    category?: 'room' | 'food' | 'staff' | 'noise' | 'other';
-  }): Promise<unknown> => {
-    const response = await api.post('/complaints/', data);
-    return response.data;
-  },
-
-  getComplaint: async (id: number | string): Promise<unknown> => {
-    const response = await api.get(`/complaints/${id}/`);
+  sendComplaint: async (
+    target: ComplaintTargetRole,
+    data: {
+      type: ComplaintType;
+      category?: ComplaintCategory;
+      title: string;
+      description: string;
+      floor?: number;
+      image?: File | null;
+    }
+  ): Promise<Complaint> => {
+    const formData = new FormData();
+    formData.append('type', data.type);
+    if (data.category) formData.append('category', data.category);
+    formData.append('title', data.title);
+    formData.append('description', data.description);
+    if (data.floor != null) formData.append('floor', String(data.floor));
+    if (data.image) formData.append('image', data.image);
+    const path = target === 'admin' ? '/student/complaints/to-admin/' : '/student/complaints/to-superadmin/';
+    const response = await api.post(path, formData);
     return response.data;
   },
 

@@ -90,7 +90,9 @@ const ContactForm: React.FC = () => {
     setIsSubmitting(true);
     try {
       const phone = normalizePhoneForApi(formData.phone);
-      await authAPI.createComplaint({
+      await authAPI.sendComplaint('superadmin', {
+        type: formData.subject === 'Shikoyat' ? 'complaint' : 'suggestion',
+        category: 'other',
         title: formData.subject,
         description: [
           `Ism: ${formData.name}`,
@@ -102,7 +104,6 @@ const ContactForm: React.FC = () => {
           `Xabar:`,
           formData.message,
         ].join('\n'),
-        category: formData.subject === 'Shikoyat' ? 'other' : 'other',
       });
       setFormData({
         name: user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.name || user.username || '' : '',

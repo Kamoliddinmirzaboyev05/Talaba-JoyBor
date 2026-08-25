@@ -9,21 +9,12 @@ import {
   CheckCircle,
   AlertCircle,
   RefreshCw,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
 import EmptyState from '../components/EmptyState';
-import { authAPI } from '../services/api';
-
-interface Complaint {
-  id: number;
-  title: string;
-  description: string;
-  category?: string;
-  status: 'pending' | 'in_progress' | 'resolved' | 'rejected' | string;
-  admin_response?: string;
-  created_at?: string;
-}
+import { authAPI, mediaUrl, Complaint, ComplaintCategory, ComplaintTargetRole, ComplaintType } from '../services/api';
 
 const STATUS_UI: Record<string, { label: string; className: string; icon: React.ReactNode }> = {
   pending: {
@@ -48,6 +39,22 @@ const STATUS_UI: Record<string, { label: string; className: string; icon: React.
   },
 };
 
+const CATEGORY_LABELS: Record<ComplaintCategory, string> = {
+  room: 'Xona',
+  food: 'Ovqat',
+  staff: 'Xodimlar',
+  noise: 'Shovqin',
+  cleanliness: 'Tozalik',
+  wifi: 'Wi-Fi',
+  equipment: 'Jihoz (chiroq, mebel...)',
+  security: 'Xavfsizlik',
+  tariff: 'Tarif/toʻlov',
+  system: 'Platforma/tizim',
+  other: 'Boshqa',
+};
+
+const ALL_CATEGORIES: ComplaintCategory[] = ['room', 'food', 'staff', 'noise', 'cleanliness', 'wifi', 'equipment', 'security', 'tariff', 'system', 'other'];
+
 const MessagesPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -55,16 +62,21 @@ const MessagesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const [target, setTarget] = useState<ComplaintTargetRole>('admin');
+  const [type, setType] = useState<ComplaintType>('complaint');
+  const [category, setCategory] = useState<ComplaintCategory>('room');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<'room' | 'food' | 'staff' | 'noise' | 'other'>('other');
+  const [floor, setFloor] = useState('');
+  const [image, setImage] = useState<File | null>(null);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const data = (await authAPI.getComplaints()) as Complaint[];
+      const data = await authAPI.getMyComplaints();
       setItems(Array.isArray(data) ? data : []);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Yuklashda xatolik');
@@ -85,13 +97,18 @@ const MessagesPage: React.FC = () => {
     setSubmitting(true);
     setError('');
     try {
-      await authAPI.createComplaint({
+      await authAPI.sendComplaint(target, {
+        type,
+        category,
         title: title.trim(),
         description: description.trim(),
-        category,
+        floor: floor ? Number(floor) : undefined,
+        image,
       });
       setTitle('');
       setDescription('');
+      setFloor('');
+      setImage(null);
       setShowForm(false);
       await load();
     } catch (err) {
@@ -134,9 +151,9 @@ const MessagesPage: React.FC = () => {
             <div>
               <h1 className="text-2xl font-bold text-surface-900 dark:text-white flex items-center gap-2">
                 <MessageCircle className="w-7 h-7 text-brand-500" />
-                Shikoyatlar
+                Shikoyat va takliflar
               </h1>
-              <p className="text-sm text-surface-500">Yotoqxona bo&apos;yicha murojaat yuboring</p>
+              <p className="text-sm text-surface-500">Yotoqxona adminiga yoki platforma bo&apos;yicha superadminga murojaat yuboring</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -168,6 +185,31 @@ const MessagesPage: React.FC = () => {
             onSubmit={handleSubmit}
             className="mb-6 p-4 rounded-2xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 space-y-3 shadow-sm"
           >
+            <div className="grid grid-cols-2 gap-3">
+              <label className="text-sm">
+                <span className="text-surface-500 dark:text-surface-400">Kimga</span>
+                <select
+                  value={target}
+                  onChange={(e) => setTarget(e.target.value as ComplaintTargetRole)}
+                  className="mt-1 w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800"
+                >
+                  <option value="admin">Yotoqxona admini</option>
+                  <option value="superadmin">Superadmin (platforma)</option>
+                </select>
+              </label>
+              <label className="text-sm">
+                <span className="text-surface-500 dark:text-surface-400">Turi</span>
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value as ComplaintType)}
+                  className="mt-1 w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800"
+                >
+                  <option value="complaint">Shikoyat</option>
+                  <option value="suggestion">Taklif</option>
+                </select>
+              </label>
+            </div>
+
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -175,17 +217,31 @@ const MessagesPage: React.FC = () => {
               className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 outline-none focus:ring-2 focus:ring-brand-500/40"
               required
             />
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as typeof category)}
-              className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800"
-            >
-              <option value="room">Xona</option>
-              <option value="food">Ovqat</option>
-              <option value="staff">Xodimlar</option>
-              <option value="noise">Shovqin</option>
-              <option value="other">Boshqa</option>
-            </select>
+
+            <div className="grid grid-cols-2 gap-3">
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value as ComplaintCategory)}
+                className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800"
+              >
+                {ALL_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {CATEGORY_LABELS[c]}
+                  </option>
+                ))}
+              </select>
+              {target === 'admin' && (
+                <input
+                  type="number"
+                  min={0}
+                  value={floor}
+                  onChange={(e) => setFloor(e.target.value)}
+                  placeholder="Qavat (ixtiyoriy)"
+                  className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800"
+                />
+              )}
+            </div>
+
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -194,6 +250,18 @@ const MessagesPage: React.FC = () => {
               className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 outline-none focus:ring-2 focus:ring-brand-500/40"
               required
             />
+
+            <label className="flex items-center gap-2 text-sm text-surface-500 dark:text-surface-400 cursor-pointer">
+              <ImageIcon className="w-4 h-4" />
+              {image ? image.name : "Rasm biriktirish (ixtiyoriy)"}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => setImage(e.target.files?.[0] || null)}
+              />
+            </label>
+
             <button
               type="submit"
               disabled={submitting}
@@ -217,9 +285,9 @@ const MessagesPage: React.FC = () => {
         ) : items.length === 0 ? (
           <EmptyState
             icon={MessageCircle}
-            title="Shikoyatlar yo'q"
-            description="Muammo bo'lsa, yangi murojaat yuboring"
-            action={{ label: 'Yangi shikoyat', onClick: () => setShowForm(true) }}
+            title="Murojaatlar yo'q"
+            description="Muammo yoki taklifingiz bo'lsa, yangi murojaat yuboring"
+            action={{ label: 'Yangi murojaat', onClick: () => setShowForm(true) }}
           />
         ) : (
           <div className="space-y-3">
@@ -231,17 +299,33 @@ const MessagesPage: React.FC = () => {
                   className="p-4 rounded-2xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 shadow-sm"
                 >
                   <div className="flex items-start justify-between gap-3 mb-2">
-                    <h3 className="font-semibold text-surface-900 dark:text-white">{c.title}</h3>
+                    <div>
+                      <h3 className="font-semibold text-surface-900 dark:text-white">{c.title}</h3>
+                      <p className="text-xs text-surface-400 mt-0.5">
+                        {c.type_display || (c.type === 'suggestion' ? 'Taklif' : 'Shikoyat')}
+                        {' · '}
+                        {c.target_role_display || (c.target_role === 'superadmin' ? 'Superadmin' : 'Admin')}
+                        {c.category_display ? ` · ${c.category_display}` : ''}
+                        {c.floor_name ? ` · ${c.floor_name}` : ''}
+                      </p>
+                    </div>
                     <span
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${st.className}`}
+                      className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${st.className}`}
                     >
                       {st.icon}
                       {st.label}
                     </span>
                   </div>
-                  <p className="text-sm text-surface-600 dark:text-surface-300 mb-2">
+                  <p className="text-sm text-surface-600 dark:text-surface-300 mb-2 whitespace-pre-wrap">
                     {c.description}
                   </p>
+                  {c.image && (
+                    <img
+                      src={mediaUrl(c.image)}
+                      alt=""
+                      className="max-h-40 rounded-xl border border-surface-200 dark:border-surface-700 mb-2"
+                    />
+                  )}
                   {c.admin_response && (
                     <p className="text-sm text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-900/20 rounded-xl p-3">
                       Javob: {c.admin_response}
@@ -250,7 +334,6 @@ const MessagesPage: React.FC = () => {
                   {c.created_at && (
                     <p className="text-xs text-surface-400 mt-2">
                       {new Date(c.created_at).toLocaleString('uz-UZ')}
-                      {c.category ? ` · ${c.category}` : ''}
                     </p>
                   )}
                 </div>
